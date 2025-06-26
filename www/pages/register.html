@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register - E-commerce</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; 
+        style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; 
+        media-src *; 
+        connect-src 'self' https://backend-rj0a.onrender.com;
+    ">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link 
+        rel="stylesheet" 
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    >
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="card mx-auto" style="max-width: 500px;">
+        <div class="card-header text-center">
+            <h4>User Registration</h4>
+        </div>
+        <div class="card-body">
+            <!-- Optional alert message placeholder -->
+            <div id="alert-box" class="alert alert-info d-none"></div>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Full Name:</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Email address:</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" name="password" class="form-control" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>User Role:</label>
+                    <select name="role" class="form-control" required>
+                        <option value="">Select Role</option>
+                        <option value="admin">Admin</option>
+                        <option value="seller">Seller</option>
+                        <option value="customer">Customer</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Register</button>
+                <p class="text-center mt-3">
+                    Already have an account? <a href="login.html">Login here</a>.
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script src="../js/register.js"></script>
+
+</body>
+</html>

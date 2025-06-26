@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Product</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .product-image-preview {
+            max-height: 150px;
+            max-width: 100%;
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4 mb-5">
+    <div id="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 id="productNameTitle">Edit Product</h2>
+            <a href="seller_dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+
+        <!-- Alert placeholder for messages -->
+        <div id="alert-container"></div>
+
+        <form id="editProductForm">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="4" required></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="price">Price ($)</label>
+                    <input type="number" id="price" name="price" step="0.01" class="form-control" required>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="stock">Stock</label>
+                    <input type="number" id="stock" name="stock" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Current Image:</label><br>
+                <div id="image-preview-container">
+                    <img src="" id="imagePreview" alt="Product Image" class="product-image-preview">
+                    <em id="noImageText" class="text-muted">No image uploaded.</em>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="image">Change Image (optional):</label>
+                <input type="file" id="image" name="image" class="form-control-file" accept="image/*">
+            </div>
+            <button type="submit" id="updateButton" class="btn btn-primary">Update Product</button>
+        </form>
+    </div>
+</div>
+
+<script src="../js/edit_product.js"></script>
+
+</body>
+</html>

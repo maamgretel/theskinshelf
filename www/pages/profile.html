@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #dee2e6;
+        }
+        .form-readonly {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4 mb-5">
+    <h2>My Profile</h2>
+    <hr>
+    
+    <!-- Profile picture display -->
+    <div class="text-center mb-4">
+        <img src="" id="profilePicPreview" class="profile-avatar" alt="Profile Picture">
+    </div>
+
+    <!-- Alert placeholder for messages -->
+    <div id="alert-container" class="mb-3"></div>
+    
+    <!-- Profile update form -->
+    <form id="profileForm">
+        <div class="form-group">
+            <label>Name:</label>
+            <input type="text" id="name" class="form-control form-readonly" readonly>
+        </div>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="email" class="form-control form-readonly" readonly>
+        </div>
+        <div class="form-group">
+            <label for="contact_number">Contact Number:</label>
+            <input type="text" id="contact_number" name="contact_number" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="address">Address:</label>
+            <textarea id="address" name="address" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="profile_pic">Update Profile Picture:</label>
+            <input type="file" id="profile_pic" name="profile_pic" class="form-control-file" accept="image/*">
+        </div>
+        <button type="submit" id="updateButton" class="btn btn-primary">Update Profile</button>
+        <a href="#" id="backButton" class="btn btn-secondary">Back to Dashboard</a>
+    </form>
+</div>
+
+<script src="../js/profile.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Verify OTP</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <div class="card mx-auto" style="max-width: 500px;">
+      <div class="card-header text-center">
+        <h4>Reset Password</h4>
+      </div>
+      <div class="card-body">
+        <div id="alertBox" class="alert d-none"></div>
+
+        <form id="resetForm">
+          <div class="form-group">
+            <label for="otp">Enter OTP:</label>
+            <input type="text" id="otp" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="newPassword">New Password:</label>
+            <input type="password" id="newPassword" class="form-control" required />
+          </div>
+          <button type="submit" class="btn btn-success btn-block">Reset Password</button>
+        </form>
+
+        <!-- Spinner -->
+        <div id="loadingSpinner" class="text-center d-none mt-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+        </div>
+
+        <p class="text-center mt-3">
+          Go back to <a href="login.html">Login</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/forgot_reset.js"></script>
+</body>
+</html>
