@@ -19,11 +19,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 2. Function to Fetch and Populate Profile Data ---
     async function fetchAndPopulateProfile() {
         try {
+            // The auth decorator on the backend now handles user lookup
             const response = await fetch(`${BACKEND_URL}/api/profile`, {
-                headers: { 'X-User-ID': user.id }
+                headers: {
+                    // Assuming your auth decorator uses a token from localStorage
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'X-User-ID': user.id // Keep sending this if your decorator needs it
+                }
             });
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    alert('Session expired or invalid. Please log in again.');
+                    localStorage.clear(); // Clear all stale data
+                    window.location.href = 'login.html';
+                    return;
+                }
                 throw new Error('Could not fetch profile data.');
             }
 
@@ -43,16 +54,22 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('contact_number').value = data.contact_number || '';
         document.getElementById('address').value = data.address || '';
         
-        // Set the profile picture, with a fallback to a default
+        // =================================================================
+        // ✅ UPDATED: This is the only change needed.
+        // =================================================================
+        // The backend now sends a full, absolute URL from Cloudinary.
+        // We just need to use that URL directly.
         profilePicPreview.src = data.profile_pic 
-            ? `../uploads/${data.profile_pic}` 
-            : '../assets/default-avatar.png';
+            ? data.profile_pic // This now contains the full URL like "https://res.cloudinary.com/..."
+            : '../assets/default-avatar.png'; // The fallback to a local default avatar is still correct.
+        // =================================================================
         
         // Set the correct "Back" button URL based on user role
         backButton.href = `${data.role}_dashboard.html`;
     }
 
     // --- 4. Event Listener for Form Submission ---
+    // This section is already correct and does not need changes.
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -67,8 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${BACKEND_URL}/api/profile`, {
                 method: 'PUT',
                 headers: {
-                    'X-User-ID': user.id
-                    // No 'Content-Type' header needed; the browser sets it for FormData
+                    // Your auth decorator will handle user identification from the token
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'X-User-ID': user.id // Keep sending if needed
                 },
                 body: formData
             });
@@ -80,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // --- IMPORTANT: Update localStorage with the new user data ---
+            // This now includes the new Cloudinary URL for the profile_pic
             localStorage.setItem('user', JSON.stringify(result.user));
 
             showAlert('Profile updated successfully!', 'success');

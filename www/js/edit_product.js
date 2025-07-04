@@ -2,33 +2,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const BACKEND_URL = 'https://backend-rj0a.onrender.com';
     const user = JSON.parse(localStorage.getItem('user'));
-
-    // --- 1. Get Product ID from URL ---
     const params = new URLSearchParams(window.location.search);
     const productId = params.get('id');
 
-    // --- DOM Element References ---
     const editProductForm = document.getElementById('editProductForm');
     const updateButton = document.getElementById('updateButton');
     const productNameTitle = document.getElementById('productNameTitle');
     const imagePreview = document.getElementById('imagePreview');
     const noImageText = document.getElementById('noImageText');
     const mainContent = document.getElementById('main-content');
+    const categoryDropdown = document.getElementById('categoryDropdown'); // ✅ Get dropdown
 
-    // --- 2. Security & Validation Checks ---
     if (!user || user.role !== 'seller') {
         alert('Access Denied. Please log in as a seller.');
         window.location.href = '../login.html';
         return;
     }
     if (!productId) {
-        mainContent.innerHTML = '<div class="alert alert-danger">No product ID specified. Please go back to the dashboard and select a product to edit.</div>';
+        mainContent.innerHTML = '<div class="alert alert-danger">No product ID specified.</div>';
         return;
     }
 
-    // --- 3. Function to Fetch and Populate Product Data ---
+    // ✅ NEW: Function to load categories into the dropdown
+    async function loadCategories() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/categories`);
+            if (!response.ok) throw new Error('Could not load categories.');
+            const categories = await response.json();
+            categoryDropdown.innerHTML = '<option value="">Select a Category</option>';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                categoryDropdown.appendChild(option);
+            });
+        } catch (error) {
+            console.error(error);
+            categoryDropdown.innerHTML = '<option value="">Error loading categories</option>';
+        }
+    }
+
     async function fetchAndPopulateProduct() {
         try {
+            // ✅ We must wait for categories to load BEFORE fetching product details
+            await loadCategories();
+
             const response = await fetch(`${BACKEND_URL}/api/products/${productId}`, {
                 headers: { 'X-User-ID': user.id }
             });
@@ -43,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 4. Function to Fill the Form with Data ---
     function populateForm(product) {
         productNameTitle.textContent = `Edit Product: ${product.name}`;
         document.getElementById('name').value = product.name;
@@ -51,8 +68,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('price').value = product.price;
         document.getElementById('stock').value = product.stock;
         
+        // ✅ NEW: Set the selected category in the dropdown
+        if (product.category_id) {
+            categoryDropdown.value = product.category_id;
+        }
+
         if (product.image) {
-            imagePreview.src = `../../uploads/${product.image}`;
+            imagePreview.src = product.image;
             imagePreview.style.display = 'block';
             noImageText.style.display = 'none';
         } else {
@@ -61,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 5. Event Listener for Form Submission ---
     editProductForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         updateButton.disabled = true;
@@ -70,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(editProductForm);
 
         try {
-            // Using POST to handle multipart/form-data easily
             const response = await fetch(`${BACKEND_URL}/api/products/${productId}`, {
                 method: 'POST', 
                 headers: { 'X-User-ID': user.id },
@@ -95,13 +115,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Helper function for displaying alerts ---
     function showAlert(message, type = 'info', duration = 3000) {
         const alertContainer = document.getElementById('alert-container');
         const alert = document.createElement('div');
         alert.className = `alert alert-${type}`;
         alert.textContent = message;
-        alertContainer.innerHTML = ''; // Clear previous alerts
+        alertContainer.innerHTML = '';
         alertContainer.append(alert);
         if (type === 'success') {
             setTimeout(() => {

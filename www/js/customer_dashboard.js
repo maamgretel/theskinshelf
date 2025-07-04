@@ -5,8 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. Security Check ---
     if (!user || user.role !== 'customer') {
         localStorage.clear();
-        // Use the new toast for this alert as well
-        showToast('Access Denied. Please log in as a customer.', 'error');
         window.location.href = 'login.html';
         return;
     }
@@ -14,68 +12,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Element References ---
     const productListContainer = document.getElementById('productListContainer');
     const filterForm = document.getElementById('filterForm');
+    const categoryFilterDropdown = document.getElementById('categoryFilterDropdown');
+    
+    // Modal elements
     const quantityModal = document.getElementById('quantityModal');
     const modalProductName = document.getElementById('modalProductName');
     const modalProductStock = document.getElementById('modalProductStock');
     const quantityInput = document.getElementById('quantityInput');
     const quantityError = document.getElementById('quantityError');
     const confirmPurchaseBtn = document.getElementById('confirmPurchaseBtn');
+    
+    // Store current product info for purchase
+    let currentProductId = null;
+    let currentProductStock = 0;
 
-    // --- NEW: Helper function for modern toast notifications ---
+    // --- 2. Initial Page Setup ---
+    document.getElementById('userName').textContent = user.name;
+    const profilePic = document.getElementById('profilePic');
+    if (user.profile_pic) {
+        profilePic.src = user.profile_pic;
+    } else {
+        profilePic.src = '../assets/default-avatar.png';
+    }
+
+    // --- Helper Functions ---
     function showToast(message, type = 'success') {
-        // Remove any existing toasts first
-        const existingToasts = document.querySelectorAll('.toast-notification');
-        existingToasts.forEach(toast => toast.remove());
-
+        // Simple toast notification
         const toast = document.createElement('div');
-        toast.className = `toast-notification ${type}`;
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 5px;
-            color: white;
-            font-weight: bold;
-            z-index: 9999;
-            opacity: 0;
-            transform: translateX(100%);
-            transition: all 0.3s ease;
-            max-width: 300px;
-            word-wrap: break-word;
-        `;
-        
-        if (type === 'success') {
-            toast.style.backgroundColor = '#28a745';
-        } else if (type === 'error') {
-            toast.style.backgroundColor = '#dc3545';
-        } else {
-            toast.style.backgroundColor = '#17a2b8';
-        }
-        
+        toast.className = `alert alert-${type} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
         toast.textContent = message;
         document.body.appendChild(toast);
         
         setTimeout(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateX(0)';
-        }, 10);
-        
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    document.body.removeChild(toast);
-                }
-            }, 300);
-        }, 4000);
+            toast.remove();
+        }, 3000);
     }
 
-    // --- Modal Management Functions ---
-    function showModal(modal) {
-        modal.style.display = 'block';
-        modal.classList.add('show');
+    function showModal() {
+        quantityModal.style.display = 'block';
+        quantityModal.classList.add('show');
         document.body.classList.add('modal-open');
         
         // Create backdrop
@@ -85,9 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(backdrop);
     }
 
-    function hideModal(modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('show');
+    function hideModal() {
+        quantityModal.style.display = 'none';
+        quantityModal.classList.remove('show');
         document.body.classList.remove('modal-open');
         
         // Remove backdrop
@@ -95,20 +71,42 @@ document.addEventListener('DOMContentLoaded', () => {
         if (backdrop) {
             backdrop.remove();
         }
+        
+        // Reset form
+        quantityInput.value = '1';
+        quantityInput.classList.remove('is-invalid');
+        quantityError.textContent = '';
     }
 
-    // --- 2. Initial Page Setup ---
-    document.getElementById('userName').textContent = user.name;
-    // EDITED: Corrected image path for Cordova
-    const profilePicUrl = user.profile_pic ? `${BACKEND_URL}/uploads/${user.profile_pic}` : '../img/default-avatar.png';
-    document.getElementById('profilePic').src = profilePicUrl;
+    // ✅ Function to load categories into the filter dropdown
+    async function loadCategories() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/categories`);
+            if (!response.ok) return;
+            const categories = await response.json();
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                categoryFilterDropdown.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Failed to load categories:', error);
+        }
+    }
 
     // --- 3. Main Function to Fetch and Display Products ---
     async function fetchAndDisplayProducts() {
         const params = new URLSearchParams(window.location.search);
+        
+        // Pre-fill all filter inputs from the URL to maintain state on refresh
         document.getElementById('searchInput').value = params.get('search') || '';
         document.getElementById('minPriceInput').value = params.get('min_price') || '';
         document.getElementById('maxPriceInput').value = params.get('max_price') || '';
+        if (categoryFilterDropdown) {
+             categoryFilterDropdown.value = params.get('category_id') || '';
+        }
+
         productListContainer.innerHTML = '<div class="col-12 text-center"><p>Loading products...</p></div>';
         try {
             const response = await fetch(`${BACKEND_URL}/api/products?${params.toString()}`);
@@ -118,185 +116,169 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error fetching products:', error);
             productListContainer.innerHTML = '<div class="col-12 text-center text-danger"><p>Error loading products.</p></div>';
-            showToast('Error loading products from the server.', 'error');
         }
     }
 
-    // --- 4. Function to Render the Product Cards (More Secure) ---
+    // --- 4. Function to Render the Product Cards ---
     function renderProducts(products) {
         productListContainer.innerHTML = '';
         if (products.length === 0) {
-            productListContainer.innerHTML = '<div class="col-12 text-center"><p>No products found.</p></div>';
+            productListContainer.innerHTML = '<div class="col-12 text-center"><p>No products found matching your criteria.</p></div>';
             return;
         }
 
         products.forEach(p => {
-            // EDITED: Corrected image path for Cordova
-            const productImage = p.image ? `${BACKEND_URL}/uploads/${p.image}` : '../img/default-product.png';
+            const productImage = p.image ? p.image : '../assets/default-product.png';
+            const categoryBadge = p.category_name ? `<span class="badge badge-secondary mb-2">${p.category_name}</span>` : '';
 
-            // --- Create elements safely to prevent XSS ---
             const cardContainer = document.createElement('div');
             cardContainer.className = 'col-12 col-sm-6 col-lg-4 mb-4 product-card';
-
-            const card = document.createElement('div');
-            card.className = 'card shadow-sm';
-
-            const img = document.createElement('img');
-            img.src = productImage;
-            img.className = 'card-img-top';
-            img.alt = p.name;
-            img.style.height = '150px';
-            img.style.objectFit = 'contain';
-
-            const cardBody = document.createElement('div');
-            cardBody.className = 'card-body text-center d-flex flex-column';
-
-            const title = document.createElement('h5');
-            title.className = 'card-title';
-            title.textContent = p.name;
-
-            const description = document.createElement('p');
-            description.className = 'card-text text-muted';
-            description.textContent = p.description || '';
-
-            const seller = document.createElement('p');
-            seller.className = 'card-text text-muted';
-            const sellerSmall = document.createElement('small');
-            sellerSmall.textContent = `Seller: ${p.seller_name}`;
-            seller.appendChild(sellerSmall);
-
-            const footerDiv = document.createElement('div');
-            footerDiv.className = 'mt-auto';
-
-            const price = document.createElement('h4');
-            price.className = 'card-text font-weight-bold';
-            price.textContent = `$${parseFloat(p.price).toFixed(2)}`;
-
-            const stock = document.createElement('p');
-            stock.className = 'card-text';
-            const stockSmall = document.createElement('small');
-            stockSmall.textContent = `Stock: ${p.stock}`;
-            stock.appendChild(stockSmall);
-
-            const buyButton = document.createElement('a');
-            buyButton.href = '#';
-            buyButton.className = 'btn btn-success mt-2 buy-now-btn';
-            buyButton.textContent = 'Buy Now';
-            buyButton.dataset.productId = p.id;
-            buyButton.dataset.productName = p.name;
-            buyButton.dataset.productStock = p.stock;
-
-            // --- Append elements to build the card ---
-            footerDiv.append(price, stock, buyButton);
-            cardBody.append(title, description, seller, footerDiv);
-            card.append(img, cardBody);
-            cardContainer.appendChild(card);
+            
+            cardContainer.innerHTML = `
+                <div class="card shadow-sm h-100">
+                    <img src="${productImage}" class="card-img-top" alt="${p.name}" style="height: 150px; object-fit: contain;">
+                    <div class="card-body text-center d-flex flex-column">
+                        <h5 class="card-title">${p.name}</h5>
+                        ${categoryBadge}
+                        <p class="card-text text-muted"><small>Seller: ${p.seller_name}</small></p>
+                        <div class="mt-auto">
+                            <h4 class="card-text font-weight-bold">₱${parseFloat(p.price).toFixed(2)}</h4>
+                            <p class="card-text"><small>Stock: ${p.stock}</small></p>
+                            <button class="btn btn-success mt-2 buy-now-btn" 
+                                    data-product-id="${p.id}" 
+                                    data-product-name="${p.name}" 
+                                    data-product-stock="${p.stock}"
+                                    ${p.stock <= 0 ? 'disabled' : ''}>
+                                ${p.stock <= 0 ? 'Out of Stock' : 'Buy Now'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
             productListContainer.appendChild(cardContainer);
+        });
+
+        // ✅ ADD EVENT LISTENERS TO BUY BUTTONS (This was missing!)
+        const buyButtons = productListContainer.querySelectorAll('.buy-now-btn');
+        buyButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                currentProductId = button.getAttribute('data-product-id');
+                const productName = button.getAttribute('data-product-name');
+                currentProductStock = parseInt(button.getAttribute('data-product-stock'));
+                
+                // Populate modal with product info
+                modalProductName.textContent = productName;
+                modalProductStock.textContent = currentProductStock;
+                quantityInput.max = currentProductStock;
+                
+                showModal();
+            });
         });
     }
 
-    // --- 5. Function to Handle the Purchase (via Modal) ---
-    async function handlePurchase() {
-        const productId = confirmPurchaseBtn.dataset.productId;
-        const stock = parseInt(confirmPurchaseBtn.dataset.productStock, 10);
-        const quantity = parseInt(quantityInput.value, 10);
+    // --- 5. Event Listeners ---
+    
+    // Filter form submission
+    filterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams();
+        
+        for (const [key, value] of formData.entries()) {
+            if (value) {
+                params.append(key, value);
+            }
+        }
+        
+        history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
+        fetchAndDisplayProducts();
+    });
 
+    // ✅ MODAL EVENT LISTENERS (These were missing!)
+    
+    // Close modal when clicking X or Cancel
+    document.querySelectorAll('[data-dismiss="modal"]').forEach(closeBtn => {
+        closeBtn.addEventListener('click', hideModal);
+    });
+
+    // Close modal when clicking backdrop
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.id === 'modal-backdrop') {
+            hideModal();
+        }
+    });
+
+    // Validate quantity input
+    quantityInput.addEventListener('input', () => {
+        const quantity = parseInt(quantityInput.value);
         quantityInput.classList.remove('is-invalid');
         quantityError.textContent = '';
-        
-        if (isNaN(quantity) || quantity <= 0) {
-            quantityError.textContent = 'Please enter a valid, positive quantity.';
+
+        if (quantity < 1) {
             quantityInput.classList.add('is-invalid');
-            return;
+            quantityError.textContent = 'Quantity must be at least 1';
+        } else if (quantity > currentProductStock) {
+            quantityInput.classList.add('is-invalid');
+            quantityError.textContent = `Only ${currentProductStock} items available`;
         }
-        if (quantity > stock) {
-            quantityError.textContent = `Quantity cannot exceed available stock (${stock}).`;
+    });
+
+    // ✅ CONFIRM PURCHASE BUTTON (This was missing!)
+    confirmPurchaseBtn.addEventListener('click', async () => {
+        const quantity = parseInt(quantityInput.value);
+        
+        // Validate quantity
+        if (quantity < 1 || quantity > currentProductStock) {
             quantityInput.classList.add('is-invalid');
+            quantityError.textContent = quantity < 1 ? 'Quantity must be at least 1' : `Only ${currentProductStock} items available`;
             return;
         }
 
+        // Disable button to prevent double-clicking
         confirmPurchaseBtn.disabled = true;
         confirmPurchaseBtn.textContent = 'Processing...';
 
         try {
             const response = await fetch(`${BACKEND_URL}/api/orders`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-User-ID': user.id },
-                body: JSON.stringify({ product_id: productId, quantity: quantity })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-ID': user.id.toString() // Try X-User-ID prefix (common CORS-allowed pattern)
+                },
+                body: JSON.stringify({
+                    product_id: parseInt(currentProductId), // Convert to number
+                    quantity: quantity // This is already a number from parseInt above
+                })
             });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'Could not place order.');
 
-            // EDITED: Use toast notification instead of alert
-            showToast('Order placed successfully! Thank you.');
-            hideModal(quantityModal);
-            fetchAndDisplayProducts();
-
+            if (response.ok) {
+                showToast('Order placed successfully!', 'success');
+                hideModal();
+                fetchAndDisplayProducts(); // Refresh to update stock
+            } else {
+                const errorData = await response.json();
+                showToast(errorData.message || 'Failed to place order', 'danger');
+            }
         } catch (error) {
-            console.error('Purchase error:', error);
-            // EDITED: Use toast notification instead of alert
-            showToast(`Error: ${error.message}`, 'error');
+            console.error('Error placing order:', error);
+            showToast('Error placing order. Please try again.', 'danger');
         } finally {
+            // Re-enable button
             confirmPurchaseBtn.disabled = false;
             confirmPurchaseBtn.textContent = 'Confirm Purchase';
         }
-    }
+    });
 
-    // --- 6. Event Listeners ---
-    filterForm.addEventListener('submit', (e) => {
+    // Logout functionality
+    document.getElementById('logoutButton').addEventListener('click', (e) => {
         e.preventDefault();
-        const params = new URLSearchParams(new FormData(filterForm));
-        history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
-        fetchAndDisplayProducts();
-    });
-
-    productListContainer.addEventListener('click', (e) => {
-        // Find the button if the user clicked on an element inside it
-        const buyButton = e.target.closest('.buy-now-btn');
-        if (buyButton) {
-            e.preventDefault();
-            const { productId, productName, productStock } = buyButton.dataset;
-            modalProductName.textContent = productName;
-            modalProductStock.textContent = productStock;
-            quantityInput.value = '1';
-            quantityInput.max = productStock;
-            quantityInput.classList.remove('is-invalid');
-            quantityError.textContent = '';
-            confirmPurchaseBtn.dataset.productId = productId;
-            confirmPurchaseBtn.dataset.productStock = productStock;
-            showModal(quantityModal);
-        }
-    });
-
-    confirmPurchaseBtn.addEventListener('click', handlePurchase);
-
-    // Modal close event listeners
-    const closeButtons = quantityModal.querySelectorAll('[data-dismiss="modal"], .close');
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            hideModal(quantityModal);
-        });
-    });
-
-    // Close modal when clicking on backdrop
-    document.addEventListener('click', (e) => {
-        if (e.target.id === 'modal-backdrop') {
-            hideModal(quantityModal);
-        }
-    });
-
-    // Close modal with Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && quantityModal.classList.contains('show')) {
-            hideModal(quantityModal);
-        }
-    });
-
-    document.getElementById('logoutButton').addEventListener('click', () => {
         localStorage.clear();
         window.location.href = 'login.html';
     });
 
-    // --- Initial Call ---
+    // --- Initial Calls ---
+    loadCategories();
     fetchAndDisplayProducts();
 });

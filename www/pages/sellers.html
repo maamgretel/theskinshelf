@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - All Sellers</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .seller-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            height: 100%;
+        }
+        .seller-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .loading-container, .error-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            width: 100%;
+            color: #6c757d;
+        }
+        .pagination-nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        .seller-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <h3 class="mb-4">👥 All Sellers</h3>
+
+    <div id="sellersContainer" class="row">
+        <div class="loading-container">
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <span class="ml-2">Loading sellers...</span>
+        </div>
+    </div>
+
+    <nav id="paginationNav" class="pagination-nav" aria-label="Page navigation"></nav>
+</div>
+
+<script src="../js/admin_sellers_page.js"></script>
+
+</body>
+</html>

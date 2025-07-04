@@ -1,55 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seller Dashboard</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        .product-card img {
-            height: 150px;
-            width: 100%;
-            object-fit: contain;
-            margin-bottom: 1rem;
-        }
-        #productListRow:empty::after {
-            content: "Loading your products...";
-            display: block;
-            text-align: center;
-            font-style: italic;
-            color: #6c757d;
-            padding: 2rem;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Seller Dashboard</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
+  <style>
+    .product-card img {
+      height: 150px;
+      width: 100%;
+      object-fit: contain;
+      margin-bottom: 1rem;
+    }
+    #productListRow:empty::after {
+      content: "Loading your products...";
+      display: block;
+      text-align: center;
+      font-style: italic;
+      color: #6c757d;
+      padding: 2rem;
+    }
+  </style>
 </head>
 <body>
-<div class="container mt-4">
+  <div class="container mt-4">
     <div class="d-flex align-items-center mb-2">
-        <img id="profilePic" src="" width="40" height="40" class="rounded-circle mr-2" alt="Profile Picture">
-        <h2 class="mb-0">Welcome, <span id="userName"></span> (Seller)</h2>
+      <img id="profilePic" src="" width="40" height="40" class="rounded-circle mr-2" alt="Profile Picture" />
+      <h2 class="mb-0">Welcome, <span id="userName"></span> (Seller)</h2>
     </div>
 
     <div class="mb-3">
-        <a href="profile.html" class="btn btn-outline-primary">👤 My Profile</a>
-        <a href="notifications.html" class="btn btn-outline-info position-relative">
-            🔔 Notifications
-            <span id="notifBadge" class="badge badge-danger" style="position: absolute; top: -5px; right: -10px; display: none;"></span>
-        </a>
-        <a href="#" id="logoutButton" class="btn btn-danger btn-sm">Logout</a>
+      <a href="profile.html" class="btn btn-outline-primary">👤 My Profile</a>
+      <a href="notifications.html" class="btn btn-outline-info position-relative">
+        🔔 Notifications
+        <span id="notifBadge" class="badge badge-danger" style="position: absolute; top: -5px; right: -10px; display: none;"></span>
+      </a>
+      <a href="#" id="logoutButton" class="btn btn-danger btn-sm">Logout</a>
     </div>
 
     <div class="mb-4">
-        <a href="add_product.html" class="btn btn-primary">➕ Add New Product</a>
-        <a href="orders.html" class="btn btn-secondary">📦 View Orders</a>
+      <a href="add_product.html" class="btn btn-primary">➕ Add New Product</a>
+      <a href="orders.html" class="btn btn-secondary">📦 View Orders</a>
     </div>
 
-    <hr>
+    <hr />
     <h3>Your Products</h3>
-    
-    <div id="productListRow" class="row">
-        </div>
-</div>
 
-<script src="../js/seller_dashboard.js"></script>
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search by product name" />
+      </div>
+      <div class="col-md-4">
+        <select id="categoryFilter" class="form-control">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <button id="applyFiltersBtn" class="btn btn-success btn-block">Apply Filters</button>
+      </div>
+    </div>
+
+    <div id="productListRow" class="row"></div>
+  </div>
+
+  <script src="../js/seller_dashboard.js"></script>
 </body>
 </html>
