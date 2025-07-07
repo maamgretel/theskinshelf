@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         option.textContent = cat.name;
         categoryFilter.appendChild(option);
       });
-    } catch (err) {
+    } catch (err) { 
       console.warn('Failed to load categories:', err);
     }
   }

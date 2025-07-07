@@ -1,3 +1,5 @@
+// register.js - (Updated JavaScript Logic)
+
 // Wait for either deviceready (Cordova) or DOMContentLoaded (web browser)
 document.addEventListener('deviceready', initRegister, false);
 document.addEventListener('DOMContentLoaded', initRegister, false);
@@ -8,71 +10,106 @@ function initRegister() {
     if (isInitialized) return; // Prevent double initialization
     isInitialized = true;
 
+    // Get both forms and the alert box
     const registerForm = document.getElementById('registerForm');
+    const verifyForm = document.getElementById('verifyForm');
     const alertBox = document.getElementById('alert-box');
 
-    if (!registerForm) {
-        console.error('Register form not found');
+    // Make sure elements exist
+    if (!registerForm || !verifyForm || !alertBox) {
+        console.error('One or more required form elements are missing.');
         return;
     }
 
+    // == STEP 1: Handle the initial registration form submission ==
     registerForm.addEventListener('submit', async function (e) {
-        e.preventDefault(); // Stop the form from submitting the traditional way
+        e.preventDefault();
+        clearAlert();
 
-        // Clear previous alerts
-        alertBox.classList.add('d-none');
-        alertBox.classList.remove('alert-success', 'alert-danger');
-
-        // Get form data
         const formData = new FormData(registerForm);
         const data = Object.fromEntries(formData.entries());
 
-        // Simple validation to ensure role is selected
         if (!data.role) {
-            showAlert('Please select a user role.', 'danger');
-            return;
+            return showAlert('Please select a user role.', 'danger');
         }
 
         try {
-            // Send data to the backend API
+            // Send data to the backend to request OTP
             const response = await fetch('https://backend-rj0a.onrender.com/api/auth/register', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
 
             const result = await response.json();
 
             if (response.ok) {
-                // Handle success
-                showAlert('Registration successful! Redirecting to login...', 'success');
-                registerForm.reset(); // Clear the form fields
-                setTimeout(() => {
-                    window.location.href = 'login.html'; // Redirect to login page
-                }, 2000); // 2-second delay
+                // Success: OTP was sent
+                showAlert(result.message, 'info'); // "Verification OTP sent..."
+                
+                // Hide register form, show verify form
+                registerForm.classList.add('d-none');
+                verifyForm.classList.remove('d-none');
+                
+                // Store the email in the hidden field of the verify form
+                document.getElementById('verifyEmail').value = data.email;
             } else {
-                // Handle errors from the API (e.g., email already exists)
+                // Handle errors (e.g., email already exists)
                 showAlert(result.error || 'An unknown error occurred.', 'danger');
             }
         } catch (error) {
-            // Handle network errors (e.g., backend is not running)
-            console.error('Registration error:', error);
+            console.error('Registration request error:', error);
             showAlert('Could not connect to the server. Please try again later.', 'danger');
         }
     });
 
-    /**
-     * Helper function to display messages in the alert box.
-     * @param {string} message - The message to display.
-     * @param {string} type - 'success' or 'danger' for styling.
-     */
-    function showAlert(message, type) {
-        if (!alertBox) return;
+    // == STEP 2: Handle the OTP verification form submission ==
+    verifyForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearAlert();
         
+        const formData = new FormData(verifyForm);
+        const data = Object.fromEntries(formData.entries());
+
+        if (!data.otp || data.otp.length < 6) {
+             return showAlert('Please enter a valid 6-digit OTP.', 'danger');
+        }
+
+        try {
+            // Send email and OTP to the new verification endpoint
+            const response = await fetch('https://backend-rj0a.onrender.com/api/auth/verify-registration', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Final success!
+                showAlert('Registration successful! Redirecting to login...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'login.html'; // Redirect to login page
+                }, 2000);
+            } else {
+                // Handle errors (e.g., invalid OTP)
+                showAlert(result.error || 'Verification failed.', 'danger');
+            }
+
+        } catch (error) {
+            console.error('Verification error:', error);
+            showAlert('Could not connect to the server for verification.', 'danger');
+        }
+    });
+
+    /** Helper function to display messages in the alert box. */
+    function showAlert(message, type) {
         alertBox.textContent = message;
-        alertBox.classList.remove('d-none');
-        alertBox.classList.add(`alert-${type}`);
+        alertBox.className = `alert alert-${type}`; // Replaces all classes
+    }
+    
+    /** Helper function to clear previous alerts */
+    function clearAlert(){
+        alertBox.className = 'alert d-none';
     }
 }

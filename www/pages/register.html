@@ -44,14 +44,26 @@
                     <label>User Role:</label>
                     <select name="role" class="form-control" required>
                         <option value="">Select Role</option>
-                        <option value="admin">Admin</option>
                         <option value="seller">Seller</option>
                         <option value="customer">Customer</option>
-                    </select>
+                    </select> 
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Register</button>
                 <p class="text-center mt-3">
                     Already have an account? <a href="login.html">Login here</a>.
+                </p>
+            </form>
+             <form id="verifyForm" class="d-none">
+                <p class="text-center">An OTP has been sent to your email. Please enter it below.</p>
+                <input type="hidden" id="verifyEmail" name="email">
+
+                <div class="form-group">
+                    <label>Verification OTP:</label>
+                    <input type="text" id="otp" name="otp" class="form-control" required placeholder="Enter 6-digit OTP">
+                </div>
+                <button type="submit" class="btn btn-success btn-block">Verify & Complete Registration</button>
+                 <p class="text-center mt-3">
+                    Didn't get an OTP? <a href="register.html">Try registering again</a>.
                 </p>
             </form>
         </div>
