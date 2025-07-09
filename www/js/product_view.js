@@ -116,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         addQuantityControls(product.stock);
+        addEventListenerToBagButton(product.id); 
     };
 
     const addQuantityControls = (maxStock) => {
@@ -137,6 +138,58 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     };
+
+    // Add this code inside your product_view.js, after the addQuantityControls function
+
+const addEventListenerToBagButton = (productId) => {
+    const addToBagBtn = document.getElementById('add-to-bag-btn');
+    if (addToBagBtn) {
+        addToBagBtn.addEventListener('click', async () => {
+            const quantityInput = document.getElementById('quantity-input');
+            const quantity = parseInt(quantityInput.value);
+            
+            // Disable button to prevent multiple clicks
+            addToBagBtn.disabled = true;
+            addToBagBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adding...';
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/cart`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': user.id.toString() // Assuming 'user' object is available
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: quantity
+                    })
+                });
+
+                if (response.ok) {
+                    // You can show a success message or update a cart icon counter here
+                    alert('Item added to bag!');
+                     updateCartBadge(); 
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.message}`);
+                }
+
+            } catch (error) {
+                console.error('Failed to add item to bag:', error);
+                alert('An error occurred. Please try again.');
+            } finally {
+                // Re-enable button
+                addToBagBtn.disabled = false;
+                addToBagBtn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
+            }
+        });
+    }
+};
+
+// And inside your renderProduct function, call this new function at the end
+// Like this:
+// addQuantityControls(product.stock);
+// addEventListenerToBagButton(product.id);
 
     fetchProductData();
 });

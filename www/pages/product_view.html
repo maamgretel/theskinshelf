@@ -8,8 +8,41 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/product_view.css">
+    <style>
+        /* Optional: Add a little space below the sticky header */
+        body {
+            padding-top: 70px;
+        }
+        .sticky-top {
+            top: -1px; /* Ensures the shadow is always visible */
+        }
+    </style>
 </head>
 <body>
+
+<header class="p-3 mb-3 border-bottom bg-white shadow-sm fixed-top">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+            <a href="customer_dashboard.html" class="navbar-brand d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
+                <strong>TheSkinShelf</strong>
+            </a>
+
+            <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-auto ml-lg-4 flex-grow-1" action="customer_dashboard.html" method="GET">
+                <input type="search" name="search" class="form-control" placeholder="Search for products..." aria-label="Search">
+            </form>
+
+            <div class="text-end d-flex align-items-center">
+                <a href="bag.html" class="nav-link px-2 text-dark position-relative">
+                    <i class="fas fa-shopping-bag fa-lg"></i>
+                    <span id="cart-badge" class="badge badge-danger" style="position: absolute; top: 0; right: 0; display: none;"></span>
+                </a>
+                <a href="profile.html" class="nav-link px-2 text-dark">
+                    <i class="fas fa-user-circle fa-lg"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
 
 <div class="container my-5">
     <div id="product-container" class="card p-4 shadow-sm">
@@ -18,15 +51,20 @@
                 <span class="sr-only">Loading...</span>
             </div>
         </div>
-        </div>
+    </div>
 
     <div id="related-products-section" class="mt-5" style="display: none;">
         <h3 class="mb-4">Related Products</h3>
         <div id="related-products-container" class="row">
-            </div>
+        </div>
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script src="../js/shared.js"></script>
 <script src="../js/product_view.js"></script>
 
 </body>
