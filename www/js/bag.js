@@ -100,27 +100,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const updateCartAPI = async (method, itemId, body = null) => {
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/cart/${itemId}`, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-User-ID': user.id.toString(),
-                },
-                body: body ? JSON.stringify(body) : null,
-            });
+  const updateCartAPI = async (method, itemId, body = null) => {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/cart/${itemId}`, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-ID': user.id.toString(),
+            },
+            body: body ? JSON.stringify(body) : null,
+        });
 
-            if (!response.ok) {
-                throw new Error('Failed to update cart.');
-            }
-            fetchCartItems(); // Refresh the cart view
-            updateCartBadge();
-        } catch (error) {
-            console.error(`Error with ${method} request:`, error);
-            alert('Could not update your bag. Please try again.');
+        if (!response.ok) {
+            throw new Error('Failed to update cart.');
         }
-    };
+        fetchCartItems();
+        updateCartBadge();
+    } catch (error) {
+        // The alert is gone. Errors are now only logged to the console.
+        console.error(`Error with ${method} request:`, error);
+    }
+};
 
     // Initial load
     fetchCartItems();
