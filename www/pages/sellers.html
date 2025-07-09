@@ -61,50 +61,53 @@
 
 <div class="container mt-4">
     <h3 class="mb-4">👥 All Sellers</h3>
-    <div id="sellersContainer" class="row">
-        </div>
+    <div id="sellersContainer" class="row"></div>
     <nav id="paginationNav" class="pagination-nav"></nav>
 </div>
 
 <div class="modal fade" id="productsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+    </div>
+
+<div class="modal fade" id="sellerDetailsModal" tabindex="-1" aria-hidden="true">
+    </div>
+
+
+<div class="modal fade" id="editSellerModal" tabindex="-1" aria-labelledby="editSellerModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="productsModalLabel">Seller's Products</h5>
+        <h5 class="modal-title" id="editSellerModalLabel">Edit Seller</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body" id="modalProductList"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      <div class="modal-body">
+        <form id="editSellerForm">
+          <input type="hidden" id="editSellerId">
+
+          <div class="form-group">
+            <label for="editSellerEmail">Email address</label>
+            <input type="email" class="form-control" id="editSellerEmail" required>
+          </div>
+          <div class="form-group">
+            <label for="editSellerPhone">Phone Number</label>
+            <input type="tel" class="form-control" id="editSellerPhone">
+          </div>
+          <div class="form-group">
+            <label for="editSellerPassword">New Password</label>
+            <input type="password" class="form-control" id="editSellerPassword" placeholder="Leave blank to keep current password">
+            <small class="form-text text-muted">Only enter a value here if you want to change the seller's password.</small>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="sellerDetailsModal" tabindex="-1" aria-labelledby="sellerDetailsModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="sellerDetailsModalLabel">Seller Details</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body" id="sellerDetailsBody">
-          <div class="text-center">
-              <div class="spinner-border" role="status">
-                  <span class="sr-only">Loading...</span>
-              </div>
-          </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
