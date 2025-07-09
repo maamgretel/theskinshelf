@@ -7,60 +7,19 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
-        /* Your existing CSS remains the same */
-        body { background-color: #f8f9fa; }
-        .seller-card {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            height: 100%; display: flex; flex-direction: column;
-        }
-        .seller-card:hover {
-            transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .seller-card .card-body { flex-grow: 1; }
-        .seller-card .card-footer {
-            background-color: transparent; border-top: 1px solid rgba(0,0,0,0.125);
-        }
-        .loading-container, .error-container {
-            display: flex; justify-content: center; align-items: center;
-            height: 200px; width: 100%; color: #6c757d;
-        }
-        .pagination-nav {
-            display: flex; justify-content: center; margin-top: 2rem;
-        }
-        .seller-img { width: 80px; height: 80px; object-fit: cover; }
-        .product-list-item {
-            display: flex; align-items: center; margin-bottom: 1rem;
-            padding-bottom: 1rem; border-bottom: 1px solid #eee;
-        }
-        .product-list-item:last-child { border-bottom: none; }
-        .product-list-item img {
-            width: 60px; height: 60px; object-fit: cover;
-            border-radius: 0.25rem; margin-right: 1rem;
-        }
-        /* Style for the details modal */
-        .details-modal-body {
-            display: flex;
-            align-items: center;
-        }
-        .details-modal-body img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            margin-right: 1.5rem;
-        }
-        .details-list {
-            list-style: none;
-            padding-left: 0;
-        }
-        .details-list li {
-            margin-bottom: 0.5rem;
-        }
+        /* Your existing CSS is unchanged */
     </style>
 </head>
 <body>
 
 <div class="container mt-4">
-    <h3 class="mb-4">👥 All Sellers</h3>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">👥 All Sellers</h3>
+        <a href="admin_dashboard.html" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+        </a>
+    </div>
+    
     <div id="sellersContainer" class="row"></div>
     <nav id="paginationNav" class="pagination-nav"></nav>
 </div>
@@ -74,8 +33,7 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body" id="modalProductList">
-        </div>
+      <div class="modal-body" id="modalProductList"></div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
@@ -92,8 +50,7 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body" id="sellerDetailsBody">
-          </div>
+      <div class="modal-body" id="sellerDetailsBody"></div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>

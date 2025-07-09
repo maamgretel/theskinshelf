@@ -1,0 +1,76 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f4f4f4;
+}
+
+.product-image-main {
+    width: 100%;
+    height: auto;
+    max-height: 450px;
+    object-fit: contain;
+    border-radius: 5px;
+    border: 1px solid #eee;
+}
+
+.product-title {
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.price-section {
+    background-color: #fafafa;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.current-price {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #007bff;
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+}
+
+.quantity-selector .btn {
+    width: 40px;
+    border: 1px solid #ced4da;
+}
+
+.quantity-selector input {
+    text-align: center;
+    width: 60px;
+    border-left: none;
+    border-right: none;
+}
+
+/* Hide spinner arrows on number input */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.action-buttons .btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    margin-right: 10px;
+}
+
+.related-product-card img {
+    height: 150px;
+    width: 100%;
+    object-fit: contain;
+}
+
+.product-description-section {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    margin-top: 2rem;
+}

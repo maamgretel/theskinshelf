@@ -16,48 +16,75 @@
         .form-readonly {
             background-color: #e9ecef;
         }
+        .sidebar-nav .nav-link {
+            color: #333;
+            font-weight: 500;
+            padding: 10px 15px;
+            border-radius: 0.25rem;
+        }
+        .sidebar-nav .nav-link.active,
+        .sidebar-nav .nav-link:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
-<div class="container mt-4 mb-5">
-    <h2>My Profile</h2>
-    <hr>
-    
-    <!-- Profile picture display -->
-    <div class="text-center mb-4">
-        <img src="" id="profilePicPreview" class="profile-avatar" alt="Profile Picture">
-    </div>
 
-    <!-- Alert placeholder for messages -->
-    <div id="alert-container" class="mb-3"></div>
-    
-    <!-- Profile update form -->
-    <form id="profileForm">
-        <div class="form-group">
-            <label>Name:</label>
-            <input type="text" id="name" class="form-control form-readonly" readonly>
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-md-3">
+            <nav class="sidebar-nav">
+                <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    <a class="nav-link active" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="true">My Profile</a>
+                    <a class="nav-link" id="v-pills-orders-tab" data-toggle="pill" href="#v-pills-orders" role="tab" aria-controls="v-pills-orders" aria-selected="false">My Orders</a>
+                    <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="false">Settings</a>
+                    <a class="nav-link" id="v-pills-help-tab" data-toggle="pill" href="#v-pills-help" role="tab" aria-controls="v-pills-help" aria-selected="false">Help Center</a>
+                </div>
+            </nav>
         </div>
-        <div class="form-group">
-            <label>Email:</label>
-            <input type="email" id="email" class="form-control form-readonly" readonly>
+
+        <div class="col-md-9">
+            <h2>My Profile</h2>
+            <hr>
+            
+            <div class="text-center mb-4">
+                <img src="" id="profilePicPreview" class="profile-avatar" alt="Profile Picture">
+            </div>
+
+            <div id="alert-container" class="mb-3"></div>
+            
+            <form id="profileForm">
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" id="name" class="form-control form-readonly" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="email" class="form-control form-readonly" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="contact_number">Contact Number:</label>
+                    <input type="text" id="contact_number" name="contact_number" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="address">Address:</label>
+                    <textarea id="address" name="address" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="profile_pic">Update Profile Picture:</label>
+                    <input type="file" id="profile_pic" name="profile_pic" class="form-control-file" accept="image/*">
+                </div>
+                <button type="submit" id="updateButton" class="btn btn-primary">Update Profile</button>
+                <a href="#" id="backButton" class="btn btn-secondary">Back to Dashboard</a>
+            </form>
         </div>
-        <div class="form-group">
-            <label for="contact_number">Contact Number:</label>
-            <input type="text" id="contact_number" name="contact_number" class="form-control">
-        </div>
-        <div class="form-group">
-            <label for="address">Address:</label>
-            <textarea id="address" name="address" class="form-control" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="profile_pic">Update Profile Picture:</label>
-            <input type="file" id="profile_pic" name="profile_pic" class="form-control-file" accept="image/*">
-        </div>
-        <button type="submit" id="updateButton" class="btn btn-primary">Update Profile</button>
-        <a href="#" id="backButton" class="btn btn-secondary">Back to Dashboard</a>
-    </form>
+    </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="../js/profile.js"></script>
 
 </body>
