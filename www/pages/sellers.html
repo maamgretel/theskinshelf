@@ -5,38 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - All Sellers</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
+        /* Your existing CSS remains the same */
         body { background-color: #f8f9fa; }
         .seller-card {
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            height: 100%;
+            height: 100%; display: flex; flex-direction: column;
         }
         .seller-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .card-body {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+        .seller-card .card-body { flex-grow: 1; }
+        .seller-card .card-footer {
+            background-color: transparent; border-top: 1px solid rgba(0,0,0,0.125);
         }
         .loading-container, .error-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 200px;
-            width: 100%;
-            color: #6c757d;
+            display: flex; justify-content: center; align-items: center;
+            height: 200px; width: 100%; color: #6c757d;
         }
         .pagination-nav {
-            display: flex;
-            justify-content: center;
-            margin-top: 2rem;
+            display: flex; justify-content: center; margin-top: 2rem;
         }
-        .seller-img {
-            width: 80px;
-            height: 80px;
+        .seller-img { width: 80px; height: 80px; object-fit: cover; }
+        .product-list-item {
+            display: flex; align-items: center; margin-bottom: 1rem;
+            padding-bottom: 1rem; border-bottom: 1px solid #eee;
+        }
+        .product-list-item:last-child { border-bottom: none; }
+        .product-list-item img {
+            width: 60px; height: 60px; object-fit: cover;
+            border-radius: 0.25rem; margin-right: 1rem;
+        }
+        /* Style for the new details modal */
+        .details-modal-body {
+            display: flex;
+            align-items: center;
+        }
+        .details-modal-body img {
+            width: 100px;
+            height: 100px;
             object-fit: cover;
+            margin-right: 1.5rem;
+        }
+        .details-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .details-list li {
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
@@ -44,19 +61,54 @@
 
 <div class="container mt-4">
     <h3 class="mb-4">👥 All Sellers</h3>
-
     <div id="sellersContainer" class="row">
-        <div class="loading-container">
-            <div class="spinner-border" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-            <span class="ml-2">Loading sellers...</span>
         </div>
-    </div>
-
-    <nav id="paginationNav" class="pagination-nav" aria-label="Page navigation"></nav>
+    <nav id="paginationNav" class="pagination-nav"></nav>
 </div>
 
+<div class="modal fade" id="productsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productsModalLabel">Seller's Products</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modalProductList"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="sellerDetailsModal" tabindex="-1" aria-labelledby="sellerDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="sellerDetailsModalLabel">Seller Details</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="sellerDetailsBody">
+          <div class="text-center">
+              <div class="spinner-border" role="status">
+                  <span class="sr-only">Loading...</span>
+              </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="../js/admin_sellers_page.js"></script>
 
 </body>
