@@ -37,7 +37,7 @@
             width: 60px; height: 60px; object-fit: cover;
             border-radius: 0.25rem; margin-right: 1rem;
         }
-        /* Style for the new details modal */
+        /* Style for the details modal */
         .details-modal-body {
             display: flex;
             align-items: center;
@@ -65,12 +65,41 @@
     <nav id="paginationNav" class="pagination-nav"></nav>
 </div>
 
-<div class="modal fade" id="productsModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="productsModal" tabindex="-1" aria-labelledby="productsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productsModalLabel">Seller's Products</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modalProductList">
+        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
     </div>
+  </div>
+</div>
 
-<div class="modal fade" id="sellerDetailsModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="sellerDetailsModal" tabindex="-1" aria-labelledby="sellerDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="sellerDetailsModalLabel">Seller Details</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="sellerDetailsBody">
+          </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
     </div>
-
+  </div>
+</div>
 
 <div class="modal fade" id="editSellerModal" tabindex="-1" aria-labelledby="editSellerModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -84,7 +113,6 @@
       <div class="modal-body">
         <form id="editSellerForm">
           <input type="hidden" id="editSellerId">
-
           <div class="form-group">
             <label for="editSellerEmail">Email address</label>
             <input type="email" class="form-control" id="editSellerEmail" required>
