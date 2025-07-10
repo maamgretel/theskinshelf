@@ -16,8 +16,47 @@
         .product-card .card-body { flex-grow: 1; }
         .product-card img { height: 150px; width: 100%; object-fit: contain; }
     </style>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/product_view.css">
+    <style>
+        /* Optional: Add a little space below the sticky header */
+        body {
+            padding-top: 70px;
+        }
+        .sticky-top {
+            top: -1px; /* Ensures the shadow is always visible */
+        }
+    </style>
 </head>
 <body>
+    <header class="p-3 mb-3 border-bottom bg-white shadow-sm fixed-top">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+            <a href="customer_dashboard.html" class="navbar-brand d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
+                <strong>TheSkinShelf</strong>
+            </a>
+
+            <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-auto ml-lg-4 flex-grow-1" action="customer_dashboard.html" method="GET">
+                <input type="search" name="search" class="form-control" placeholder="Search for products..." aria-label="Search">
+            </form>
+
+            <div class="text-end d-flex align-items-center">
+                <a href="bag.html" class="nav-link px-2 text-dark position-relative">
+                    <i class="fas fa-shopping-bag fa-lg"></i>
+                    <span id="cart-badge" class="badge badge-danger" style="position: absolute; top: 0; right: 0; display: none;"></span>
+                </a>
+                <a href="profile.html" class="nav-link px-2 text-dark">
+                    <i class="fas fa-user-circle fa-lg"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
 <div class="container mt-4 mb-5">
     <div class="d-flex align-items-center mb-3">
         <img id="profilePic" src="" width="40" height="40" class="rounded-circle mr-2" alt="Profile Picture">
@@ -92,6 +131,7 @@
     </div>
 </div>
 
+<script src="../js/shared.js"></script>
 <script src="../js/customer_dashboard.js"></script>
 
 </body>

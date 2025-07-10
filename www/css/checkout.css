@@ -1,0 +1,64 @@
+/* General Body Style */
+body {
+    background-color: #f8f9fa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Card Styling */
+.card {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e9ecef;
+    font-weight: 500;
+}
+
+/* Delivery Address Section */
+#delivery-address-container p {
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+/* Products Ordered Table */
+#checkout-items-container .table {
+    margin-bottom: 0; /* Remove default bottom margin from table inside card */
+}
+
+#checkout-items-container th {
+    font-weight: 500;
+    color: #6c757d;
+    border-top: none;
+}
+
+#checkout-items-container td {
+    vertical-align: middle;
+}
+
+/* Place Order Button */
+#place-order-btn {
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 0.75rem;
+    transition: background-color 0.2s ease;
+}
+
+#place-order-btn:disabled {
+    cursor: not-allowed;
+}
+
+/* Modal Styling */
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+}
