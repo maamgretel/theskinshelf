@@ -1,0 +1,129 @@
+/* Main Modal and Card Container Styling */
+#paymentModal .modal-content {
+    border-radius: 8px;
+    border: none;
+}
+
+#paymentModal .modal-body {
+    padding: 2rem;
+}
+
+.card-flip-container {
+    perspective: 1000px;
+    margin-bottom: 2rem;
+}
+
+.card-flipper {
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    position: relative;
+    height: 190px; 
+}
+
+.card-flipper.is-flipped {
+    transform: rotateY(180deg);
+}
+
+.card-visual {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    transform: rotateY(0deg);
+    background: #222;
+    color: #fff;
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-visual.back {
+    transform: rotateY(180deg);
+}
+
+/* Card Front Elements */
+.card-visual-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.card-chip {
+    width: 50px;
+    height: 40px;
+    background: #555;
+    border-radius: 6px;
+}
+
+.card-logo {
+    height: 35px;
+    filter: invert(1);
+}
+
+.card-number-display {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.card-details-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 0.9rem;
+}
+
+.card-label {
+    font-size: 0.7rem;
+    color: #ccc;
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* Card Back Elements */
+.black-strip {
+    background: #000;
+    height: 45px;
+    margin: -20px -20px 20px -20px;
+}
+
+.cvv-section {
+    text-align: right;
+}
+
+.cvv-display {
+    background: #fff;
+    color: #000;
+    height: 30px;
+    border-radius: 4px;
+    line-height: 30px;
+    padding-right: 10px;
+    width: 80%;
+    margin-left: auto;
+}
+
+/* Form Styling - UPDATED */
+#payment-form label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+#payment-form .form-control::placeholder {
+    color: #ced4da; /* Light gray for format guides */
+}
+
+#save-payment-btn {
+    background-color: #000;
+    border-color: #000;
+    width: 150px;
+}
