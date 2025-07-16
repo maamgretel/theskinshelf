@@ -13,6 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- DOM REFERENCES (Main Page) ---
+    const addressContainer = document.getElementById('delivery-address-container');
+    const itemsContainer = document.getElementById('checkout-items-container');
+    const merchandiseSubtotalEl = document.getElementById('merchandise-subtotal');
+    const shippingSubtotalEl = document.getElementById('shipping-subtotal');
+    const totalPaymentEl = document.getElementById('total-payment');
     const placeOrderBtn = document.getElementById('place-order-btn');
     const codRadio = document.getElementById('cod');
     const bankCardRadio = document.getElementById('bankCard');
@@ -30,19 +35,101 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardExpiresDisplay = document.getElementById('cardExpiresDisplay');
     const cardFlipper = document.getElementById('cardFlipper');
 
+    // --- DATA FETCHING & RENDERING ---
+
+    const fetchCheckoutData = async () => {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/checkout`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`,
+                    'X-User-ID': user.id.toString()
+                }
+            });
+            if (!response.ok) {
+                throw new Error('Failed to fetch checkout data.');
+            }
+            const checkoutData = await response.json();
+            renderAddress(checkoutData.deliveryInfo);
+            renderItems(checkoutData.items);
+            calculateSummary(checkoutData.items, checkoutData.shippingOptions);
+        } catch (error) {
+            console.error('Error:', error);
+            itemsContainer.innerHTML = `<div class="alert alert-danger p-3">Could not load checkout details. Please try again later.</div>`;
+        }
+    };
+
+    const renderAddress = (deliveryInfo) => {
+        if (deliveryInfo && deliveryInfo.address && deliveryInfo.contact_number) {
+            addressContainer.innerHTML = `
+                <p class="font-weight-bold mb-0">${deliveryInfo.name} (${deliveryInfo.contact_number})</p>
+                <p>${deliveryInfo.address}</p>
+                <button class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#addressModal">Change</button>
+            `;
+        } else {
+            addressContainer.innerHTML = `
+                <p class="text-danger">No delivery address found.</p>
+                <button class="btn btn-primary" data-toggle="modal" data-target="#addressModal">Add Address</button>
+            `;
+        }
+    };
+
+    const renderItems = (items) => {
+        if (!items || items.length === 0) {
+            itemsContainer.innerHTML = '<p class="p-3 text-center">Your cart is empty.</p>';
+            placeOrderBtn.disabled = true;
+            return;
+        }
+        const tableRows = items.map(item => {
+            const itemSubtotal = item.price * item.quantity;
+            return `
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img src="${item.image}" alt="${item.name}" class="img-fluid rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                            <span class="ml-3">${item.name}</span>
+                        </div>
+                    </td>
+                    <td class="text-right">₱${parseFloat(item.price).toFixed(2)}</td>
+                    <td class="text-center">${item.quantity}</td>
+                    <td class="text-right">₱${itemSubtotal.toFixed(2)}</td>
+                </tr>`;
+        }).join('');
+
+        itemsContainer.innerHTML = `
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col" class="text-right">Unit Price</th>
+                        <th scope="col" class="text-center">Quantity</th>
+                        <th scope="col" class="text-right">Item Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>${tableRows}</tbody>
+            </table>`;
+    };
+
+    const calculateSummary = (items, shippingOptions) => {
+        const merchandiseSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const shippingFee = shippingOptions.standard || 0;
+        const totalPayment = merchandiseSubtotal + shippingFee;
+        merchandiseSubtotalEl.textContent = `₱${merchandiseSubtotal.toFixed(2)}`;
+        shippingSubtotalEl.textContent = `₱${shippingFee.toFixed(2)}`;
+        totalPaymentEl.textContent = `₱${totalPayment.toFixed(2)}`;
+    };
+
 
     // --- PAYMENT MODAL LOGIC ---
+
     const populateDateDropdowns = () => {
-        // Populate months (01-12)
         for (let i = 1; i <= 12; i++) {
             const month = i.toString().padStart(2, '0');
             expiryMonthSelect.add(new Option(month, month));
         }
-        // Populate years (current year to +10 years)
         const currentYear = new Date().getFullYear();
         for (let i = 0; i <= 10; i++) {
             const year = currentYear + i;
-            // Use the two-digit year for display text, but could use full year for value
             expiryYearSelect.add(new Option(year.toString().slice(-2), year));
         }
     };
@@ -59,11 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.value = e.target.value.replace(/[^\d]/g, '').replace(/(.{4})/g, '$1 ').trim();
         updateCardDisplay();
     });
-    
+
     cardHolderInput.addEventListener('input', updateCardDisplay);
     expiryMonthSelect.addEventListener('change', updateCardDisplay);
     expiryYearSelect.addEventListener('change', updateCardDisplay);
-
     cvvInput.addEventListener('focus', () => cardFlipper.classList.add('is-flipped'));
     cvvInput.addEventListener('blur', () => cardFlipper.classList.remove('is-flipped'));
 
@@ -85,25 +171,43 @@ document.addEventListener('DOMContentLoaded', () => {
             paymentForm.classList.add('was-validated');
             return;
         }
-        
         cardDetailsSaved = true;
-        const label = document.querySelector('label[for="bankCard"]');
-        label.innerHTML = 'Bank Card <span class="text-success font-weight-bold">✔</span>';
+        document.querySelector('label[for="bankCard"]').innerHTML = 'Bank Card <span class="text-success font-weight-bold">✔</span>';
         $('#paymentModal').modal('hide');
     });
 
-    // --- Other page functions (fetch data, render items, etc.) ---
-    const fetchCheckoutData = async () => { /* ... */ };
+
+    // --- ORDER PLACEMENT ---
+
     const handlePlaceOrder = async () => {
         if (bankCardRadio.checked && !cardDetailsSaved) {
             alert('Please add your bank card details before placing the order.');
             $('#paymentModal').modal('show');
             return;
         }
-        // ... rest of the function is unchanged
+        placeOrderBtn.disabled = true;
+        placeOrderBtn.textContent = 'Placing Order...';
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/orders/place`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}`, 'X-User-ID': user.id.toString() }
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to place order.');
+            }
+            alert('Order placed successfully!');
+            window.location.href = 'customer_dashboard.html';
+        } catch (error) {
+            console.error('Error placing order:', error);
+            alert(`Error: ${error.message}`);
+            placeOrderBtn.disabled = false;
+            placeOrderBtn.textContent = 'Place Order';
+        }
     };
-    
+
     // --- INITIALIZATION ---
     placeOrderBtn.addEventListener('click', handlePlaceOrder);
     populateDateDropdowns();
+    fetchCheckoutData(); // <-- This is now active and will run on page load.
 });
