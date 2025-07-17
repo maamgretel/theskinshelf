@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .sidebar-nav .nav-link {
+            color: #333;
+            font-weight: 500;
+            padding: 10px 15px;
+            border-radius: 0.25rem;
+        }
+        .sidebar-nav .nav-link.active,
+        .sidebar-nav .nav-link:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .order-card .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-md-3">
+            <nav class="sidebar-nav">
+                <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    <a class="nav-link" href="profile.html">My Profile</a>
+                    <a class="nav-link active" href="my_orders.html">My Orders</a>
+                    <a class="nav-link" href="#">Settings</a>
+                    <a class="nav-link" href="#">Help Center</a>
+                </div>
+            </nav>
+        </div>
+
+        <div class="col-md-9">
+            <h2>My Orders</h2>
+            <hr>
+            
+            <div id="orders-list-container">
+                </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="../js/my_orders.js"></script>
+
+</body>
+</html>
