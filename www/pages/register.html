@@ -1,78 +1,836 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Register - E-commerce</title>
+    <title>Register - The Skins Shelf</title>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; 
-        style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; 
+        style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://fonts.googleapis.com; 
+        font-src 'self' https://fonts.gstatic.com;
         media-src *; 
         connect-src 'self' https://backend-rj0a.onrender.com;
     ">
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link 
         rel="stylesheet" 
         href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
     >
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        /* Floating Background Icons */
+        .floating-icons {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .floating-icon {
+            position: absolute;
+            font-size: 2rem;
+            color: rgba(255, 105, 180, 0.15);
+            animation: float 20s infinite linear;
+            user-select: none;
+            will-change: transform;
+        }
+
+        .floating-icon:nth-child(1) {
+            top: 100%;
+            left: 10%;
+            animation-delay: 0s;
+            font-size: 1.5rem;
+        }
+
+        .floating-icon:nth-child(2) {
+            top: 100%;
+            left: 85%;
+            animation-delay: -3s;
+            font-size: 2.5rem;
+        }
+
+        .floating-icon:nth-child(3) {
+            top: 100%;
+            left: 70%;
+            animation-delay: -6s;
+            font-size: 1.8rem;
+        }
+
+        .floating-icon:nth-child(4) {
+            top: 100%;
+            left: 20%;
+            animation-delay: -9s;
+            font-size: 2rem;
+        }
+
+        .floating-icon:nth-child(5) {
+            top: 100%;
+            left: 5%;
+            animation-delay: -12s;
+            font-size: 1.6rem;
+        }
+
+        .floating-icon:nth-child(6) {
+            top: 100%;
+            left: 50%;
+            animation-delay: -2s;
+            font-size: 2.2rem;
+        }
+
+        .floating-icon:nth-child(7) {
+            top: 100%;
+            left: 60%;
+            animation-delay: -5s;
+            font-size: 1.7rem;
+        }
+
+        .floating-icon:nth-child(8) {
+            top: 100%;
+            left: 30%;
+            animation-delay: -8s;
+            font-size: 1.9rem;
+        }
+
+        .floating-icon:nth-child(9) {
+            top: 100%;
+            left: 75%;
+            animation-delay: -11s;
+            font-size: 1.4rem;
+        }
+
+        .floating-icon:nth-child(10) {
+            top: 100%;
+            left: 45%;
+            animation-delay: -14s;
+            font-size: 2.1rem;
+        }
+
+        .floating-icon:nth-child(11) {
+            top: 100%;
+            left: 15%;
+            animation-delay: -4s;
+            font-size: 1.8rem;
+        }
+
+        .floating-icon:nth-child(12) {
+            top: 100%;
+            left: 65%;
+            animation-delay: -7s;
+            font-size: 2rem;
+        }
+
+        .floating-icon:nth-child(13) {
+            top: 100%;
+            left: 35%;
+            animation-delay: -10s;
+            font-size: 1.6rem;
+        }
+
+        .floating-icon:nth-child(14) {
+            top: 100%;
+            left: 80%;
+            animation-delay: -13s;
+            font-size: 2.3rem;
+        }
+
+        .floating-icon:nth-child(15) {
+            top: 100%;
+            left: 55%;
+            animation-delay: -1s;
+            font-size: 1.7rem;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0;
+            }
+            5% {
+                opacity: 1;
+            }
+            95% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-120vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 520px;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .brand-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .brand-logo h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand-logo p {
+            color: #666666;
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .register-card {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        .register-card:hover {
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            background: none;
+            border: none;
+            padding: 0;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .card-header h4 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #000000;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .card-header p {
+            color: #666666;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .form-control:focus {
+            border-color: #000000;
+            box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.1);
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .form-control::placeholder {
+            color: #999999;
+        }
+
+        /* Custom select styling */
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23666666' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 3rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.5;
+            height: auto;
+            min-height: 48px;
+        }
+
+        /* Fix dropdown options */
+        select.form-control option {
+            padding: 0.75rem 1rem;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.4;
+            height: auto;
+            min-height: 40px;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        /* Role-specific styling */
+        .role-info {
+            font-size: 0.85rem;
+            color: #666666;
+            margin-top: 0.5rem;
+        }
+
+        .role-seller {
+            border-left: 3px solid #ff6b6b;
+            padding-left: 0.5rem;
+        }
+
+        .role-customer {
+            border-left: 3px solid #4ecdc4;
+            padding-left: 0.5rem;
+        }
+
+        /* OTP input styling */
+        #otp {
+            text-align: center;
+            letter-spacing: 0.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .btn-primary-custom {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 0.875rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-primary-custom:hover {
+            background: #333333;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-success-custom {
+            background: #28a745;
+            color: #ffffff;
+            border: none;
+            padding: 0.875rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-success-custom:hover {
+            background: #218838;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40,167,69,0.3);
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-info {
+            background: #e7f3ff;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .text-links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .text-links p {
+            margin-bottom: 0.5rem;
+            color: #666666;
+        }
+
+        .text-links a {
+            color: #000000;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .text-links a:hover {
+            color: #333333;
+            text-decoration: underline;
+        }
+
+        .verification-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .verification-notice h6 {
+            color: #856404;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .verification-notice p {
+            color: #856404;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 576px) {
+            .register-container {
+                padding: 1rem;
+            }
+            
+            .register-card {
+                padding: 2rem;
+            }
+            
+            .brand-logo h1 {
+                font-size: 2rem;
+            }
+            
+            .card-header h4 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
-<body class="bg-light">
-<div class="container mt-5">
-    <div class="card mx-auto" style="max-width: 500px;">
-        <div class="card-header text-center">
-            <h4>User Registration</h4>
-        </div>
-        <div class="card-body">
-            <!-- Optional alert message placeholder -->
-            <div id="alert-box" class="alert alert-info d-none"></div>
+<body>
+    <!-- Floating Background Icons -->
+    <div class="floating-icons">
+        <div class="floating-icon">💄</div>
+        <div class="floating-icon">💋</div>
+        <div class="floating-icon">✨</div>
+        <div class="floating-icon">💄</div>
+        <div class="floating-icon">🎀</div>
+        <div class="floating-icon">💋</div>
+        <div class="floating-icon">✨</div>
+        <div class="floating-icon">💄</div>
+        <div class="floating-icon">🎀</div>
+        <div class="floating-icon">💋</div>
+        <div class="floating-icon">✨</div>
+        <div class="floating-icon">💄</div>
+        <div class="floating-icon">🎀</div>
+        <div class="floating-icon">💋</div>
+        <div class="floating-icon">✨</div>
+    </div>
 
-            <form id="registerForm">
-                <div class="form-group">
-                    <label>Full Name:</label>
-                    <input type="text" name="name" class="form-control" required>
+    <!-- OTP Verification Modal -->
+    <div class="modal fade" id="otpModal" tabindex="-1" role="dialog" aria-labelledby="otpModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="otpModalLabel">
+                        <span class="verification-icon">📧</span>
+                        Verify Your Email
+                    </h5>
                 </div>
-                <div class="form-group">
-                    <label>Email address:</label>
-                    <input type="email" name="email" class="form-control" required>
+                <div class="modal-body">
+                    <div class="verification-notice-modal">
+                        <p class="verification-message">We've sent a 6-digit verification code to:</p>
+                        <p class="email-display" id="displayEmail"></p>
+                        <p class="verification-instruction">Please enter the code below to complete your registration.</p>
+                    </div>
+                    
+                    <form id="verifyForm">
+                        <input type="hidden" id="verifyEmail" name="email">
+                        
+                        <div class="form-group">
+                            <label for="otp">Verification Code</label>
+                            <input type="text" id="otp" name="otp" class="form-control otp-input" required placeholder="000000" maxlength="6">
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <button type="submit" class="btn-success-custom">
+                                <span class="button-text">Verify & Complete</span>
+                                <span class="button-spinner d-none">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                    Verifying...
+                                </span>
+                            </button>
+                        </div>
+                        
+                        <div class="resend-section">
+                            <p class="resend-text">Didn't receive the code?</p>
+                            <button type="button" class="btn-link-custom" id="resendOtp">Resend Code</button>
+                            <span class="resend-timer d-none">Resend in <span id="countdown">60</span>s</span>
+                        </div>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label>Password:</label>
-                    <input type="password" name="password" class="form-control" required minlength="6">
-                </div>
-                <div class="form-group">
-                    <label>User Role:</label>
-                    <select name="role" class="form-control" required>
-                        <option value="">Select Role</option>
-                        <option value="seller">Seller</option>
-                        <option value="customer">Customer</option>
-                     
-                    </select> 
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">Register</button>
-                <p class="text-center mt-3">
-                    Already have an account? <a href="login.html">Login here</a>.
-                </p>
-            </form>
-             <form id="verifyForm" class="d-none">
-                <p class="text-center">An OTP has been sent to your email. Please enter it below.</p>
-                <input type="hidden" id="verifyEmail" name="email">
-
-                <div class="form-group">
-                    <label>Verification OTP:</label>
-                    <input type="text" id="otp" name="otp" class="form-control" required placeholder="Enter 6-digit OTP">
-                </div>
-                <button type="submit" class="btn btn-success btn-block">Verify & Complete Registration</button>
-                 <p class="text-center mt-3">
-                    Didn't get an OTP? <a href="register.html">Try registering again</a>.
-                </p>
-            </form>
+            </div>
         </div>
     </div>
-</div>
+
+    <script>
+        // Modal-specific styles and functionality
+        const modalStyles = `
+            .modal-content {
+                border: none;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+                overflow: hidden;
+            }
+            
+            .modal-header {
+                background: linear-gradient(135deg, #000000 0%, #333333 100%);
+                color: white;
+                border: none;
+                padding: 1.5rem 2rem;
+                text-align: center;
+            }
+            
+            .modal-title {
+                font-size: 1.3rem;
+                font-weight: 700;
+                margin: 0;
+                width: 100%;
+            }
+            
+            .verification-icon {
+                font-size: 1.5rem;
+                margin-right: 0.5rem;
+            }
+            
+            .modal-body {
+                padding: 2rem;
+                background: white;
+            }
+            
+            .verification-notice-modal {
+                text-align: center;
+                margin-bottom: 2rem;
+                padding: 1.5rem;
+                background: #f8f9fa;
+                border-radius: 12px;
+                border: 1px solid #e9ecef;
+            }
+            
+            .verification-message {
+                color: #666666;
+                margin-bottom: 0.5rem;
+                font-size: 0.95rem;
+            }
+            
+            .email-display {
+                color: #000000;
+                font-weight: 600;
+                font-size: 1.1rem;
+                margin-bottom: 0.5rem;
+                word-break: break-all;
+            }
+            
+            .verification-instruction {
+                color: #666666;
+                margin: 0;
+                font-size: 0.9rem;
+            }
+            
+            .otp-input {
+                text-align: center;
+                letter-spacing: 1rem;
+                font-size: 1.5rem;
+                font-weight: 600;
+                padding: 1rem;
+                border: 3px solid #e0e0e0;
+                border-radius: 12px;
+                transition: all 0.3s ease;
+            }
+            
+            .otp-input:focus {
+                border-color: #000000;
+                box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.1);
+                transform: scale(1.02);
+            }
+            
+            .modal-actions {
+                margin-top: 1.5rem;
+            }
+            
+            .button-spinner {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+            
+            .resend-section {
+                text-align: center;
+                margin-top: 2rem;
+                padding-top: 1.5rem;
+                border-top: 1px solid #e9ecef;
+            }
+            
+            .resend-text {
+                color: #666666;
+                margin-bottom: 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .btn-link-custom {
+                background: none;
+                border: none;
+                color: #000000;
+                font-weight: 600;
+                text-decoration: underline;
+                padding: 0;
+                cursor: pointer;
+                transition: color 0.3s ease;
+            }
+            
+            .btn-link-custom:hover {
+                color: #333333;
+            }
+            
+            .btn-link-custom:disabled {
+                color: #999999;
+                cursor: not-allowed;
+                text-decoration: none;
+            }
+            
+            .resend-timer {
+                color: #666666;
+                font-size: 0.85rem;
+            }
+            
+            .modal-backdrop {
+                background-color: rgba(0, 0, 0, 0.6);
+            }
+            
+            @keyframes modalSlideIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.8) translateY(-50px);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1) translateY(0);
+                }
+            }
+            
+            .modal.show .modal-dialog {
+                animation: modalSlideIn 0.3s ease-out;
+            }
+        `;
+        
+        // Inject modal styles
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = modalStyles;
+        document.head.appendChild(styleSheet);
+        
+        // Modal functionality
+        function showOtpModal(email) {
+            document.getElementById('verifyEmail').value = email;
+            document.getElementById('displayEmail').textContent = email;
+            $('#otpModal').modal('show');
+            
+            // Focus on OTP input when modal is shown
+            $('#otpModal').on('shown.bs.modal', function () {
+                document.getElementById('otp').focus();
+            });
+        }
+        
+        // OTP input formatting
+        document.getElementById('otp').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+        
+        // Resend OTP functionality
+        let resendTimer;
+        document.getElementById('resendOtp').addEventListener('click', function() {
+            const button = this;
+            const timerSpan = document.querySelector('.resend-timer');
+            const countdownSpan = document.getElementById('countdown');
+            
+            button.style.display = 'none';
+            timerSpan.classList.remove('d-none');
+            
+            let timeLeft = 60;
+            resendTimer = setInterval(() => {
+                timeLeft--;
+                countdownSpan.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(resendTimer);
+                    button.style.display = 'inline';
+                    timerSpan.classList.add('d-none');
+                }
+            }, 1000);
+            
+            // Here you would typically make an API call to resend the OTP
+            // For now, just show a message
+            const alertBox = document.getElementById('alert-box');
+            alertBox.className = 'alert alert-info';
+            alertBox.textContent = 'New verification code sent to your email!';
+            alertBox.classList.remove('d-none');
+        });
+        
+        // Form submission loading state
+        document.getElementById('verifyForm').addEventListener('submit', function() {
+            const buttonText = document.querySelector('.button-text');
+            const buttonSpinner = document.querySelector('.button-spinner');
+            
+            buttonText.classList.add('d-none');
+            buttonSpinner.classList.remove('d-none');
+        });
+    </script>
+
+    <div class="register-container">
+        <div class="brand-logo">
+            <h1>The Skins Shelf</h1>
+            <p>Premium Makeup Collection</p>
+        </div>
+        
+        <div class="register-card">
+            <div class="card-header">
+                <h4>Create Account</h4>
+                <p>Join our community of beauty enthusiasts</p>
+            </div>
+            
+            <!-- Alert Box -->
+            <div id="alert-box" class="alert alert-info d-none"></div>
+
+            <!-- Registration Form -->
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" name="name" id="name" class="form-control" placeholder="Enter your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" name="email" id="email" class="form-control" placeholder="Enter your email address" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Create a strong password" required minlength="6">
+                    <div class="role-info">Minimum 6 characters required</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="role">Account Type</label>
+                    <select name="role" id="role" class="form-control" required>
+                        <option value="">Choose your account type</option>
+                        <option value="customer">Customer</option>
+                        <option value="seller">Seller</option>
+                    </select>
+                    <div id="role-description" class="role-info"></div>
+                </div>
+                
+                <button type="submit" class="btn-primary-custom">Create Account</button>
+                
+                <div class="text-links">
+                    <p>
+                        Already have an account? <a href="login.html">Sign in here</a>
+                    </p>
+                </div>
+            </form>
 
 
-<script src="../js/register.js"></script>
+        </div>
+    </div>
 
+    <script>
+        // Role selection helper
+        document.getElementById('role').addEventListener('change', function() {
+            const roleDescription = document.getElementById('role-description');
+            const value = this.value;
+            
+            if (value === 'customer') {
+                roleDescription.innerHTML = '<div class="role-customer">Browse and purchase premium beauty products from verified sellers</div>';
+            } else if (value === 'seller') {
+                roleDescription.innerHTML = '<div class="role-seller">List and sell your beauty products to customers worldwide</div>';
+            } else {
+                roleDescription.innerHTML = '';
+            }
+        });
+
+        // Function to show OTP modal (call this from your register.js)
+        window.showOtpModal = function(email) {
+            document.getElementById('verifyEmail').value = email;
+            document.getElementById('displayEmail').textContent = email;
+            $('#otpModal').modal('show');
+            
+            // Focus on OTP input when modal is shown
+            $('#otpModal').on('shown.bs.modal', function () {
+                document.getElementById('otp').focus();
+            });
+        };
+    </script>
+    <script src="../js/register.js"></script>
 </body>
 </html>
