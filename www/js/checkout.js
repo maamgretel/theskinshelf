@@ -179,32 +179,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ORDER PLACEMENT ---
 
-    const handlePlaceOrder = async () => {
-        if (bankCardRadio.checked && !cardDetailsSaved) {
-            alert('Please add your bank card details before placing the order.');
-            $('#paymentModal').modal('show');
-            return;
-        }
-        placeOrderBtn.disabled = true;
-        placeOrderBtn.textContent = 'Placing Order...';
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/orders/place`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}`, 'X-User-ID': user.id.toString() }
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to place order.');
+  const handlePlaceOrder = async () => {
+    if (bankCardRadio.checked && !cardDetailsSaved) {
+        alert('Please add your bank card details before placing the order.');
+        $('#paymentModal').modal('show');
+        return;
+    }
+    
+    placeOrderBtn.disabled = true;
+    placeOrderBtn.textContent = 'Placing Order...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/orders/place`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${user.token}`, 
+                'X-User-ID': user.id.toString() 
             }
-            alert('Order placed successfully!');
-            window.location.href = 'customer_dashboard.html';
-        } catch (error) {
-            console.error('Error placing order:', error);
-            alert(`Error: ${error.message}`);
-            placeOrderBtn.disabled = false;
-            placeOrderBtn.textContent = 'Place Order';
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to place order.');
         }
-    };
+        
+        const orderData = await response.json();
+        
+        // Store order details for the success page
+        localStorage.setItem('orderTotal', totalPaymentEl.textContent.replace('₱', ''));
+        localStorage.setItem('orderNumber', orderData.orderNumber || 'TSS-2025-' + Date.now().toString().slice(-6));
+        localStorage.setItem('orderDate', new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        }));
+        
+        // Redirect to success page instead of dashboard
+      window.location.href = 'sucess.html'; 
+        
+    } catch (error) {
+        console.error('Error placing order:', error);
+        alert(`Error: ${error.message}`);
+        placeOrderBtn.disabled = false;
+        placeOrderBtn.textContent = 'Place Order';
+    }
+};
 
     // --- INITIALIZATION ---
     placeOrderBtn.addEventListener('click', handlePlaceOrder);

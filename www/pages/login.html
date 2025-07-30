@@ -1,54 +1,448 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login - E-commerce</title>
+    <title>Login - The Skins Shelf</title>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; 
-        style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com; 
+        style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://fonts.googleapis.com; 
+        font-src 'self' https://fonts.gstatic.com;
         media-src *; 
         connect-src 'self' https://backend-rj0a.onrender.com;
     ">
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link 
         rel="stylesheet" 
         href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
     >
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Floating Background Icons */
+        .floating-icons {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .floating-icon {
+            position: absolute;
+            font-size: 2rem;
+            color: rgba(255, 105, 180, 0.15);
+            animation: float 20s infinite linear;
+            user-select: none;
+            will-change: transform;
+        }
+
+        .floating-icon:nth-child(1) {
+            top: 100%;
+            left: 10%;
+            animation-delay: 0s;
+            font-size: 1.5rem;
+        }
+
+        .floating-icon:nth-child(2) {
+            top: 100%;
+            left: 85%;
+            animation-delay: -3s;
+            font-size: 2.5rem;
+        }
+
+        .floating-icon:nth-child(3) {
+            top: 100%;
+            left: 70%;
+            animation-delay: -6s;
+            font-size: 1.8rem;
+        }
+
+        .floating-icon:nth-child(4) {
+            top: 100%;
+            left: 20%;
+            animation-delay: -9s;
+            font-size: 2rem;
+        }
+
+        .floating-icon:nth-child(5) {
+            top: 100%;
+            left: 5%;
+            animation-delay: -12s;
+            font-size: 1.6rem;
+        }
+
+        .floating-icon:nth-child(6) {
+            top: 100%;
+            left: 50%;
+            animation-delay: -2s;
+            font-size: 2.2rem;
+        }
+
+        .floating-icon:nth-child(7) {
+            top: 100%;
+            left: 60%;
+            animation-delay: -5s;
+            font-size: 1.7rem;
+        }
+
+        .floating-icon:nth-child(8) {
+            top: 100%;
+            left: 30%;
+            animation-delay: -8s;
+            font-size: 1.9rem;
+        }
+
+        .floating-icon:nth-child(9) {
+            top: 100%;
+            left: 75%;
+            animation-delay: -11s;
+            font-size: 1.4rem;
+        }
+
+        .floating-icon:nth-child(10) {
+            top: 100%;
+            left: 45%;
+            animation-delay: -14s;
+            font-size: 2.1rem;
+        }
+
+        .floating-icon:nth-child(11) {
+            top: 100%;
+            left: 15%;
+            animation-delay: -4s;
+            font-size: 1.8rem;
+        }
+
+        .floating-icon:nth-child(12) {
+            top: 100%;
+            left: 65%;
+            animation-delay: -7s;
+            font-size: 2rem;
+        }
+
+        .floating-icon:nth-child(13) {
+            top: 100%;
+            left: 35%;
+            animation-delay: -10s;
+            font-size: 1.6rem;
+        }
+
+        .floating-icon:nth-child(14) {
+            top: 100%;
+            left: 80%;
+            animation-delay: -13s;
+            font-size: 2.3rem;
+        }
+
+        .floating-icon:nth-child(15) {
+            top: 100%;
+            left: 55%;
+            animation-delay: -1s;
+            font-size: 1.7rem;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0;
+            }
+            5% {
+                opacity: 1;
+            }
+            95% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-120vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .brand-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .brand-logo h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand-logo p {
+            color: #666666;
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        .login-card:hover {
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            background: none;
+            border: none;
+            padding: 0;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .card-header h4 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #000000;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .form-control:focus {
+            border-color: #000000;
+            box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.1);
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .form-control::placeholder {
+            color: #999999;
+        }
+
+        .btn-primary-custom {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 0.875rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-primary-custom:hover {
+            background: #333333;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary-custom:focus {
+            box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.2);
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-danger {
+            background: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        .text-links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .text-links p {
+            margin-bottom: 0.5rem;
+            color: #666666;
+        }
+
+        .text-links a {
+            color: #000000;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .text-links a:hover {
+            color: #333333;
+            text-decoration: underline;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider span {
+            background: #ffffff;
+            padding: 0 1rem;
+            color: #666666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 1rem;
+            }
+            
+            .login-card {
+                padding: 2rem;
+            }
+            
+            .brand-logo h1 {
+                font-size: 2rem;
+            }
+            
+            .card-header h4 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
-<body class="bg-light">
-<div class="container mt-5">
-    <div class="card mx-auto" style="max-width: 500px;">
-        <div class="card-header text-center">
-            <h4>User Login</h4>
+<body>
+    <!-- Floating Background Icons -->
+    <div class="floating-icons">
+        <div class="floating-icon">💄</div>
+        <div class="floating-icon">💋</div>
+        <div class="floating-icon">✨</div>
+        <div class="floating-icon">💄</div>
+        <div class="floating-icon">🎀</div>
+        <div class="floating-icon">💋</div>
+        <div class="floating-icon">✨</div>
+        <div class="floating-icon">💄</div>
+        <div class="floating-icon">🎀</div>
+        <div class="floating-icon">💋</div>
+        <div class="floating-icon">✨</div>
+        <div class="floating-icon">💄</div>
+        <div class="floating-icon">🎀</div>
+        <div class="floating-icon">💋</div>
+        <div class="floating-icon">✨</div>
+    </div>
+
+    <div class="login-container">
+        <div class="brand-logo">
+            <h1>The Skins Shelf</h1>
+            <p>Premium Makeup Collection</p>
         </div>
-        <div class="card-body">
+        
+        <div class="login-card">
+            <div class="card-header">
+                <h4>Welcome Back</h4>
+            </div>
+            
             <!-- Login alert -->
             <div id="login-alert" class="alert alert-danger d-none"></div>
 
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="email">Email address:</label>
-                    <input type="email" name="email" id="email" class="form-control" required>
+                    <label for="email">Email Address</label>
+                    <input type="email" name="email" id="email" class="form-control" placeholder="Enter your email" required>
                 </div>
+                
                 <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input type="password" name="password" id="password" class="form-control" required>
+                    <label for="password">Password</label>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password" required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Login</button>
-
-                <p class="text-center mt-3">
-                    <a href="forgot_password.html">Forgot Password?</a>
-                </p>
-                <p class="text-center">
-                    Don't have an account? <a href="register.html">Register here</a>.
-                </p>
+                
+                <button type="submit" class="btn-primary-custom">Sign In</button>
             </form>
+            
+            <div class="text-links">
+                <p>
+                    <a href="forgot_password.html">Forgot your password?</a>
+                </p>
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                <p>
+                    New to The Skins Shelf? <a href="register.html">Create an account</a>
+                </p>
+            </div>
         </div>
     </div>
-</div>
 
-<script src="../js/login.js"></script>
+    <script src="../js/login.js"></script>
 </body>
 </html>
