@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; 
+        style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://fonts.googleapis.com; 
+        font-src 'self' https://fonts.gstatic.com;
+        media-src *; 
+        connect-src 'self' https://backend-rj0a.onrender.com;
+    ">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link 
+        rel="stylesheet" 
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    >
+    <title>About - The Skin Shelf</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+            padding-top: 80px;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: #ffffff;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            font-size: clamp(1.3rem, 3vw, 1.8rem);
+            font-weight: 800;
+            color: #000000 !important;
+            text-transform: uppercase;
+            letter-spacing: clamp(1px, 0.3vw, 2px);
+        }
+
+        .navbar-brand:hover {
+            color: #333333 !important;
+        }
+
+        .nav-link {
+            color: #000000 !important;
+            font-weight: 500;
+            margin: 0 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #666666 !important;
+        }
+
+        .navbar-toggler {
+            border: none;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 4rem 0;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: clamp(1px, 0.3vw, 2px);
+            color: #000000;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            margin-bottom: 2rem;
+            color: #555555;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Story Section */
+        .story-section {
+            padding: 5rem 0;
+            background: #ffffff;
+        }
+
+        .story-content {
+            background: #f8f8f8;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 3rem;
+        }
+
+        .story-content h2 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .story-content p {
+            font-size: clamp(1rem, 2vw, 1.1rem);
+            color: #555555;
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        /* Mission & Vision */
+        .mission-section {
+            padding: 5rem 0;
+            background: #f8f8f8;
+        }
+
+        .mission-card {
+            background: #ffffff;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+            height: 100%;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .mission-card:hover {
+            transform: translateY(-10px);
+            border-color: #000000;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .mission-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .mission-card h3 {
+            font-size: clamp(1.3rem, 3vw, 1.8rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mission-card p {
+            color: #666666;
+            line-height: 1.7;
+            font-size: clamp(0.95rem, 2vw, 1.1rem);
+        }
+
+        /* Team Section */
+        .team-section {
+            padding: 5rem 0;
+            background: #ffffff;
+        }
+
+        .team-member {
+            background: #f8f8f8;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+            height: 100%;
+        }
+
+        .team-member:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .team-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #000000, #333333);
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #ffffff;
+        }
+
+        .team-member h4 {
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #000000;
+        }
+
+        .team-member .role {
+            color: #666666;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+            font-weight: 500;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .team-member p {
+            color: #555555;
+            font-size: clamp(0.85rem, 1.8vw, 0.95rem);
+            line-height: 1.6;
+        }
+
+        /* Values Section */
+        .values-section {
+            padding: 5rem 0;
+            background: #f8f8f8;
+        }
+
+        .value-item {
+            background: #ffffff;
+            border-left: 5px solid #000000;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .value-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .value-item h4 {
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .value-item p {
+            color: #666666;
+            line-height: 1.6;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+
+        /* Stats Section */
+        .stats-section {
+            padding: 4rem 0;
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .stat-number {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            display: block;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .stat-label {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        /* Section Titles */
+        .section-title {
+            text-align: center;
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            font-weight: 700;
+            margin-bottom: 3rem;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .section-title.white {
+            color: #ffffff;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, #f8f8f8 0%, #ffffff 100%);
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .cta-section p {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            margin-bottom: 2.5rem;
+            color: #666666;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-primary-custom {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: clamp(0.8rem, 2vw, 1rem) clamp(2rem, 4vw, 2.5rem);
+            font-size: clamp(1rem, 2.5vw, 1.1rem);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem;
+        }
+
+        .btn-primary-custom:hover {
+            background: #333333;
+            color: #ffffff;
+            transform: translateY(-2px);
+            text-decoration: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn-outline-custom {
+            background: transparent;
+            color: #000000;
+            border: 2px solid #000000;
+            padding: clamp(0.8rem, 2vw, 1rem) clamp(2rem, 4vw, 2.5rem);
+            font-size: clamp(1rem, 2.5vw, 1.1rem);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem;
+        }
+
+        .btn-outline-custom:hover {
+            background: #000000;
+            color: #ffffff;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 70px;
+            }
+            
+            .story-content,
+            .mission-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .team-avatar {
+                width: 100px;
+                height: 100px;
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .value-item:hover {
+                transform: translateX(5px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">The Skin Shelf</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span style="color: black; font-size: 1.5rem;">☰</span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="features.html">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="about.html">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contact.html">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1>About The Skin Shelf</h1>
+                    <p>Your trusted destination for premium makeup and beauty essentials, where quality meets affordability and every girl deserves to feel beautiful.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Story -->
+    <section class="story-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="story-content">
+                        <h2>Our Story</h2>
+                        <p>The Skin Shelf was born from a simple belief: every woman deserves access to high-quality makeup without breaking the bank. Founded in 2023, we started as a small online boutique with a mission to democratize beauty by making premium cosmetics affordable and accessible to everyone.</p>
+                        
+                        <p>Our journey began when our founder, frustrated with the high prices of quality makeup in the Philippines, decided to create a platform that would bridge the gap between premium beauty products and everyday affordability. What started as a passion project quickly grew into a movement that has touched the lives of thousands of beauty enthusiasts across the country.</p>
+                        
+                        <p>Today, The Skin Shelf stands as the Philippines' leading affordable luxury makeup destination, serving over 25,000 happy customers with a curated selection of 500+ premium products. We've built more than just an online store – we've created a community where beauty dreams become reality.</p>
+                        
+                        <p>From our humble beginnings to becoming a trusted name in Philippine beauty retail, our commitment remains unchanged: to provide authentic, high-quality makeup at prices that make luxury accessible to all.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mission & Vision -->
+    <section class="mission-section">
+        <div class="container">
+            <h2 class="section-title">Mission & Vision</h2>
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="mission-card">
+                        <div class="mission-icon">🎯</div>
+                        <h3>Our Mission</h3>
+                        <p>To revolutionize the beauty industry in the Philippines by making premium makeup accessible, affordable, and available to every woman, regardless of her budget. We strive to empower confidence through authentic, high-quality cosmetics while providing an exceptional shopping experience that prioritizes speed, convenience, and customer satisfaction.</p>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="mission-card">
+                        <div class="mission-icon">👁️</div>
+                        <h3>Our Vision</h3>
+                        <p>To become Southeast Asia's most trusted and beloved beauty destination, where every woman can discover her perfect look without compromise. We envision a world where quality makeup is not a luxury but a right, and where beauty shopping is fast, fun, and financially friendly for everyone.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Values -->
+    <section class="values-section">
+        <div class="container">
+            <h2 class="section-title">Our Core Values</h2>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="value-item">
+                        <h4>💎 Quality First</h4>
+                        <p>We never compromise on product authenticity and quality. Every item in our collection is carefully vetted and sourced directly from authorized distributors to ensure you receive only genuine, premium cosmetics.</p>
+                    </div>
+                    <div class="value-item">
+                        <h4>💰 Affordable Luxury</h4>
+                        <p>Luxury shouldn't be exclusive. We work tirelessly to negotiate the best prices with suppliers, passing savings directly to you without sacrificing quality or service excellence.</p>
+                    </div>
+                    <div class="value-item">
+                        <h4>⚡ Speed & Convenience</h4>
+                        <p>Your time is precious. Our streamlined platform, lightning-fast checkout, and same-day delivery options are designed to get you what you need, when you need it, with minimal effort.</p>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="value-item">
+                        <h4>🤝 Customer-Centric</h4>
+                        <p>Every decision we make puts our customers first. From our user-friendly interface to our responsive support team, we're committed to exceeding your expectations at every touchpoint.</p>
+                    </div>
+                    <div class="value-item">
+                        <h4>🌟 Inclusivity</h4>
+                        <p>Beauty has no boundaries. We celebrate diversity and ensure our product range caters to all skin tones, types, and preferences, because every woman deserves to find her perfect match.</p>
+                    </div>
+                    <div class="value-item">
+                        <h4>🔒 Trust & Security</h4>
+                        <p>Your trust is our foundation. We maintain the highest standards of security for your personal information and transactions, ensuring a safe and worry-free shopping experience.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="team-section">
+        <div class="container">
+            <h2 class="section-title">Meet Our Team</h2>
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="team-member">
+                        <div class="team-avatar">👩‍💼</div>
+                        <h4>Maria Santos</h4>
+                        <div class="role">Founder & CEO</div>
+                        <p>Former beauty industry executive with 10+ years experience. Passionate about making luxury beauty accessible to every Filipina woman.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="team-member">
+                        <div class="team-avatar">👨‍💻</div>
+                        <h4>James Rodriguez</h4>
+                        <div class="role">CTO & Co-founder</div>
+                        <p>Tech innovator focused on creating seamless shopping experiences. Expert in e-commerce optimization and mobile-first design.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="team-member">
+                        <div class="team-avatar">💄</div>
+                        <h4>Sarah Kim</h4>
+                        <div class="role">Head of Product Curation</div>
+                        <p>Celebrity makeup artist turned product expert. Ensures every item meets our high standards for quality and performance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <h2 class="section-title white">Our Impact</h2>
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-item">
+                        <span class="stat-number">25K+</span>
+                        <span class="stat-label">Happy Customers</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-item">
+                        <span class="stat-number">500+</span>
+                        <span class="stat-label">Premium Products</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-item">
+                        <span class="stat-number">99.8%</span>
+                        <span class="stat-label">Customer Satisfaction</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-item">
+                        <span class="stat-number">2 Years</span>
+                        <span class="stat-label">Serving Philippines</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Join Our Beauty Community</h2>
+            <p>Ready to discover premium makeup at unbeatable prices? Join thousands of satisfied customers who have made The Skin Shelf their go-to beauty destination.</p>
+            <div class="mt-4">
+                <a href="login.html" class="btn-primary-custom">Start Shopping</a>
+                <a href="contact.html" class="btn-outline-custom">Get In Touch</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Animate stats on scroll
+        const observerOptions = {
+            threshold: 0.5,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNumbers = entry.target.querySelectorAll('.stat-number');
+                    statNumbers.forEach(stat => {
+                        stat.style.transform = 'scale(1.1)';
+                        stat.style.transition = 'transform 0.3s ease';
+                        setTimeout(() => {
+                            stat.style.transform = 'scale(1)';
+                        }, 200);
+                    });
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.stats-section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Animate value items on scroll
+        const valueObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '0';
+                    entry.target.style.transform = 'translateX(-20px)';
+                    entry.target.style.transition = 'all 0.6s ease';
+                    
+                    setTimeout(() => {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateX(0)';
+                    }, 100);
+                }
+            });
+        }, { threshold: 0.3 });
+
+        document.querySelectorAll('.value-item').forEach(item => {
+            valueObserver.observe(item);
+        });
+    </script>
+</body>
+</html>

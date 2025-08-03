@@ -12,7 +12,9 @@
     ">
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,9 +31,10 @@
             box-sizing: border-box;
         }
 
-        html, body {
+        html {
             height: 100%;
-            overflow-x: hidden;
+            height: 100vh;
+            height: -webkit-fill-available;
         }
 
         body {
@@ -39,10 +42,13 @@
             background: #ffffff;
             color: #000000;
             min-height: 100vh;
+            min-height: -webkit-fill-available;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
+            overflow-x: hidden;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
         /* Floating Background Icons */
@@ -52,6 +58,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
+            height: -webkit-fill-available;
             pointer-events: none;
             z-index: 0;
             overflow: hidden;
@@ -59,7 +66,7 @@
 
         .floating-icon {
             position: absolute;
-            font-size: 2rem;
+            font-size: clamp(1.2rem, 3vw, 2rem);
             color: rgba(255, 105, 180, 0.15);
             animation: float 20s infinite linear;
             user-select: none;
@@ -70,105 +77,105 @@
             top: 100%;
             left: 10%;
             animation-delay: 0s;
-            font-size: 1.5rem;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
         }
 
         .floating-icon:nth-child(2) {
             top: 100%;
             left: 85%;
             animation-delay: -3s;
-            font-size: 2.5rem;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
         }
 
         .floating-icon:nth-child(3) {
             top: 100%;
             left: 70%;
             animation-delay: -6s;
-            font-size: 1.8rem;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
         }
 
         .floating-icon:nth-child(4) {
             top: 100%;
             left: 20%;
             animation-delay: -9s;
-            font-size: 2rem;
+            font-size: clamp(1.3rem, 3.5vw, 2rem);
         }
 
         .floating-icon:nth-child(5) {
             top: 100%;
             left: 5%;
             animation-delay: -12s;
-            font-size: 1.6rem;
+            font-size: clamp(1.1rem, 2.8vw, 1.6rem);
         }
 
         .floating-icon:nth-child(6) {
             top: 100%;
             left: 50%;
             animation-delay: -2s;
-            font-size: 2.2rem;
+            font-size: clamp(1.4rem, 3.8vw, 2.2rem);
         }
 
         .floating-icon:nth-child(7) {
             top: 100%;
             left: 60%;
             animation-delay: -5s;
-            font-size: 1.7rem;
+            font-size: clamp(1.2rem, 3.2vw, 1.7rem);
         }
 
         .floating-icon:nth-child(8) {
             top: 100%;
             left: 30%;
             animation-delay: -8s;
-            font-size: 1.9rem;
+            font-size: clamp(1.3rem, 3.3vw, 1.9rem);
         }
 
         .floating-icon:nth-child(9) {
             top: 100%;
             left: 75%;
             animation-delay: -11s;
-            font-size: 1.4rem;
+            font-size: clamp(1rem, 2.4vw, 1.4rem);
         }
 
         .floating-icon:nth-child(10) {
             top: 100%;
             left: 45%;
             animation-delay: -14s;
-            font-size: 2.1rem;
+            font-size: clamp(1.4rem, 3.6vw, 2.1rem);
         }
 
         .floating-icon:nth-child(11) {
             top: 100%;
             left: 15%;
             animation-delay: -4s;
-            font-size: 1.8rem;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
         }
 
         .floating-icon:nth-child(12) {
             top: 100%;
             left: 65%;
             animation-delay: -7s;
-            font-size: 2rem;
+            font-size: clamp(1.3rem, 3.5vw, 2rem);
         }
 
         .floating-icon:nth-child(13) {
             top: 100%;
             left: 35%;
             animation-delay: -10s;
-            font-size: 1.6rem;
+            font-size: clamp(1.1rem, 2.8vw, 1.6rem);
         }
 
         .floating-icon:nth-child(14) {
             top: 100%;
             left: 80%;
             animation-delay: -13s;
-            font-size: 2.3rem;
+            font-size: clamp(1.5rem, 4.2vw, 2.3rem);
         }
 
         .floating-icon:nth-child(15) {
             top: 100%;
             left: 55%;
             animation-delay: -1s;
-            font-size: 1.7rem;
+            font-size: clamp(1.2rem, 3.2vw, 1.7rem);
         }
 
         @keyframes float {
@@ -188,43 +195,62 @@
             }
         }
 
+        .main-wrapper {
+            width: 100%;
+            height: 100vh;
+            height: -webkit-fill-available;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            min-height: 0;
+        }
+
         .login-container {
             width: 100%;
             max-width: 450px;
-            padding: 2rem;
             position: relative;
             z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 0;
         }
 
         .brand-logo {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: clamp(1rem, 4vw, 2rem);
+            flex-shrink: 0;
         }
 
         .brand-logo h1 {
-            font-size: 2.5rem;
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
             font-weight: 800;
             color: #000000;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: clamp(1px, 0.3vw, 2px);
             margin-bottom: 0.5rem;
+            line-height: 1.2;
         }
 
         .brand-logo p {
             color: #666666;
-            font-size: 1rem;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
             font-weight: 400;
         }
 
         .login-card {
             background: #ffffff;
             border: 1px solid #e0e0e0;
-            border-radius: 20px;
-            padding: 2.5rem;
+            border-radius: clamp(12px, 3vw, 20px);
+            padding: clamp(1.5rem, 5vw, 2.5rem);
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             position: relative;
             z-index: 10;
+            flex-shrink: 0;
+            max-height: calc(100vh - 4rem);
+            overflow: auto;
         }
 
         .login-card:hover {
@@ -235,36 +261,43 @@
             background: none;
             border: none;
             padding: 0;
-            margin-bottom: 2rem;
+            margin-bottom: clamp(1rem, 4vw, 2rem);
             text-align: center;
+            flex-shrink: 0;
         }
 
         .card-header h4 {
-            font-size: 1.8rem;
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
             font-weight: 700;
             color: #000000;
             margin: 0;
+            line-height: 1.3;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: clamp(1rem, 3vw, 1.5rem);
         }
 
         .form-group label {
             font-weight: 600;
             color: #000000;
             margin-bottom: 0.5rem;
-            font-size: 0.95rem;
+            font-size: clamp(0.85rem, 2.2vw, 0.95rem);
+            display: block;
         }
 
         .form-control {
             border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
+            border-radius: clamp(8px, 2vw, 12px);
+            padding: clamp(0.6rem, 2vw, 0.75rem) clamp(0.8rem, 2.5vw, 1rem);
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
             transition: all 0.3s ease;
             background: #ffffff;
             color: #000000;
+            width: 100%;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         .form-control:focus {
@@ -272,6 +305,7 @@
             box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.1);
             background: #ffffff;
             color: #000000;
+            outline: none;
         }
 
         .form-control::placeholder {
@@ -282,15 +316,19 @@
             background: #000000;
             color: #ffffff;
             border: none;
-            padding: 0.875rem 2rem;
-            font-size: 1.1rem;
+            padding: clamp(0.7rem, 2.5vw, 0.875rem) clamp(1.5rem, 4vw, 2rem);
+            font-size: clamp(0.95rem, 2.8vw, 1.1rem);
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: 12px;
+            letter-spacing: clamp(0.5px, 0.2vw, 1px);
+            border-radius: clamp(8px, 2vw, 12px);
             transition: all 0.3s ease;
             width: 100%;
-            margin-top: 1rem;
+            margin-top: clamp(0.5rem, 2vw, 1rem);
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         .btn-primary-custom:hover {
@@ -302,13 +340,19 @@
 
         .btn-primary-custom:focus {
             box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.2);
+            outline: none;
+        }
+
+        .btn-primary-custom:active {
+            transform: translateY(0);
         }
 
         .alert {
-            border-radius: 12px;
+            border-radius: clamp(8px, 2vw, 12px);
             border: none;
-            padding: 1rem 1.25rem;
-            margin-bottom: 1.5rem;
+            padding: clamp(0.8rem, 2.5vw, 1rem) clamp(1rem, 3vw, 1.25rem);
+            margin-bottom: clamp(1rem, 3vw, 1.5rem);
+            font-size: clamp(0.85rem, 2.2vw, 0.95rem);
         }
 
         .alert-danger {
@@ -319,12 +363,13 @@
 
         .text-links {
             text-align: center;
-            margin-top: 1.5rem;
+            margin-top: clamp(1rem, 3vw, 1.5rem);
         }
 
         .text-links p {
             margin-bottom: 0.5rem;
             color: #666666;
+            font-size: clamp(0.85rem, 2.2vw, 0.95rem);
         }
 
         .text-links a {
@@ -341,7 +386,7 @@
 
         .divider {
             text-align: center;
-            margin: 1.5rem 0;
+            margin: clamp(1rem, 3vw, 1.5rem) 0;
             position: relative;
         }
 
@@ -359,24 +404,119 @@
             background: #ffffff;
             padding: 0 1rem;
             color: #666666;
-            font-size: 0.9rem;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
         }
 
-        @media (max-width: 576px) {
-            .login-container {
-                padding: 1rem;
+        /* Very small screens (phones in portrait) */
+        @media (max-width: 380px) {
+            .main-wrapper {
+                padding: 0.5rem;
             }
             
             .login-card {
-                padding: 2rem;
+                border-radius: 12px;
+                padding: 1.25rem;
+            }
+            
+            .brand-logo {
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Small screens (phones) */
+        @media (max-width: 576px) {
+            .main-wrapper {
+                padding: 0.75rem;
+            }
+            
+            .login-card {
+                max-height: calc(100vh - 2rem);
+            }
+        }
+
+        /* Medium screens (tablets) */
+        @media (min-width: 577px) and (max-width: 768px) {
+            .login-container {
+                max-width: 500px;
+            }
+        }
+
+        /* Large screens */
+        @media (min-width: 1200px) {
+            .login-container {
+                max-width: 480px;
+            }
+        }
+
+        /* Landscape orientation on mobile */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .main-wrapper {
+                align-items: flex-start;
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+            
+            .brand-logo {
+                margin-bottom: 0.75rem;
             }
             
             .brand-logo h1 {
-                font-size: 2rem;
+                font-size: 1.5rem;
+            }
+            
+            .brand-logo p {
+                font-size: 0.85rem;
+            }
+            
+            .card-header {
+                margin-bottom: 1rem;
             }
             
             .card-header h4 {
-                font-size: 1.5rem;
+                font-size: 1.3rem;
+            }
+            
+            .form-group {
+                margin-bottom: 1rem;
+            }
+            
+            .login-card {
+                padding: 1.5rem;
+                max-height: calc(100vh - 2rem);
+                overflow-y: auto;
+            }
+        }
+
+        /* iOS Safari specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                min-height: -webkit-fill-available;
+            }
+            
+            .main-wrapper {
+                height: -webkit-fill-available;
+            }
+        }
+
+        /* Hide elements that might cause issues on very small screens */
+        @media (max-height: 400px) {
+            .floating-icons {
+                display: none;
+            }
+        }
+
+        /* Focus styles for better accessibility */
+        .form-control:focus,
+        .btn-primary-custom:focus,
+        .text-links a:focus {
+            outline: 2px solid rgba(0,0,0,0.5);
+            outline-offset: 2px;
+        }
+
+        /* Prevent zoom on input focus for iOS */
+        @media (max-width: 576px) {
+            .form-control {
+                font-size: 16px;
             }
         }
     </style>
@@ -401,44 +541,46 @@
         <div class="floating-icon">✨</div>
     </div>
 
-    <div class="login-container">
-        <div class="brand-logo">
-            <h1>The Skins Shelf</h1>
-            <p>Premium Makeup Collection</p>
-        </div>
-        
-        <div class="login-card">
-            <div class="card-header">
-                <h4>Welcome Back</h4>
+    <div class="main-wrapper">
+        <div class="login-container">
+            <div class="brand-logo">
+                <h1>The Skins Shelf</h1>
+                <p>Premium Makeup Collection</p>
             </div>
             
-            <!-- Login alert -->
-            <div id="login-alert" class="alert alert-danger d-none"></div>
+            <div class="login-card">
+                <div class="card-header">
+                    <h4>Welcome Back</h4>
+                </div>
+                
+                <!-- Login alert -->
+                <div id="login-alert" class="alert alert-danger d-none"></div>
 
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" name="email" id="email" class="form-control" placeholder="Enter your email" required>
-                </div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" name="email" id="email" class="form-control" placeholder="Enter your email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary-custom">Sign In</button>
+                </form>
                 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password" required>
+                <div class="text-links">
+                    <p>
+                        <a href="forgot_password.html">Forgot your password?</a>
+                    </p>
+                    <div class="divider">
+                        <span>or</span>
+                    </div>
+                    <p>
+                        New to The Skins Shelf? <a href="register.html">Create an account</a>
+                    </p>
                 </div>
-                
-                <button type="submit" class="btn-primary-custom">Sign In</button>
-            </form>
-            
-            <div class="text-links">
-                <p>
-                    <a href="forgot_password.html">Forgot your password?</a>
-                </p>
-                <div class="divider">
-                    <span>or</span>
-                </div>
-                <p>
-                    New to The Skins Shelf? <a href="register.html">Create an account</a>
-                </p>
             </div>
         </div>
     </div>
