@@ -233,7 +233,7 @@ function loadDashboardData() {
     document.getElementById('profilePic').src = currentUser.profile_pic || '../uploads/default-avatar.png';
 
     // Load analytics data
-    fetch(`${API_URL}/admin/dashboard-data`, {
+    fetch(`${API_URL}/api/admin/dashboard-data`, {
         headers: { 'Authorization': `Bearer ${currentUser.token}` }
     })
     .then(response => response.json())
@@ -252,7 +252,7 @@ function loadDashboardData() {
 }
 
 function loadAdmins() {
-    fetch(`${API_URL}/admin/admins`, {
+    fetch(`${API_URL}/api/admin/admins`, {
         headers: { 'Authorization': `Bearer ${currentUser.token}` }
     })
     .then(response => response.json())
@@ -316,7 +316,7 @@ function createAdmin() {
     button.disabled = true;
     button.textContent = 'Creating...';
 
-    fetch(`${API_URL}/admin/create-admin-direct`, {
+    fetch(`${API_URL}/api/admin/create-admin-direct`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -350,7 +350,7 @@ function deleteAdmin(adminId, adminName) {
         return;
     }
 
-    fetch(`${API_URL}/admin/delete-admin/${adminId}`, {
+    fetch(`${API_URL}/api/admin/delete-admin/${adminId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${currentUser.token}` }
     })
@@ -370,7 +370,7 @@ function deleteAdmin(adminId, adminName) {
 }
 
 function exportUsers() {
-    fetch(`${API_URL}/admin/export/users`, {
+    fetch(`${API_URL}/api/admin/export/users`, {
         headers: { 'Authorization': `Bearer ${currentUser.token}` }
     })
     .then(response => response.json())
