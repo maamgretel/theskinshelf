@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Dashboard</title>
+  <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍💼</text></svg>">
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
@@ -53,7 +54,7 @@
 <body>
 <div class="container mt-4">
   <div class="d-flex align-items-center mb-4">
-    <img id="profilePic" src="../uploads/default-avatar.png" width="50" height="50" class="rounded-circle mr-3" alt="Profile Picture" />
+    <img id="profilePic" src="https://res.cloudinary.com/dwgvlwkyt/image/upload/v1751856106/default-avatar.jpg" width="50" height="50" class="rounded-circle mr-3" alt="Profile Picture" />
     <div>
       <h2 class="mb-0">Welcome, <span id="userName">Loading...</span></h2>
       <small class="text-muted">Administrator Dashboard</small>
@@ -205,6 +206,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
+    // Debug: Log current user info
+    console.log('Current user:', currentUser);
+    console.log('User token:', currentUser.token ? 'Present' : 'Missing');
+
     loadDashboardData();
     loadAdmins();
     setupEventListeners();
@@ -230,13 +235,22 @@ function setupEventListeners() {
 function loadDashboardData() {
     // Update profile info
     document.getElementById('userName').textContent = currentUser.name;
-    document.getElementById('profilePic').src = currentUser.profile_pic || '../uploads/default-avatar.png';
+    document.getElementById('profilePic').src = currentUser.profile_pic || 'https://res.cloudinary.com/dwgvlwkyt/image/upload/v1751856106/default-avatar.jpg';
 
     // Load analytics data
     fetch(`${API_URL}/api/admin/dashboard-data`, {
-        headers: { 'Authorization': `Bearer ${currentUser.token}` }
+        headers: { 
+            'Authorization': `Bearer ${currentUser.token}`,
+            'Content-Type': 'application/json'
+        }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Dashboard data response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.analytics) {
             document.getElementById('totalUsers').textContent = data.analytics.total_users;
@@ -253,9 +267,18 @@ function loadDashboardData() {
 
 function loadAdmins() {
     fetch(`${API_URL}/api/admin/admins`, {
-        headers: { 'Authorization': `Bearer ${currentUser.token}` }
+        headers: { 
+            'Authorization': `Bearer ${currentUser.token}`,
+            'Content-Type': 'application/json'
+        }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Admins response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         const adminsList = document.getElementById('adminsList');
         
@@ -263,7 +286,7 @@ function loadAdmins() {
             adminsList.innerHTML = data.admins.map(admin => `
                 <div class="admin-item d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
-                        <img src="${admin.profile_pic || '../uploads/default-avatar.png'}" 
+                        <img src="${admin.profile_pic || 'https://res.cloudinary.com/dwgvlwkyt/image/upload/v1751856106/default-avatar.jpg'}" 
                              class="admin-avatar rounded-circle mr-3" alt="${admin.name}">
                         <div>
                             <h6 class="mb-0">${admin.name}</h6>
