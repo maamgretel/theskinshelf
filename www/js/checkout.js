@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
         debugLog('ITEMS', 'Items rendered successfully');
     };
 
-    
+
     const calculateSummary = (items, shippingOptions) => {
     debugLog('SUMMARY', 'Calculating summary', { 
         itemCount: items ? items.length : 0,
@@ -498,4 +498,359 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
     
     debugLog('INIT', 'Initialization complete');
+// === SIMPLIFIED PAYMENT MODAL - NO AUTHENTICATION REQUIRED ===
+// Replace the payment script section with this simplified version
+
+// Get DOM elements for payment OTP functionality
+const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+const otpInput = document.getElementById('otpInput');
+
+// Function to get user email - using the existing user object (no auth needed)
+function getUserEmail() {
+  debugLog('PAYMENT', 'Getting user email from existing user object', user);
+  
+  // Return email directly from user object
+  if (user && user.email) {
+    debugLog('PAYMENT', 'Email found in user object', user.email);
+    return user.email;
+  }
+  
+  // If no email in user object, throw error
+  throw new Error('No email found in user data');
+}
+
+// Validate card data
+function validateCardData(cardData) {
+  const required = ['number', 'holder', 'expiryMonth', 'expiryYear', 'cvv'];
+  const missing = required.filter(field => !cardData[field] || !cardData[field].trim());
+  
+  if (missing.length > 0) {
+    alert(`Please fill in all card details: ${missing.join(', ')}`);
+    return false;
+  }
+  
+  // Basic validation
+  if (cardData.number.replace(/\s/g, '').length < 13) {
+    alert('Please enter a valid card number');
+    return false;
+  }
+  
+  if (cardData.cvv.length < 3) {
+    alert('Please enter a valid CVV');
+    return false;
+  }
+  
+  return true;
+}
+
+// SIMPLIFIED: Save payment button handler - No authentication required
+if (savePaymentBtn) {
+  debugLog('PAYMENT', 'Setting up SIMPLIFIED save payment button handler (no auth)');
+  
+  // Remove any existing event listeners first
+  const newSaveBtn = savePaymentBtn.cloneNode(true);
+  savePaymentBtn.parentNode.replaceChild(newSaveBtn, savePaymentBtn);
+  
+  // Update the reference
+  const simplifiedSavePaymentBtn = document.getElementById('save-payment-btn');
+  
+  if (simplifiedSavePaymentBtn) {
+    simplifiedSavePaymentBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      
+      const originalText = simplifiedSavePaymentBtn.textContent;
+      
+      try {
+        debugLog('PAYMENT', 'SIMPLIFIED: Save payment button clicked');
+        
+        // Validate the form
+        if (paymentForm && paymentForm.checkValidity() === false) {
+          alert('Please fill in all card details correctly.');
+          paymentForm.classList.add('was-validated');
+          return;
+        }
+        
+        // Collect card data
+        const cardData = {
+          number: cardNumberInput?.value?.trim() || '',
+          holder: cardHolderInput?.value?.trim() || '',
+          expiryMonth: expiryMonthSelect?.value?.trim() || '',
+          expiryYear: expiryYearSelect?.value?.trim() || '',
+          cvv: cvvInput?.value?.trim() || ''
+        };
+
+        debugLog('PAYMENT', 'Card data collected', {
+          hasNumber: !!cardData.number,
+          hasHolder: !!cardData.holder,
+          hasExpiry: !!(cardData.expiryMonth && cardData.expiryYear),
+          hasCvv: !!cardData.cvv
+        });
+
+        // Validate card data
+        if (!validateCardData(cardData)) {
+          return;
+        }
+
+        debugLog('PAYMENT', 'Requesting OTP for card save (no auth)...');
+        
+        // Get user email (no authentication needed)
+        let userEmail;
+        try {
+          userEmail = getUserEmail();
+          debugLog('PAYMENT', 'User email obtained', userEmail);
+        } catch (error) {
+          console.error('Failed to get user email:', error);
+          alert('Unable to get your email. Please refresh the page and try again.');
+          return;
+        }
+
+        // Show loading state
+        simplifiedSavePaymentBtn.disabled = true;
+        simplifiedSavePaymentBtn.textContent = 'Requesting OTP...';
+
+        // SIMPLIFIED: Request OTP without authentication headers
+        const requestBody = {
+          email: userEmail,
+          userId: user?.id // Include user ID for context but no auth required
+        };
+
+        debugLog('PAYMENT', 'Sending OTP request without auth', requestBody);
+
+        const response = await fetch(`${BACKEND_URL}/api/orders/request-otp-save-card`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-User-ID': user.id.toString() // Backend still needs this header
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        debugLog('PAYMENT', 'OTP request response', {
+          status: response.status,
+          ok: response.ok,
+          statusText: response.statusText
+        });
+
+        // Handle response
+        if (!response.ok) {
+          const errorText = await response.text();
+          debugLog('PAYMENT', 'OTP request error response', errorText);
+          throw new Error(`Request failed: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        debugLog('PAYMENT', 'OTP Response data', data);
+        
+        if (data.message?.includes('OTP sent') || data.success || data.status === 'success') {
+  // Success - show OTP modal
+  debugLog('PAYMENT', 'OTP sent successfully, showing OTP modal');
+  
+  $('#paymentModal').modal('hide');
+  
+  // Wait for the first modal to close, then show OTP modal
+  setTimeout(() => {
+    $('#otpModal').modal('show');
+  }, 300);
+  
+  // Store card data temporarily
+  sessionStorage.setItem('tempCardData', JSON.stringify(cardData));
+  sessionStorage.setItem('tempUserEmail', userEmail); // Store email too
+  
+  // 🚀 REMOVED: no alert message shown here
+  
+  // Focus on OTP input after modal is shown
+  setTimeout(() => {
+    if (otpInput) {
+      otpInput.focus();
+      otpInput.value = '';
+    }
+  }, 800);
+  
+} else {
+  throw new Error(data.error || data.message || 'Failed to send OTP');
+}
+
+        
+      } catch (error) {
+        console.error('[ERROR] OTP request failed:', error);
+        
+        if (error.message.includes('network') || error.message.includes('Failed to fetch')) {
+          alert('Network error. Please check your connection and try again.');
+        } else {
+          alert(`Error: ${error.message || 'Failed to send OTP. Please try again.'}`);
+        }
+      } finally {
+        // Reset button state
+        simplifiedSavePaymentBtn.disabled = false;
+        simplifiedSavePaymentBtn.textContent = originalText;
+      }
+    });
+    
+    debugLog('PAYMENT', 'SIMPLIFIED save payment button handler set up successfully');
+  }
+}
+
+// SIMPLIFIED: OTP verification handler - No authentication required
+if (verifyOtpBtn) {
+  debugLog('PAYMENT', 'Setting up SIMPLIFIED OTP verification handler (no auth)');
+  
+  verifyOtpBtn.addEventListener('click', async () => {
+    const originalText = verifyOtpBtn.textContent;
+    
+    try {
+      const otp = otpInput?.value?.trim();
+
+      if (!otp) {
+        alert("Please enter the OTP.");
+        otpInput?.focus();
+        return;
+      }
+
+      if (otp.length !== 6 || !/^\d+$/.test(otp)) {
+        alert("Please enter a valid 6-digit OTP.");
+        otpInput?.focus();
+        return;
+      }
+
+      debugLog('PAYMENT', 'Verifying OTP (no auth)...');
+
+      // Show loading state
+      verifyOtpBtn.disabled = true;
+      verifyOtpBtn.textContent = 'Verifying...';
+
+      // Get stored email and card data
+      const storedEmail = sessionStorage.getItem('tempUserEmail');
+      const cardDataStr = sessionStorage.getItem('tempCardData');
+      
+      if (!storedEmail) {
+        throw new Error('Email data expired. Please try saving your card again.');
+      }
+      
+      if (!cardDataStr) {
+        throw new Error('Card data expired. Please try saving your card again.');
+      }
+
+      const cardData = JSON.parse(cardDataStr);
+      
+      // SIMPLIFIED: Verify OTP without authentication
+      const requestBody = {
+        email: storedEmail,
+        otp: otp,
+        cardData: cardData,
+        userId: user?.id // Include user ID for context but no auth required
+      };
+
+      debugLog('PAYMENT', 'Sending OTP verification without auth', {
+        email: storedEmail,
+        otp: otp,
+        hasCardData: !!cardData,
+        userId: user?.id
+      });
+
+      const response = await fetch(`${BACKEND_URL}/api/orders/verify-otp-save-card`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-ID': user.id.toString() // Backend still needs this header
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Verification failed: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      debugLog('PAYMENT', 'OTP Verification response', { status: response.status, data });
+      
+      if (data.message?.includes('Card saved') || data.success || data.status === 'success') {
+        // Success - update the UI
+        cardDetailsSaved = true;
+        
+        const bankCardLabel = document.querySelector('label[for="bankCard"]');
+        if (bankCardLabel) {
+          bankCardLabel.innerHTML = 'Bank Card <span class="text-success font-weight-bold">✔ Saved</span>';
+        }
+        
+        $('#otpModal').modal('hide');
+        alert("✅ Card saved successfully!");
+        
+        // Clean up
+        sessionStorage.removeItem('tempCardData');
+        sessionStorage.removeItem('tempUserEmail');
+        if (otpInput) otpInput.value = '';
+        
+      } else {
+        throw new Error(data.error || data.message || 'Verification failed');
+      }
+      
+    } catch (error) {
+      console.error('[ERROR] OTP verification failed:', error);
+      
+      if (error.message.includes('data expired')) {
+        $('#otpModal').modal('hide');
+        setTimeout(() => {
+          $('#paymentModal').modal('show');
+        }, 300);
+      }
+      
+      alert(error.message || 'Error verifying OTP. Please try again.');
+      
+    } finally {
+      // Reset button state
+      verifyOtpBtn.disabled = false;
+      verifyOtpBtn.textContent = originalText;
+    }
+  });
+}
+
+// Add enter key support for OTP input
+if (otpInput) {
+  otpInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && verifyOtpBtn && !verifyOtpBtn.disabled) {
+      verifyOtpBtn.click();
+    }
+  });
+  
+  // Auto-format OTP input (numbers only, max 6 digits)
+  otpInput.addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '').substring(0, 6);
+  });
+}
+
+// Modal event handlers
+if (typeof $ !== 'undefined') {
+  // Clean up when payment modal is hidden
+  $('#paymentModal').on('hidden.bs.modal', () => {
+    debugLog('PAYMENT', 'Payment modal hidden');
+    if (!cardDetailsSaved && codRadio) {
+      codRadio.checked = true;
+    }
+  });
+
+  // Clean up when OTP modal is hidden
+  $('#otpModal').on('hidden.bs.modal', () => {
+    debugLog('PAYMENT', 'OTP modal hidden');
+    setTimeout(() => {
+      const tempCardData = sessionStorage.getItem('tempCardData');
+      const tempEmail = sessionStorage.getItem('tempUserEmail');
+      if ((tempCardData || tempEmail) && !cardDetailsSaved) {
+        sessionStorage.removeItem('tempCardData');
+        sessionStorage.removeItem('tempUserEmail');
+        debugLog('PAYMENT', 'Cleaned up temporary data');
+      }
+    }, 1000);
+  });
+}
+
+// Clean up temporary data on page unload
+window.addEventListener('beforeunload', () => {
+  sessionStorage.removeItem('tempCardData');
+  sessionStorage.removeItem('tempUserEmail');
+});
+
+debugLog('PAYMENT', 'SIMPLIFIED payment script (no auth required) initialized successfully');
+
+// === END OF SIMPLIFIED PAYMENT OTP FUNCTIONALITY ===
 });
