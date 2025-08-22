@@ -2,60 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Product Orders - Enhanced</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>My Product Orders - Mobile Responsive</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .group-header {
-            background-color: #e3f2fd !important;
-            font-weight: bold;
-        }
-        .group-item {
-            background-color: #f8f9fa !important;
-        }
-        .badge-pending { background-color: #ffc107; }
-        .badge-shipped { background-color: #17a2b8; }
-        .badge-delivered { background-color: #28a745; }
-        .badge-cancelled { background-color: #dc3545; }
-        .bulk-actions {
-            margin: 15px 0;
-            padding: 15px;
-            border-radius: 8px;
-        }
-        .order-checkbox {
-            transform: scale(1.2);
-        }
-        .table th {
-            border-top: none;
-            background-color: #343a40;
-            color: white;
-        }
-        .btn-group-toggle .btn {
-            margin-right: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="../css/order.css">
 </head>
 <body>
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-2">
     <!-- Header Section -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2><i class="fas fa-shopping-cart"></i> Orders for My Products</h2>
-                    <p class="text-muted">Manage your product orders with enhanced grouping features</p>
-                </div>
-                <div class="btn-group">
-                    <a href="seller_dashboard.html" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to Dashboard
-                    </a>
-                    <button id="toggleGroupBtn" class="btn btn-info">
-                        <i class="fas fa-layer-group"></i> Show Grouped View
-                    </button>
-                    <button id="exportCsvBtn" class="btn btn-success">
-                        <i class="fas fa-download"></i> Export CSV
-                    </button>
+            <div class="header-section">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2><i class="fas fa-shopping-cart"></i> Orders for My Products</h2>
+                        <p class="text-muted">Manage your product orders with enhanced grouping features</p>
+                    </div>
+                    <div class="btn-group">
+                        <a href="seller_dashboard.html" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> <span class="d-none d-sm-inline">Back to Dashboard</span>
+                        </a>
+                        <button id="toggleGroupBtn" class="btn btn-info">
+                            <i class="fas fa-layer-group"></i> <span class="d-none d-sm-inline">Show Grouped View</span>
+                        </button>
+                        <button id="exportCsvBtn" class="btn btn-success">
+                            <i class="fas fa-download"></i> <span class="d-none d-sm-inline">Export CSV</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -70,63 +44,55 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Total Revenue</h6>
-                            <h4 id="totalRevenueCell">₱0.00</h4>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-peso-sign fa-2x"></i>
-                        </div>
+    <div class="stats-grid">
+        <div class="card stat-card primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Revenue</h6>
+                        <h4 id="totalRevenueCell">₱0.00</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-peso-sign fa-2x"></i>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Total Orders</h6>
-                            <h4 id="totalOrdersCell">0</h4>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-shopping-bag fa-2x"></i>
-                        </div>
+        <div class="card stat-card info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Orders</h6>
+                        <h4 id="totalOrdersCell">0</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-shopping-bag fa-2x"></i>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Pending Orders</h6>
-                            <h4 id="pendingOrdersCell">0</h4>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-clock fa-2x"></i>
-                        </div>
+        <div class="card stat-card warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Pending Orders</h6>
+                        <h4 id="pendingOrdersCell">0</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Delivered Orders</h6>
-                            <h4 id="deliveredOrdersCell">0</h4>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-check-circle fa-2x"></i>
-                        </div>
+        <div class="card stat-card success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Delivered Orders</h6>
+                        <h4 id="deliveredOrdersCell">0</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
                     </div>
                 </div>
             </div>
@@ -134,45 +100,41 @@
     </div>
 
     <!-- Orders Table -->
-    <div class="card">
-        <div class="card-header">
+    <div class="table-container">
+        <div class="table-header">
             <h5 class="mb-0">
                 <i class="fas fa-list"></i> Order Management
                 <small class="text-muted ml-2" id="viewModeIndicator">Regular View</small>
             </h5>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="thead-dark"> 
-                        <tr id="tableHeader">
-                            <th style="width: 40px;">
-                                <i class="fas fa-check-square" title="Select for grouping"></i>
-                            </th>
-                            <th><i class="fas fa-box"></i> Product</th>
-                            <th><i class="fas fa-user"></i> Buyer</th>
-                            <th><i class="fas fa-peso-sign"></i> Price</th>
-                            <th><i class="fas fa-calendar"></i> Date & Time</th>
-                            <th><i class="fas fa-info-circle"></i> Status</th>
-                            <th style="width: 220px;"><i class="fas fa-cogs"></i> Actions</th>    
-                        </tr>
-                    </thead>
-                    <tbody id="ordersTableBody">
-                        <tr>
-                            <td colspan="7" class="text-center">
-                                <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
-                                    <div>
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="sr-only">Loading...</span>
-                                        </div>
-                                        <p class="mt-2">Loading orders...</p>
-                                    </div>
+        <div class="table-responsive">
+            <table class="table custom-table table-striped table-hover">
+                <thead> 
+                    <tr id="tableHeader">
+                        <th>
+                            <i class="fas fa-check-square" title="Select for grouping"></i>
+                        </th>
+                        <th><i class="fas fa-box"></i> Product</th>
+                        <th><i class="fas fa-user"></i> Buyer</th>
+                        <th><i class="fas fa-peso-sign"></i> Price</th>
+                        <th><i class="fas fa-calendar"></i> Date & Time</th>
+                        <th><i class="fas fa-info-circle"></i> Status</th>
+                        <th><i class="fas fa-cogs"></i> Actions</th>    
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <div class="loading-container">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
                                 </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                                <p class="mt-2">Loading orders...</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -181,35 +143,13 @@
         <div class="col-12">
             <div class="card bg-light">
                 <div class="card-body">
-                    <h6><i class="fas fa-info-circle"></i> Enhanced Features Guide:</h6>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <strong>🔍 Buyer Information:</strong>
-                            <p class="small">See who placed each order with clear buyer identification.</p>
-                        </div>
-                        <div class="col-md-4">
-                            <strong>📅 Date & Time Display:</strong>
-                            <p class="small">View precise order dates and times for better tracking.</p>
-                        </div>
-                        <div class="col-md-4">
-                            <strong>₱ Peso Currency:</strong>
-                            <p class="small">All prices now display in Philippine Peso (₱) format.</p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <strong>📦 Order Grouping:</strong>
-                            <p class="small">Group multiple orders from the same buyer for efficient shipping.</p>
-                        </div>
-                        <div class="col-md-4">
-                            <strong>🚚 Bulk Shipping:</strong>
-                            <p class="small">Ship multiple items together with one click when grouped.</p>
-                        </div>
-                        <div class="col-md-4">
-                            <strong>🔄 View Toggle:</strong>
-                            <p class="small">Switch between regular and grouped views as needed.</p>
-                        </div>
-                    </div>
+                    <h6><i class="fas fa-info-circle"></i> Mobile Tips:</h6>
+                    <ul class="mb-0">
+                        <li>Scroll horizontally on the table to see all columns</li>
+                        <li>Tap and hold on buttons for more options</li>
+                        <li>Use landscape mode for better table viewing</li>
+                        <li>Statistics cards show key metrics at a glance</li>
+                    </ul>
                 </div>
             </div>
         </div>
