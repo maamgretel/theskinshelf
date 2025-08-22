@@ -1,5 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.myapp.ecommerce" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<widget id="com.myapp.ecommerce" version="1.0.0"
+    xmlns="http://www.w3.org/ns/widgets"
+    xmlns:cdv="http://cordova.apache.org/ns/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
     <name>E-commerceApp</name>
     <description>Sample Apache Cordova App</description>
     <author email="dev@cordova.apache.org" href="https://cordova.apache.org">
@@ -7,19 +11,29 @@
     </author>
     <content src="index.html" />
     
+    <!-- Allow backend -->
     <access origin="https://backend-rj0a.onrender.com" />
-    
+
+    <!-- Allow external links -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
 
     <platform name="android">
         <allow-intent href="market:*" />
 
+        <!-- Android permissions -->
         <config-file target="AndroidManifest.xml" parent="/manifest">
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
         </config-file>
 
-    </platform>
+        <!-- ✅ Use modern single source for icons -->
+        <icon src="resources/icon.png" />
 
+        <!-- ✅ Modern splash method -->
+        <preference name="SplashScreen" value="screen" />
+        <preference name="SplashScreenDelay" value="3000" />
+        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="resources/splash.png" />
+        <preference name="AndroidWindowSplashScreenBackground" value="#FFFFFF" />
+    </platform>
 </widget>
