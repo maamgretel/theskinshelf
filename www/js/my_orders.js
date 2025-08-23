@@ -20,18 +20,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'badge-warning'; // For 'pending' or other statuses
     }
 
-    // --- Helper function to group orders by date (since no seller info available) ---
-    function groupOrdersByDate(orders) {
-        const grouped = {};
+    // --- ENHANCED: Group orders by date, then by seller ---
+    function groupOrdersByDateAndSeller(orders) {
+        const dateGroups = {};
         
+        // First, group by date
         orders.forEach(order => {
-            // Group by order date (same day)
             const orderDate = new Date(order.order_date).toDateString();
             
-            if (!grouped[orderDate]) {
-                grouped[orderDate] = {
+            if (!dateGroups[orderDate]) {
+                dateGroups[orderDate] = {
                     order_date: order.order_date,
                     date_string: orderDate,
+                    sellers: {}
+                };
+            }
+            
+            // Then group by seller within each date
+            const sellerId = order.seller_id;
+            const sellerName = order.seller_name || 'Unknown Seller';
+            
+            if (!dateGroups[orderDate].sellers[sellerId]) {
+                dateGroups[orderDate].sellers[sellerId] = {
+                    seller_id: sellerId,
+                    seller_name: sellerName,
                     status: order.status || 'pending',
                     order_ids: [],
                     products: [],
@@ -39,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }
             
-            // Add product to the group
+            // Add product to the seller group
             const productData = {
                 id: order.id,
                 name: order.product_name || 'Unknown Product',
@@ -49,19 +61,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 subtotal: parseFloat(order.total_price || 0)
             };
             
-            grouped[orderDate].products.push(productData);
-            grouped[orderDate].order_ids.push(order.id);
+            dateGroups[orderDate].sellers[sellerId].products.push(productData);
+            dateGroups[orderDate].sellers[sellerId].order_ids.push(order.id);
+            dateGroups[orderDate].sellers[sellerId].total_amount += productData.subtotal;
             
-            // Add to total amount
-            grouped[orderDate].total_amount += productData.subtotal;
-            
-            // Update status to most recent status in the group
+            // Update status to most recent status in the seller group
             if (order.status) {
-                grouped[orderDate].status = order.status;
+                dateGroups[orderDate].sellers[sellerId].status = order.status;
             }
         });
         
-        return Object.values(grouped);
+        return dateGroups;
     }
 
     // --- Function to create product item HTML ---
@@ -69,10 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <div class="d-flex align-items-center mb-2 pb-2 border-bottom">
                 <img src="${product.image}" 
-                     alt="${product.name}" 
-                     class="product-image mr-3"
-                     style="width: 60px; height: 60px; object-fit: cover; border-radius: 0.25rem;"
-                     onerror="this.src='/images/placeholder.jpg'">
+                    alt="${product.name}" 
+                    class="product-image mr-3"
+                    style="width: 60px; height: 60px; object-fit: cover; border-radius: 0.25rem;"
+                    onerror="this.src='/images/placeholder.jpg'">
                 <div class="flex-grow-1">
                     <h6 class="mb-1">${product.name}</h6>
                     <small class="text-muted">Individual Order</small>
@@ -84,41 +94,30 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // --- Function to create grouped order card ---
-    function createGroupedOrderCard(orderGroup) {
-        const orderDate = new Date(orderGroup.order_date).toLocaleDateString('en-US', {
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric'
-        });
-
-        const orderTime = new Date(orderGroup.order_date).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-
-        const productsHTML = orderGroup.products.map(product => 
+    // --- ENHANCED: Function to create seller group card ---
+    function createSellerGroupCard(sellerGroup) {
+        const productsHTML = sellerGroup.products.map(product => 
             createProductItemHTML(product)
         ).join('');
 
-        const productCount = orderGroup.products.length;
+        const productCount = sellerGroup.products.length;
         const productText = productCount === 1 ? 'item' : 'items';
 
         return `
-            <div class="card mb-4 order-card">
-                <div class="card-header">
+            <div class="card mb-3 seller-group-card" style="margin-left: 20px; border-left: 4px solid #007bff;">
+                <div class="card-header bg-light">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 class="mb-1">
-                                <i class="fas fa-calendar-day mr-2"></i>
-                                Order from ${orderDate}
-                            </h5>
+                            <h6 class="mb-1">
+                                <i class="fas fa-store mr-2"></i>
+                                ${sellerGroup.seller_name}
+                            </h6>
                             <small class="text-muted">
-                                ${productCount} ${productText} • Placed at ${orderTime}
+                                ${productCount} ${productText}
                             </small>
                         </div>
-                        <span class="badge ${getStatusBadgeClass(orderGroup.status)} badge-lg">
-                            ${orderGroup.status || 'Pending'}
+                        <span class="badge ${getStatusBadgeClass(sellerGroup.status)}">
+                            ${sellerGroup.status || 'Pending'}
                         </span>
                     </div>
                 </div>
@@ -129,14 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <hr>
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>Total Amount: ₱${orderGroup.total_amount.toFixed(2)}</strong>
+                            <strong>Seller Total: ₱${sellerGroup.total_amount.toFixed(2)}</strong>
                         </div>
                         <div>
-                            <button class="btn btn-outline-primary btn-sm mr-2" onclick="viewOrderDetails('${orderGroup.order_ids.join(',')}')">
+                            <button class="btn btn-outline-primary btn-sm mr-2" onclick="viewOrderDetails('${sellerGroup.order_ids.join(',')}')">
                                 View Details
                             </button>
-                            ${orderGroup.status === 'delivered' ? 
-                                '<button class="btn btn-primary btn-sm" onclick="reorderItems(\'' + orderGroup.order_ids.join(',') + '\')">Reorder</button>' : 
+                            ${sellerGroup.status === 'delivered' ? 
+                                '<button class="btn btn-primary btn-sm" onclick="reorderItems(\'' + sellerGroup.order_ids.join(',') + '\')">Reorder</button>' : 
                                 ''
                             }
                         </div>
@@ -146,46 +145,59 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // --- Alternative: Show individual orders (no grouping) ---
-    function createIndividualOrderCard(order) {
-        const orderDate = new Date(order.order_date).toLocaleDateString('en-US', {
+    // --- ENHANCED: Function to create date group card ---
+    function createDateGroupCard(dateGroup) {
+        const orderDate = new Date(dateGroup.order_date).toLocaleDateString('en-US', {
             year: 'numeric', 
             month: 'long', 
-            day: 'numeric',
+            day: 'numeric'
+        });
+
+        const orderTime = new Date(dateGroup.order_date).toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit'
         });
 
+        // Calculate totals for the entire date
+        let totalProducts = 0;
+        let totalAmount = 0;
+        const sellers = Object.values(dateGroup.sellers);
+        
+        sellers.forEach(seller => {
+            totalProducts += seller.products.length;
+            totalAmount += seller.total_amount;
+        });
+
+        // Create seller group cards
+        const sellerGroupsHTML = sellers.map(sellerGroup => 
+            createSellerGroupCard(sellerGroup)
+        ).join('');
+
+        const productText = totalProducts === 1 ? 'item' : 'items';
+        const sellerText = sellers.length === 1 ? 'seller' : 'sellers';
+
         return `
-            <div class="card mb-3 order-card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>Order #${order.id}</strong>
-                        <small class="text-muted d-block">Placed on ${orderDate}</small>
-                    </div>
-                    <span class="badge ${getStatusBadgeClass(order.status)}">${order.status || 'Pending'}</span>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <img src="${order.product_image}" 
-                             alt="${order.product_name}" 
-                             class="product-image mr-3"
-                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 0.25rem;"
-                             onerror="this.src='/images/placeholder.jpg'">
-                        <div class="flex-grow-1">
-                            <h5 class="card-title mb-1">${order.product_name}</h5>
-                            <p class="card-text font-weight-bold">₱${parseFloat(order.total_price).toFixed(2)}</p>
-                        </div>
+            <div class="card mb-4 date-group-card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <button class="btn btn-outline-primary btn-sm mr-2" onclick="viewOrderDetails(${order.id})">
-                                View Details
-                            </button>
-                            ${order.status === 'delivered' ? 
-                                '<button class="btn btn-primary btn-sm" onclick="reorderItems(' + order.id + ')">Reorder</button>' : 
-                                ''
-                            }
+                            <h5 class="mb-1">
+                                <i class="fas fa-calendar-day mr-2"></i>
+                                Orders from ${orderDate}
+                            </h5>
+                            <small class="text-muted">
+                                ${totalProducts} ${productText} from ${sellers.length} ${sellerText} • Placed at ${orderTime}
+                            </small>
+                        </div>
+                        <div class="text-right">
+                            <strong class="text-primary">₱${totalAmount.toFixed(2)}</strong>
+                            <br>
+                            <small class="text-muted">Daily Total</small>
                         </div>
                     </div>
+                </div>
+                <div class="card-body p-0">
+                    ${sellerGroupsHTML}
                 </div>
             </div>
         `;
@@ -231,70 +243,48 @@ document.addEventListener('DOMContentLoaded', () => {
             // Sort orders by date (newest first)
             orders.sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
 
-            // Option 1: Group by date (recommended since no seller info)
-            const useGrouping = true; // Set to false for individual order cards
+            // Group by date and seller
+            const groupedOrders = groupOrdersByDateAndSeller(orders);
             
-            if (useGrouping) {
-                const groupedOrders = groupOrdersByDate(orders);
-                groupedOrders.sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
-                
-                groupedOrders.forEach(orderGroup => {
-                    const orderCardHTML = createGroupedOrderCard(orderGroup);
-                    ordersContainer.insertAdjacentHTML('beforeend', orderCardHTML);
-                });
+            // Convert to array and sort by date (newest first)
+            const sortedDateGroups = Object.values(groupedOrders)
+                .sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
+            
+            // Create cards for each date group
+            sortedDateGroups.forEach(dateGroup => {
+                const dateCardHTML = createDateGroupCard(dateGroup);
+                ordersContainer.insertAdjacentHTML('beforeend', dateCardHTML);
+            });
 
-                // Add summary stats
-                const totalOrders = groupedOrders.length;
-                const totalAmount = groupedOrders.reduce((sum, order) => sum + order.total_amount, 0);
-                
-                const summaryHTML = `
-                    <div class="alert alert-info mb-4">
-                        <div class="row text-center">
-                            <div class="col-md-4">
-                                <h5>${orders.length}</h5>
-                                <small>Total Items</small>
-                            </div>
-                            <div class="col-md-4">
-                                <h5>${totalOrders}</h5>
-                                <small>Order Days</small>
-                            </div>
-                            <div class="col-md-4">
-                                <h5>₱${totalAmount.toFixed(2)}</h5>
-                                <small>Total Spent</small>
-                            </div>
+            // Add summary stats
+            const totalDays = sortedDateGroups.length;
+            const totalSellers = new Set(orders.map(order => order.seller_id)).size;
+            const totalAmount = orders.reduce((sum, order) => sum + parseFloat(order.total_price), 0);
+            
+            const summaryHTML = `
+                <div class="alert alert-info mb-4">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h5>${orders.length}</h5>
+                            <small>Total Orders</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h5>${totalDays}</h5>
+                            <small>Order Days</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h5>${totalSellers}</h5>
+                            <small>Different Sellers</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h5>₱${totalAmount.toFixed(2)}</h5>
+                            <small>Total Spent</small>
                         </div>
                     </div>
-                `;
-                
-                ordersContainer.insertAdjacentHTML('afterbegin', summaryHTML);
-                
-            } else {
-                // Option 2: Show individual orders (original style)
-                orders.forEach(order => {
-                    const orderCardHTML = createIndividualOrderCard(order);
-                    ordersContainer.insertAdjacentHTML('beforeend', orderCardHTML);
-                });
-
-                // Add summary stats
-                const totalAmount = orders.reduce((sum, order) => sum + parseFloat(order.total_price), 0);
-                
-                const summaryHTML = `
-                    <div class="alert alert-info mb-4">
-                        <div class="row text-center">
-                            <div class="col-md-6">
-                                <h5>${orders.length}</h5>
-                                <small>Total Orders</small>
-                            </div>
-                            <div class="col-md-6">
-                                <h5>₱${totalAmount.toFixed(2)}</h5>
-                                <small>Total Spent</small>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                ordersContainer.insertAdjacentHTML('afterbegin', summaryHTML);
-            }
+                </div>
+            `;
+            
+            ordersContainer.insertAdjacentHTML('afterbegin', summaryHTML);
 
         } catch (error) {
             console.error('Error fetching orders:', error);
@@ -310,10 +300,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Helper functions for order actions ---
+
     window.viewOrderDetails = function(orderIds) {
         console.log('View order details for:', orderIds);
-        // If multiple IDs, show the first one or create a combined view
+        
         const firstId = typeof orderIds === 'string' ? orderIds.split(',')[0] : orderIds;
         window.location.href = `order_details.html?id=${firstId}`;
     };
@@ -325,6 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Initial call to start the process ---
+
     fetchAndDisplayOrders();
 });
