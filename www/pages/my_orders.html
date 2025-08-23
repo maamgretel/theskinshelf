@@ -5,54 +5,327 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Orders</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        
+        .sidebar-nav {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
         .sidebar-nav .nav-link {
             color: #333;
             font-weight: 500;
-            padding: 10px 15px;
-            border-radius: 0.25rem;
+            padding: 12px 15px;
+            border-radius: 0.375rem;
+            margin-bottom: 0.25rem;
+            transition: all 0.2s ease;
         }
+        
         .sidebar-nav .nav-link.active,
         .sidebar-nav .nav-link:hover {
             background-color: #007bff;
             color: #fff;
+            transform: translateX(5px);
         }
-        .order-card .product-image {
-            width: 80px;
-            height: 80px;
+        
+        .order-card {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .order-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom: none;
+        }
+        
+        .order-card .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .product-image {
+            width: 60px;
+            height: 60px;
             object-fit: cover;
-            border-radius: 0.25rem;
+            border-radius: 0.375rem;
+            border: 2px solid #e9ecef;
+        }
+        
+        .products-list .border-bottom:last-child {
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        
+        .badge-lg {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+        }
+        
+        .badge-primary {
+            background-color: #007bff;
+        }
+        
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .badge-danger {
+            background-color: #dc3545;
+        }
+        
+        .spinner-border {
+            color: #007bff;
+        }
+        
+        .main-content {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .page-header {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .page-header h2 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .empty-state {
+            padding: 3rem 0;
+        }
+        
+        .empty-state i {
+            opacity: 0.5;
+        }
+        
+        .btn-outline-primary:hover {
+            transform: translateY(-1px);
+        }
+        
+        .alert-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        
+        .alert-info h5 {
+            margin: 0;
+            font-weight: 700;
+        }
+        
+        .alert-danger {
+            border: none;
+            background-color: #f8d7da;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar-nav {
+                margin-bottom: 2rem;
+            }
+            
+            .order-card .card-header {
+                padding: 1rem;
+            }
+            
+            .order-card .card-header h5 {
+                font-size: 1rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+            
+            .d-flex.justify-content-between > div:first-child {
+                margin-bottom: 1rem;
+            }
+        }
+        
+        /* Loading animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .order-card {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Hover effects for buttons */
+        .btn {
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
         }
     </style>
 </head>
 <body>
 
-<div class="container mt-4 mb-5">
+<div class="container-fluid mt-4 mb-5">
     <div class="row">
-        <div class="col-md-3">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-3 col-md-4">
             <nav class="sidebar-nav">
                 <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                    <a class="nav-link" href="profile.html">My Profile</a>
-                    <a class="nav-link active" href="my_orders.html">My Orders</a>
-                    <a class="nav-link" href="#">Help Center</a>
+                    <a class="nav-link" href="profile.html">
+                        <i class="fas fa-user mr-2"></i>My Profile
+                    </a>
+                    <a class="nav-link active" href="my_orders.html">
+                        <i class="fas fa-shopping-bag mr-2"></i>My Orders
+                    </a>
+                    <a class="nav-link" href="wishlist.html">
+                        <i class="fas fa-heart mr-2"></i>Wishlist
+                    </a>
+                    <a class="nav-link" href="addresses.html">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Addresses
+                    </a>
+                    <a class="nav-link" href="help.html">
+                        <i class="fas fa-question-circle mr-2"></i>Help Center
+                    </a>
                 </div>
             </nav>
         </div>
 
-        <div class="col-md-9">
-            <h2>My Orders</h2>
-            <hr>
-            
-            <div id="orders-list-container">
+        <!-- Main Content -->
+        <div class="col-lg-9 col-md-8">
+            <div class="main-content">
+                <div class="page-header">
+                    <h2>
+                        <i class="fas fa-shopping-bag mr-3"></i>My Orders
+                    </h2>
+                    <p class="text-muted mb-0">Track and manage your orders grouped by seller</p>
                 </div>
+                
+                <!-- Filter/Sort Options (Optional) -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <select class="form-control" id="statusFilter">
+                            <option value="">All Orders</option>
+                            <option value="pending">Pending</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <select class="form-control" id="sortOptions">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="amount_high">Highest Amount</option>
+                            <option value="amount_low">Lowest Amount</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Orders Container -->
+                <div id="orders-list-container">
+                    <!-- Orders will be loaded here by JavaScript -->
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="../js/my_orders.js"></script>
+
+<script>
+// Optional: Add filtering and sorting functionality
+document.addEventListener('DOMContentLoaded', () => {
+    const statusFilter = document.getElementById('statusFilter');
+    const sortOptions = document.getElementById('sortOptions');
+    
+    // Add event listeners for filtering and sorting
+    statusFilter.addEventListener('change', filterOrders);
+    sortOptions.addEventListener('change', sortOrders);
+    
+    function filterOrders() {
+        const selectedStatus = statusFilter.value.toLowerCase();
+        const orderCards = document.querySelectorAll('.order-card');
+        
+        orderCards.forEach(card => {
+            if (!selectedStatus) {
+                card.style.display = 'block';
+            } else {
+                const statusBadge = card.querySelector('.badge');
+                const cardStatus = statusBadge ? statusBadge.textContent.toLowerCase() : '';
+                card.style.display = cardStatus.includes(selectedStatus) ? 'block' : 'none';
+            }
+        });
+    }
+    
+    function sortOrders() {
+        const sortValue = sortOptions.value;
+        const container = document.getElementById('orders-list-container');
+        const orderCards = Array.from(container.querySelectorAll('.order-card'));
+        
+        orderCards.sort((a, b) => {
+            switch (sortValue) {
+                case 'oldest':
+                    return new Date(getOrderDate(a)) - new Date(getOrderDate(b));
+                case 'amount_high':
+                    return getOrderAmount(b) - getOrderAmount(a);
+                case 'amount_low':
+                    return getOrderAmount(a) - getOrderAmount(b);
+                case 'newest':
+                default:
+                    return new Date(getOrderDate(b)) - new Date(getOrderDate(a));
+            }
+        });
+        
+        // Remove and re-append sorted cards
+        orderCards.forEach(card => container.appendChild(card));
+    }
+    
+    function getOrderDate(card) {
+        const dateText = card.querySelector('small').textContent;
+        // Extract date from "Order #123 • 2 products • January 15, 2024 at 2:30 PM"
+        const dateMatch = dateText.match(/(\w+ \d+, \d+)/);
+        return dateMatch ? new Date(dateMatch[1]) : new Date();
+    }
+    
+    function getOrderAmount(card) {
+        const amountText = card.querySelector('strong').textContent;
+        // Extract amount from "Total Amount: ₱1,234.56"
+        const amountMatch = amountText.match(/₱([\d,]+\.?\d*)/);
+        return amountMatch ? parseFloat(amountMatch[1].replace(',', '')) : 0;
+    }
+});
+</script>
 
 </body>
 </html>
