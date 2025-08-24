@@ -117,11 +117,16 @@
       position: relative;
       overflow: hidden;
       cursor: pointer;
+      user-select: none;
     }
 
     .stat-card:hover {
       transform: translateY(-5px);
       box-shadow: var(--shadow-hover);
+    }
+
+    .stat-card:active {
+      transform: translateY(-2px) scale(0.98);
     }
 
     .stat-card::before {
@@ -139,6 +144,23 @@
     .stat-card.danger::before { background: var(--danger-color); }
     .stat-card.info::before { background: var(--info-color); }
 
+    /* Add click hint for stat cards */
+    .stat-card::after {
+      content: 'Click to view details';
+      position: absolute;
+      bottom: 10px;
+      right: 15px;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .stat-card:hover::after {
+      opacity: 1;
+    }
+
     .stat-header {
       display: flex;
       justify-content: space-between;
@@ -155,6 +177,11 @@
       justify-content: center;
       font-size: 1.5rem;
       color: white;
+      transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+      transform: scale(1.1);
     }
 
     .stat-icon.success { background: var(--success-color); }
@@ -404,11 +431,11 @@
 
     <!-- Stats Grid -->
     <div class="stats-grid">
-      <div class="stat-card info">
+      <div class="stat-card info" id="usersCard" onclick="navigateToPage('sellers.html')">
         <div class="stat-header">
           <div>
             <div class="stat-value" id="totalUsers">0</div>
-            <div class="stat-label">Total Users</div>
+            <div class="stat-label">Total Sellers</div>
             <div class="stat-change positive">
               <i class="fas fa-arrow-up"></i>
               <span id="usersChange">+5.2%</span>
@@ -420,7 +447,7 @@
         </div>
       </div>
 
-      <div class="stat-card success">
+      <div class="stat-card success" id="productsCard" onclick="navigateToPage('products.html')">
         <div class="stat-header">
           <div>
             <div class="stat-value" id="totalProducts">0</div>
@@ -436,7 +463,7 @@
         </div>
       </div>
 
-      <div class="stat-card warning">
+      <div class="stat-card warning" id="ordersCard" onclick="navigateToPage('admin_orders.html')">
         <div class="stat-header">
           <div>
             <div class="stat-value" id="totalOrders">0</div>
@@ -452,7 +479,7 @@
         </div>
       </div>
 
-      <div class="stat-card danger">
+      <div class="stat-card danger" id="revenueCard" onclick="showRevenueDetails()">
         <div class="stat-header">
           <div>
             <div class="stat-value" id="totalRevenue">₱0.00</div>
@@ -606,6 +633,8 @@
     let orderStatusChart = null;
 
     document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM Content Loaded');
+      
       currentUser = JSON.parse(localStorage.getItem('user'));
       
       if (!currentUser || currentUser.role !== 'admin') {
@@ -616,6 +645,8 @@
 
       initializeDashboard();
       setupEventListeners();
+      
+      console.log('Dashboard initialization complete');
     });
 
     function initializeDashboard() {
@@ -625,101 +656,54 @@
       initializeCharts();
     }
 
- // IMMEDIATE FIX - Replace your setupEventListeners function with this:
-
-function setupEventListeners() {
-  console.log('Setting up event listeners'); 
-  
-  // Try multiple ways to attach the logout listener
-  const logoutBtn = document.getElementById('logoutButton');
-  if (logoutBtn) {
-    console.log('Logout button found, adding listener');
-    
-    // Method 1: Direct onclick assignment
-    logoutBtn.onclick = function(e) {
-      e.preventDefault();
-      console.log('Logout clicked via onclick');
-      logout();
-    };
-    
-    // Method 2: addEventListener as backup
-    logoutBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      console.log('Logout clicked via addEventListener');
-      logout();
-    });
-    
-    console.log('Event listeners attached. Testing onclick:', logoutBtn.onclick !== null);
-  } else {
-    console.error('Logout button not found!');
-  }
-
-  // Create Admin button
-  const createAdminBtn = document.getElementById('createAdminBtn');
-  if (createAdminBtn) {
-    createAdminBtn.addEventListener('click', createAdmin);
-  }
-}
-
-// Make sure this logout function exists and is clean:
-function logout() {
-  console.log('Logout function called');
-  
-  if (confirm('Are you sure you want to logout?')) {
-    console.log('User confirmed logout');
-    
-    // Clear localStorage
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.clear();
-    
-    // Redirect - try multiple methods
-    try {
-      window.location.href = '../login.html';
-    } catch (error) {
-      console.error('Redirect error:', error);
-      window.location.replace('../login.html');
+    // Simple navigation functions
+    function navigateToPage(page) {
+      console.log('Navigating to:', page);
+      window.location.href = page;
     }
-  }
-}
 
-// ALSO - Make sure your DOMContentLoaded is calling setupEventListeners:
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('DOM Content Loaded');
-  
-  currentUser = JSON.parse(localStorage.getItem('user'));
-  
-  if (!currentUser || currentUser.role !== 'admin') {
-    alert('Access denied. Admin login required.');
-    window.location.href = '../login.html';
-    return;
-  }
+    function showRevenueDetails() {
+      console.log('Revenue card clicked');
+      showSuccessMessage('Revenue analytics coming soon!');
+    }
 
-  initializeDashboard();
-  setupEventListeners(); // MAKE SURE THIS IS CALLED
-  
-  // Additional check after setup
-  setTimeout(function() {
-    const btn = document.getElementById('logoutButton');
-    console.log('After setup - Button onclick:', btn.onclick !== null ? 'ATTACHED' : 'NOT ATTACHED');
-  }, 100);
-});
-
-// EMERGENCY FALLBACK - Add this after your existing code:
-// This will run after everything else and force attach the listener
-setTimeout(function() {
-  const logoutBtn = document.getElementById('logoutButton');
-  if (logoutBtn && !logoutBtn.onclick) {
-    console.log('Emergency fallback: Attaching logout listener');
-    logoutBtn.onclick = function() {
-      console.log('Emergency logout triggered');
-      if (confirm('Are you sure you want to logout?')) {
-        localStorage.clear();
-        window.location.href = 'login.html';
+    function setupEventListeners() {
+      console.log('Setting up event listeners');
+      
+      // Logout button
+      const logoutBtn = document.getElementById('logoutButton');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          logout();
+        });
       }
-    };
-  }
-}, 2000);
+
+      // Create Admin button
+      const createAdminBtn = document.getElementById('createAdminBtn');
+      if (createAdminBtn) {
+        createAdminBtn.addEventListener('click', createAdmin);
+      }
+
+      console.log('Event listeners setup complete');
+    }
+
+    function logout() {
+      console.log('Logout function called');
+      
+      if (confirm('Are you sure you want to logout?')) {
+        try {
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          localStorage.clear();
+          window.location.href = '../login.html';
+        } catch (error) {
+          console.error('Error during logout:', error);
+          window.location.replace('../login.html');
+        }
+      }
+    }
+
     function updateAdminProfile() {
       document.getElementById('userName').textContent = currentUser.name;
       if (currentUser.profile_pic) {
@@ -1075,121 +1059,65 @@ setTimeout(function() {
       window.URL.revokeObjectURL(url);
     }
 
-// COMPLETE LOGOUT BUTTON FIX
-// Replace your existing logout-related code with this:
-
-// 1. First, make sure you have ONLY ONE logout function:
-function logout() {
-  console.log('Logout function called'); // Debug log
-  
-  if (confirm('Are you sure you want to logout?')) {
-    console.log('User confirmed logout'); // Debug log
-    
-    try {
-      // Clear all user data from localStorage
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      localStorage.removeItem('userRole');
-      localStorage.clear(); // Clear everything to be safe
-      
-      console.log('LocalStorage cleared'); // Debug log
-      
-      // Redirect to login page
-      window.location.href = '../login.html';
-      
-    } catch (error) {
-      console.error('Error during logout:', error);
-      // Fallback redirect
-      window.location.replace('../login.html');
-    }
-  } else {
-    console.log('User cancelled logout'); // Debug log
-  }
-}
-
-// 2. Update your setupEventListeners function:
-function setupEventListeners() {
-  console.log('Setting up event listeners'); // Debug log
-  
-  // Logout button
-  const logoutBtn = document.getElementById('logoutButton');
-  if (logoutBtn) {
-    console.log('Logout button found, adding listener'); // Debug log
-    
-    // Remove any existing listeners first
-    logoutBtn.removeEventListener('click', logout);
-    
-    // Add the event listener
-    logoutBtn.addEventListener('click', function(e) {
-      e.preventDefault(); // Prevent any default behavior
-      console.log('Logout button clicked'); // Debug log
-      logout();
-    });
-  } else {
-    console.error('Logout button not found!'); // Debug log
-  }
-
-  // Create Admin button
-  const createAdminBtn = document.getElementById('createAdminBtn');
-  if (createAdminBtn) {
-    createAdminBtn.addEventListener('click', createAdmin);
-  }
-}
-
-// 3. Alternative: Add inline onclick as backup
-// In your HTML, you can also add onclick directly to the button:
-// <button class="btn btn-outline-light" id="logoutButton" onclick="logout()">
-
-// 4. Test function - add this temporarily to test if JavaScript is working:
-function testLogout() {
-  alert('Test function works!');
-  console.log('Test function called');
-}
-
-// Call this in browser console to test: testLogout()
-
-// 5. Make sure DOMContentLoaded is properly set up:
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('DOM Content Loaded'); // Debug log
-  
-  currentUser = JSON.parse(localStorage.getItem('user'));
-  
-  if (!currentUser || currentUser.role !== 'admin') {
-    alert('Access denied. Admin login required.');
-    window.location.href = '../login.html';
-    return;
-  }
-
-  initializeDashboard();
-  setupEventListeners(); // Make sure this is called
-});
-
-// 6. Additional debugging - check if button exists after page loads
-setTimeout(function() {
-  const btn = document.getElementById('logoutButton');
-  console.log('Logout button check:', btn ? 'Found' : 'NOT FOUND');
-  if (btn) {
-    console.log('Button element:', btn);
-    console.log('Button onclick:', btn.onclick);
-  }
-}, 1000);
     // Auto-refresh data every 5 minutes
     setInterval(() => {
       loadDashboardStats();
       loadRecentActivity();
     }, 300000);
 
-    // Add click-to-refresh functionality for stat cards
+    // Enhanced stat card interaction feedback
     document.addEventListener('click', function(e) {
-      if (e.target.closest('.stat-card')) {
-        const card = e.target.closest('.stat-card');
-        card.style.opacity = '0.7';
+      const statCard = e.target.closest('.stat-card');
+      if (statCard && !e.target.closest('button') && !e.target.closest('a')) {
+        // Visual feedback for card click
+        statCard.style.transform = 'translateY(-2px) scale(0.98)';
         setTimeout(() => {
-          card.style.opacity = '1';
-          loadDashboardStats();
-        }, 200);
+          statCard.style.transform = 'translateY(-5px) scale(1)';
+        }, 150);
+        
+        // Add ripple effect
+        const ripple = document.createElement('div');
+        ripple.style.position = 'absolute';
+        ripple.style.borderRadius = '50%';
+        ripple.style.background = 'rgba(99, 102, 241, 0.3)';
+        ripple.style.transform = 'scale(0)';
+        ripple.style.animation = 'ripple 0.6s linear';
+        ripple.style.left = e.offsetX + 'px';
+        ripple.style.top = e.offsetY + 'px';
+        ripple.style.width = '20px';
+        ripple.style.height = '20px';
+        ripple.style.pointerEvents = 'none';
+        
+        statCard.style.position = 'relative';
+        statCard.appendChild(ripple);
+        
+        setTimeout(() => {
+          ripple.remove();
+        }, 600);
       }
     });
+
+    // Add CSS for ripple animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes ripple {
+        to {
+          transform: scale(4);
+          opacity: 0;
+        }
+      }
+      
+      .stat-card {
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .stat-card:active {
+        transform: translateY(-2px) scale(0.98) !important;
+      }
+    `;
+    document.head.appendChild(style);
+
   </script>
 </body>
 </html>

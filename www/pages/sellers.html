@@ -3,101 +3,1151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - All Sellers</title>
+    <title>Admin - All Sellers | Shein Admin</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Your existing CSS is unchanged */
+        :root {
+            --shein-black: #000000;
+            --shein-white: #ffffff;
+            --shein-gray: #666666;
+            --shein-light-gray: #f5f5f5;
+            --shein-border: #e0e0e0;
+            --shein-hover: #f9f9f9;
+            --shein-success: #000000;
+            --shein-warning: #666666;
+            --shein-danger: #000000;
+            --shein-info: #000000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--shein-white);
+            min-height: 100vh;
+            color: var(--shein-black);
+        }
+
+        .main-container {
+            background: var(--shein-white);
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .header-section {
+            background: var(--shein-black);
+            padding: 40px 30px;
+            color: var(--shein-white);
+            border-bottom: 1px solid var(--shein-border);
+        }
+
+        .header-section::before,
+        .header-section::after {
+            display: none;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            letter-spacing: -0.02em;
+        }
+
+        .page-subtitle {
+            font-size: 1rem;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .back-btn {
+            background: var(--shein-white);
+            border: 2px solid var(--shein-white);
+            color: var(--shein-black);
+            padding: 12px 24px;
+            border-radius: 0;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .back-btn:hover {
+            background: var(--shein-light-gray);
+            border-color: var(--shein-light-gray);
+            color: var(--shein-black);
+            text-decoration: none;
+        }
+
+        .content-section {
+            padding: 40px 30px;
+            background: var(--shein-white);
+        }
+
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--shein-light-gray);
+            border-top: 2px solid var(--shein-black);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1rem;
+            color: var(--shein-gray);
+            font-weight: 400;
+        }
+
+        .seller-card {
+            background: var(--shein-white);
+            border: 1px solid var(--shein-border);
+            border-radius: 0;
+            box-shadow: none;
+            transition: all 0.2s ease;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .seller-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-color: var(--shein-black);
+        }
+
+        .seller-card::before {
+            display: none;
+        }
+
+        .card-body {
+            padding: 30px 25px 20px;
+            border-bottom: 1px solid var(--shein-border);
+        }
+
+        .seller-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 0;
+            border: 1px solid var(--shein-border);
+            transition: all 0.2s ease;
+        }
+
+        .seller-card:hover .seller-img {
+            border-color: var(--shein-black);
+        }
+
+        .seller-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--shein-black);
+            margin: 15px 0 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .seller-email {
+            color: var(--shein-gray);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .product-count-badge {
+            background: var(--shein-black);
+            color: var(--shein-white);
+            padding: 8px 16px;
+            border-radius: 0;
+            font-weight: 500;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-footer {
+            background: var(--shein-white);
+            border: none;
+            padding: 15px 25px;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 0;
+            border: 1px solid var(--shein-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            margin: 0 2px;
+            background: var(--shein-white);
+            color: var(--shein-black);
+        }
+
+        .action-btn:hover {
+            background: var(--shein-black);
+            color: var(--shein-white);
+            border-color: var(--shein-black);
+        }
+
+        .pagination {
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .page-link {
+            border: 1px solid var(--shein-border);
+            color: var(--shein-black);
+            background: var(--shein-white);
+            padding: 12px 16px;
+            margin: 0 2px;
+            border-radius: 0;
+            transition: all 0.2s ease;
+        }
+
+        .page-link:hover {
+            background: var(--shein-black);
+            color: var(--shein-white);
+            border-color: var(--shein-black);
+        }
+
+        .page-item.active .page-link {
+            background: var(--shein-black);
+            color: var(--shein-white);
+            border-color: var(--shein-black);
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: var(--shein-black);
+            color: var(--shein-white);
+            border: none;
+            padding: 25px 30px;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .close {
+            color: var(--shein-white);
+            opacity: 1;
+        }
+
+        .close:hover {
+            color: var(--shein-light-gray);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-footer {
+            border: none;
+            padding: 20px 30px;
+            background: var(--shein-light-gray);
+        }
+
+        .btn-primary {
+            background: var(--shein-black);
+            border: 1px solid var(--shein-black);
+            border-radius: 0;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary:hover {
+            background: var(--shein-gray);
+            border-color: var(--shein-gray);
+        }
+
+        .btn-secondary {
+            background: var(--shein-white);
+            border: 1px solid var(--shein-border);
+            color: var(--shein-black);
+            border-radius: 0;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--shein-light-gray);
+            border-color: var(--shein-black);
+            color: var(--shein-black);
+        }
+
+        .form-control {
+            border: 1px solid var(--shein-border);
+            border-radius: 0;
+            padding: 15px;
+            transition: all 0.2s ease;
+            background: var(--shein-white);
+        }
+
+        .form-control:focus {
+            border-color: var(--shein-black);
+            box-shadow: none;
+            background: var(--shein-white);
+        }
+
+        .product-list-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid var(--shein-border);
+            border-radius: 0;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+            background: var(--shein-white);
+        }
+
+        .product-list-item:hover {
+            border-color: var(--shein-black);
+        }
+
+        .product-list-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 0;
+            border: 1px solid var(--shein-border);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--shein-gray);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--shein-black);
+        }
+
+        .stats-card {
+            background: var(--shein-light-gray);
+            border: 1px solid var(--shein-border);
+            border-radius: 0;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .stats-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--shein-black);
+        }
+
+        .stats-label {
+            color: var(--shein-gray);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge {
+            background: var(--shein-black);
+            color: var(--shein-white);
+            border-radius: 0;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-success {
+            background: var(--shein-black);
+        }
+
+        .badge-info {
+            background: var(--shein-gray);
+        }
+
+        .text-success {
+            color: var(--shein-black) !important;
+        }
+
+        .text-info {
+            color: var(--shein-gray) !important;
+        }
+
+        .text-warning {
+            color: var(--shein-black) !important;
+        }
+
+        .text-danger {
+            color: var(--shein-black) !important;
+        }
+
+        .alert-success {
+            background: var(--shein-black) !important;
+            color: var(--shein-white) !important;
+            border: none !important;
+            border-radius: 0 !important;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 0;
+            }
+
+            .header-section {
+                padding: 30px 20px;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+            }
+
+            .content-section {
+                padding: 20px 15px;
+            }
+
+            .seller-card {
+                margin-bottom: 15px;
+            }
+
+            .action-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0">👥 All Sellers</h3>
-        <a href="admin_dashboard.html" class="btn btn-secondary">
-            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
-        </a>
+<div class="main-container">
+    <div class="header-section">
+        <div class="header-content d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-users"></i>
+                    All Sellers
+                </h1>
+                <p class="page-subtitle">Manage and monitor all seller accounts</p>
+            </div>
+            <a href="admin_dashboard.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Dashboard
+            </a>
+        </div>
     </div>
-    
-    <div id="sellersContainer" class="row"></div>
-    <nav id="paginationNav" class="pagination-nav"></nav>
+
+    <div class="content-section">
+        <div id="loadingSpinner" class="loading-spinner">
+            <div class="spinner"></div>
+            <div class="loading-text">Fetching sellers data...</div>
+        </div>
+        
+        <div id="sellersContainer" class="row" style="display: none;"></div>
+        <nav id="paginationNav" class="pagination-nav"></nav>
+    </div>
 </div>
 
+<!-- Products Modal -->
 <div class="modal fade" id="productsModal" tabindex="-1" aria-labelledby="productsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="productsModalLabel">Seller's Products</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body" id="modalProductList"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productsModalLabel">
+                    <i class="fas fa-box-open me-2"></i>
+                    Seller's Products
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalProductList">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading products...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
+<!-- Seller Details Modal -->
 <div class="modal fade" id="sellerDetailsModal" tabindex="-1" aria-labelledby="sellerDetailsModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="sellerDetailsModalLabel">Seller Details</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body" id="sellerDetailsBody"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sellerDetailsModalLabel">
+                    <i class="fas fa-user-circle me-2"></i>
+                    Seller Details
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="sellerDetailsBody">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading seller details...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
+<!-- Edit Seller Modal -->
 <div class="modal fade" id="editSellerModal" tabindex="-1" aria-labelledby="editSellerModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editSellerModalLabel">Edit Seller</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form id="editSellerForm">
-          <input type="hidden" id="editSellerId">
-          <div class="form-group">
-            <label for="editSellerEmail">Email address</label>
-            <input type="email" class="form-control" id="editSellerEmail" required>
-          </div>
-          <div class="form-group">
-            <label for="editSellerPhone">Phone Number</label>
-            <input type="tel" class="form-control" id="editSellerPhone">
-          </div>
-          <div class="form-group">
-            <label for="editSellerPassword">New Password</label>
-            <input type="password" class="form-control" id="editSellerPassword" placeholder="Leave blank to keep current password">
-            <small class="form-text text-muted">Only enter a value here if you want to change the seller's password.</small>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-          </div>
-        </form>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSellerModalLabel">
+                    <i class="fas fa-edit me-2"></i>
+                    Edit Seller
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editSellerForm">
+                    <input type="hidden" id="editSellerId">
+                    <div class="form-group">
+                        <label for="editSellerEmail"><i class="fas fa-envelope me-2"></i>Email Address</label>
+                        <input type="email" class="form-control" id="editSellerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editSellerPhone"><i class="fas fa-phone me-2"></i>Phone Number</label>
+                        <input type="tel" class="form-control" id="editSellerPhone">
+                    </div>
+                    <div class="form-group">
+                        <label for="editSellerPassword"><i class="fas fa-lock me-2"></i>New Password</label>
+                        <input type="password" class="form-control" id="editSellerPassword" placeholder="Leave blank to keep current password">
+                        <small class="form-text text-muted">Only enter a value here if you want to change the seller's password.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="submit" form="editSellerForm" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Save Changes
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script src="../js/admin_sellers_page.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+    const DEFAULT_AVATAR = 'https://res.cloudinary.com/dwgvlwkyt/image/upload/v1751856106/default-avatar.jpg';
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    // --- Security Check ---
+    if (!user || user.role !== 'admin') {
+        alert("Access denied. You must be an admin to view this page.");
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // --- Element References ---
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const sellersContainer = document.getElementById('sellersContainer');
+    const paginationNav = document.getElementById('paginationNav');
+    const modalProductList = document.getElementById('modalProductList');
+    const productsModalLabel = document.getElementById('productsModalLabel');
+    const sellerDetailsBody = document.getElementById('sellerDetailsBody');
+    const editSellerForm = document.getElementById('editSellerForm');
+    const editSellerIdInput = document.getElementById('editSellerId');
+    const editSellerEmailInput = document.getElementById('editSellerEmail');
+    const editSellerPhoneInput = document.getElementById('editSellerPhone');
+    const editSellerPasswordInput = document.getElementById('editSellerPassword');
+
+    // --- State Variables ---
+    const SELLERS_PER_PAGE = 8;
+    let currentPage = 1;
+    let allSellers = [];
+
+    // --- Currency Formatter for Philippine Peso ---
+    const pesoFormatter = new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+    });
+
+    // =================================================================
+    // FUNCTION DEFINITIONS
+    // =================================================================
+
+    /**
+     * Shows loading spinner
+     */
+    function showLoading() {
+        loadingSpinner.style.display = 'flex';
+        sellersContainer.style.display = 'none';
+        paginationNav.style.display = 'none';
+    }
+
+    /**
+     * Hides loading spinner
+     */
+    function hideLoading() {
+        loadingSpinner.style.display = 'none';
+        sellersContainer.style.display = 'flex';
+        paginationNav.style.display = 'block';
+    }
+
+    /**
+     * Renders the seller cards for the current active page.
+     */
+    function renderSellerCards() {
+        sellersContainer.innerHTML = '';
+        if (!allSellers || allSellers.length === 0) {
+            sellersContainer.innerHTML = `
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No Sellers Found</h3>
+                        <p>There are currently no sellers registered in the system.</p>
+                    </div>
+                </div>`;
+            return;
+        }
+
+        const startIndex = (currentPage - 1) * SELLERS_PER_PAGE;
+        const sellersOnPage = allSellers.slice(startIndex, startIndex + SELLERS_PER_PAGE);
+
+        sellersOnPage.forEach(seller => {
+            const cardCol = document.createElement('div');
+            cardCol.className = 'col-md-4 col-lg-3 mb-4 d-flex';
+            const profilePic = seller.profile_pic || DEFAULT_AVATAR;
+
+            cardCol.innerHTML = `
+                <div class="card seller-card w-100">
+                    <div class="card-body text-center d-flex flex-column">
+                        <div class="flex-grow-1">
+                            <img src="${profilePic}" class="seller-img mb-3" alt="${seller.name}" onerror="this.src='${DEFAULT_AVATAR}';">
+                            <h5 class="seller-name">${seller.name}</h5>
+                            <p class="seller-email">${seller.email}</p>
+                            <div class="product-count-badge">
+                                <i class="fas fa-box"></i>
+                                ${seller.product_count} Products
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="btn-group w-100" role="group">
+                            <button class="btn btn-sm action-btn" data-action="view" data-seller-id="${seller.id}" title="View Details"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm action-btn" data-action="products" data-seller-id="${seller.id}" data-seller-name="${seller.name}" title="View Products"><i class="fas fa-box-open"></i></button>
+                            <button class="btn btn-sm action-btn" data-action="edit" data-seller-id="${seller.id}" title="Edit Seller"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm action-btn" data-action="delete" data-seller-id="${seller.id}" title="Delete Seller"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                </div>`;
+            sellersContainer.appendChild(cardCol);
+        });
+    }
+
+    /**
+     * Renders pagination controls.
+     */
+    function renderPaginationControls() {
+        paginationNav.innerHTML = '';
+        const pageCount = Math.ceil(allSellers.length / SELLERS_PER_PAGE);
+        if (pageCount <= 1) return;
+
+        let ulHTML = '<ul class="pagination">';
+        ulHTML += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${currentPage - 1}"><i class="fas fa-chevron-left"></i></a></li>`;
+        
+        for (let i = 1; i <= pageCount; i++) {
+            ulHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+        }
+        
+        ulHTML += `<li class="page-item ${currentPage === pageCount ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${currentPage + 1}"><i class="fas fa-chevron-right"></i></a></li>`;
+        ulHTML += '</ul>';
+        paginationNav.innerHTML = ulHTML;
+    }
+
+    /**
+     * Renders the entire page content.
+     */
+    function render() {
+        renderSellerCards();
+        renderPaginationControls();
+        hideLoading();
+    }
+
+    /**
+     * Fetches all sellers from the backend.
+     */
+    async function fetchSellers() {
+        showLoading();
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/admin/sellers`);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            const data = await response.json();
+            allSellers = data.sellers || [];
+            render();
+        } catch (error) {
+            console.error("Failed to fetch sellers:", error);
+            hideLoading();
+            sellersContainer.innerHTML = `
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                        <h3>Error Loading Sellers</h3>
+                        <p>Failed to load sellers. Please try again later.</p>
+                        <button class="btn btn-primary" onclick="fetchSellers()">
+                            <i class="fas fa-redo"></i> Try Again
+                        </button>
+                    </div>
+                </div>`;
+        }
+    }
+
+    /**
+     * Fetches and displays a seller's products in a modal.
+     */
+    async function showProductsModal(sellerId, sellerName) {
+        productsModalLabel.textContent = `Products from ${sellerName}`;
+        modalProductList.innerHTML = '<div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>';
+        $('#productsModal').modal('show');
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/admin/sellers/${sellerId}/products`);
+            if (!response.ok) throw new Error('Failed to fetch products');
+            const data = await response.json();
+
+            if (data.products && data.products.length > 0) {
+                modalProductList.innerHTML = data.products.map(product => {
+                    const productImage = product.image || 'path/to/default-product.png';
+                    return `
+                        <div class="product-list-item">
+                            <img src="${productImage}" alt="${product.name}" onerror="this.src='path/to/default-product.png';">
+                            <div class="flex-grow-1">
+                                <strong>${product.name}</strong>
+                                <div class="text-muted small mt-1">
+                                    <span class="badge badge-success me-2">${pesoFormatter.format(product.price)}</span>
+                                    <span class="badge badge-info">${product.stock} in stock</span>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
+            } else {
+                modalProductList.innerHTML = '<p class="text-center">This seller has no products listed.</p>';
+            }
+        } catch (error) {
+            console.error("Error fetching products:", error);
+            modalProductList.innerHTML = '<p class="text-center text-danger">Could not load products.</p>';
+        }
+    }
+    
+    /**
+     * Fetches and displays a seller's full details in a modal.
+     */
+    async function showSellerDetailsModal(sellerId) {
+        sellerDetailsBody.innerHTML = '<div class="text-center p-4"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>';
+        $('#sellerDetailsModal').modal('show');
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/admin/sellers/${sellerId}`);
+            if (!response.ok) throw new Error('Failed to fetch seller details.');
+            
+            const seller = await response.json();
+            const profilePic = seller.profile_pic || DEFAULT_AVATAR;
+
+            let topProductsHTML = '';
+            if (seller.top_selling_products && seller.top_selling_products.length > 0) {
+                topProductsHTML = `
+                    <h6><i class="fas fa-trophy text-warning"></i> Top Selling Products</h6>
+                    <ul class="list-group list-group-flush small">
+                        ${seller.top_selling_products.map(product => `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                ${product.name}
+                                <span class="badge badge-success badge-pill">${product.units_sold} sold</span>
+                            </li>
+                        `).join('')}
+                    </ul>`;
+            } else {
+                topProductsHTML = '<p class="text-muted small text-center mt-3">No top selling products found.</p>';
+            }
+
+            sellerDetailsBody.innerHTML = `
+                <div class="text-center">
+                    <img src="${profilePic}" class="rounded-circle mb-3" alt="${seller.name}" style="width: 100px; height: 100px; object-fit: cover;" onerror="this.src='${DEFAULT_AVATAR}';">
+                    <h5 class="modal-title">${seller.name}</h5>
+                    <p class="text-muted small mt-0">${seller.email} | Phone: ${seller.contact_number || 'N/A'}</p>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <strong>Total Sales</strong>
+                        <p class="text-success font-weight-bold mb-0">${pesoFormatter.format(seller.total_sales || 0)}</p>
+                    </div>
+                    <div class="col-6">
+                        <strong>Products Sold</strong>
+                        <p class="text-info font-weight-bold mb-0">${seller.total_products_sold || 0} units</p>
+                    </div>
+                </div>
+                <hr>
+                ${topProductsHTML}
+            `;
+        } catch (error) {
+            sellerDetailsBody.innerHTML = `<p class="text-danger text-center p-4">${error.message}</p>`;
+        }
+    }
+
+    /**
+     * Deletes a seller after confirmation.
+     */
+    async function deleteSeller(sellerId) {
+        if (!confirm(`Are you sure you want to delete seller ID: ${sellerId}?\n\nThis action cannot be undone.`)) return;
+        
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/admin/sellers/${sellerId}`, { method: 'DELETE' });
+            if (response.ok) {
+                // Show success message with better styling
+                const toast = document.createElement('div');
+                toast.className = 'alert alert-success position-fixed';
+                toast.style.cssText = `
+                    top: 20px; right: 20px; z-index: 9999; 
+                    border-radius: 12px; border: none;
+                    background: linear-gradient(135deg, var(--shein-success), #48bb78);
+                    color: white; font-weight: 600;
+                `;
+                toast.innerHTML = '<i class="fas fa-check-circle me-2"></i>Seller deleted successfully!';
+                document.body.appendChild(toast);
+                
+                setTimeout(() => toast.remove(), 3000);
+                fetchSellers();
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to delete seller.');
+            }
+        } catch (error) {
+            console.error('Deletion failed:', error);
+            alert(`Error: ${error.message}`);
+        }
+    }
+
+    /**
+     * Opens and populates the edit modal with a seller's current data.
+     */
+    async function openEditModal(sellerId) {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/admin/sellers/${sellerId}`);
+            if (!response.ok) throw new Error('Failed to fetch seller data.');
+            
+            const seller = await response.json();
+            
+            editSellerIdInput.value = seller.id;
+            editSellerEmailInput.value = seller.email;
+            editSellerPhoneInput.value = seller.contact_number || '';
+            editSellerPasswordInput.value = '';
+            
+            $('#editSellerModal').modal('show');
+
+        } catch (error) {
+            console.error('Error opening edit modal:', error);
+            alert('Could not load seller data for editing. Please try again.');
+        }
+    }
+
+    /**
+     * Handles clicks on any of the action buttons on a seller card.
+     */
+    function handleActionClick(e) {
+        const button = e.target.closest('.action-btn');
+        if (!button) return;
+
+        const action = button.dataset.action;
+        const sellerId = button.dataset.sellerId;
+
+        switch (action) {
+            case 'view':
+                showSellerDetailsModal(sellerId);
+                break;
+            case 'products':
+                const sellerName = button.dataset.sellerName;
+                showProductsModal(sellerId, sellerName);
+                break;
+            case 'edit':
+                openEditModal(sellerId);
+                break;
+            case 'delete':
+                deleteSeller(sellerId);
+                break;
+        }
+    }
+    
+    // --- Event Listeners ---
+
+    sellersContainer.addEventListener('click', handleActionClick);
+
+    paginationNav.addEventListener('click', function(e) {
+        e.preventDefault();
+        const link = e.target.closest('a[data-page]');
+        if (link) {
+            const page = parseInt(link.dataset.page, 10);
+            if (page >= 1 && page <= Math.ceil(allSellers.length / SELLERS_PER_PAGE)) {
+                currentPage = page;
+                render();
+                // Smooth scroll to top
+                document.querySelector('.header-section').scrollIntoView({ 
+                    behavior: 'smooth' 
+                });
+            }
+        }
+    });
+
+   // Replace the editSellerForm event listener with this fixed version:
+
+editSellerForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // Fix: Get the submit button from the modal footer instead of inside the form
+    const submitBtn = document.querySelector('#editSellerModal button[type="submit"]');
+    if (!submitBtn) {
+        console.error('Submit button not found');
+        return;
+    }
+
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    submitBtn.disabled = true;
+
+    const sellerId = editSellerIdInput.value;
+    
+    // Validation
+    if (!sellerId) {
+        alert('No seller ID found. Please try again.');
+        return;
+    }
+    
+    if (!editSellerEmailInput.value.trim()) {
+        alert('Email is required.');
+        return;
+    }
+    
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(editSellerEmailInput.value.trim())) {
+        alert('Please enter a valid email address.');
+        return;
+    }
+    
+    const payload = {
+        email: editSellerEmailInput.value.trim(),
+        contact_number: editSellerPhoneInput.value.trim() || null,
+    };
+
+    // Only include password if it's not empty
+    if (editSellerPasswordInput.value.trim()) {
+        if (editSellerPasswordInput.value.length < 6) {
+            alert('Password must be at least 6 characters long.');
+            return;
+        }
+        payload.password = editSellerPasswordInput.value.trim();
+    }
+    
+    console.log('Seller ID:', sellerId);
+    console.log('Payload being sent:', payload);
+
+    try {
+        console.log('Updating seller:', sellerId, 'with payload:', payload);
+        
+        const response = await fetch(`${BACKEND_URL}/api/admin/sellers/${sellerId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        console.log('Response status:', response.status);
+        
+        // Try to parse response as JSON, but handle cases where it might not be JSON
+        let result;
+        try {
+            result = await response.json();
+        } catch (jsonError) {
+            console.error('Response is not valid JSON:', jsonError);
+            const textResponse = await response.text();
+            console.error('Response text:', textResponse);
+            throw new Error(`Server returned non-JSON response (${response.status}): ${textResponse}`);
+        }
+        
+        console.log('Response data:', result);
+        
+        if (!response.ok) {
+            // Log more details about the error
+            console.error('Server error details:', {
+                status: response.status,
+                statusText: response.statusText,
+                url: response.url,
+                headers: Object.fromEntries(response.headers.entries())
+            });
+            
+            if (response.status === 500) {
+                throw new Error('Server error occurred. This might be due to:\n• Database connection issues\n• Email already exists for another user\n• Backend validation problems\n• Missing permissions\n\nPlease check with the backend administrator.');
+            } else if (response.status === 404) {
+                throw new Error('Seller not found. The seller may have been deleted by another admin.');
+            } else if (response.status === 403) {
+                throw new Error('Access denied. You may not have permission to edit this seller.');
+            } else {
+                throw new Error(result.error || result.message || `HTTP ${response.status}: Update failed`);
+            }
+        }
+        
+        // Show success message
+        const toast = document.createElement('div');
+        toast.className = 'alert alert-success position-fixed';
+        toast.style.cssText = `
+            top: 20px; right: 20px; z-index: 9999; 
+            border: none;
+            background: var(--shein-black);
+            color: var(--shein-white); font-weight: 600;
+        `;
+        toast.innerHTML = '<i class="fas fa-check-circle me-2"></i>Seller updated successfully!';
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.remove(), 3000);
+        $('#editSellerModal').modal('hide');
+        fetchSellers();
+    } catch (error) {
+        console.error('Failed to update seller:', error);
+        
+        // If it's a server error, try to get more information
+        if (error.message.includes('Server error occurred')) {
+            // Try a simple GET request to check if the seller exists
+            try {
+                console.log('Checking if seller exists...');
+                const checkResponse = await fetch(`${BACKEND_URL}/api/admin/sellers/${sellerId}`);
+                if (!checkResponse.ok) {
+                    console.error('Seller verification failed:', checkResponse.status);
+                    alert(`Error: Seller with ID ${sellerId} may not exist or you may not have access to it.`);
+                    return;
+                }
+                console.log('Seller exists, server error is likely backend-related');
+            } catch (checkError) {
+                console.error('Could not verify seller existence:', checkError);
+            }
+        }
+        
+        // Show a more user-friendly error message
+        const errorMessage = error.message.length > 200 ? 
+            'Update failed due to a server error. Please try again or contact support.' : 
+            error.message;
+            
+        alert(`Update failed: ${errorMessage}`);
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
+    // Add smooth animations when modals are shown
+    $(document).ready(function() {
+        $('.modal').on('show.bs.modal', function() {
+            $(this).find('.modal-dialog').css({
+                'transform': 'scale(0.8)',
+                'opacity': '0'
+            });
+            setTimeout(() => {
+                $(this).find('.modal-dialog').css({
+                    'transform': 'scale(1)',
+                    'opacity': '1',
+                    'transition': 'all 0.3s ease'
+                });
+            }, 50);
+        });
+
+        // Reset modal content when hidden
+        $('.modal').on('hidden.bs.modal', function() {
+            $(this).find('.modal-dialog').css({
+                'transform': '',
+                'opacity': '',
+                'transition': ''
+            });
+        });
+    });
+
+    // Add keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft' && currentPage > 1) {
+            currentPage--;
+            render();
+        } else if (e.key === 'ArrowRight' && currentPage < Math.ceil(allSellers.length / SELLERS_PER_PAGE)) {
+            currentPage++;
+            render();
+        }
+    });
+
+    // --- Initial Load ---
+    fetchSellers();
+
+    // Add window resize handler for responsive behavior
+    window.addEventListener('resize', function() {
+        render();
+    });
+});
+</script>
 
 </body>
 </html>
