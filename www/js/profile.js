@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- OTP Related Variables ---
     let otpVerificationInProgress = false;
     let pendingProfileUpdate = null;
+    let pendingPasswordChange = null;
     let otpTimer = null;
     let otpCountdown = 300; // 5 minutes in seconds
 
@@ -101,7 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 🔐 OTP VERIFICATION FUNCTIONS ---
 
     // Create OTP Modal HTML
-    function createOTPModal() {
+    function createOTPModal(purpose = 'profile_update') {
+        const purposeText = purpose === 'password_change' 
+            ? 'change your password' 
+            : 'update your profile information';
+            
         const modalHTML = `
             <div id="otpModal" class="modal fade" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered" role="document">
@@ -111,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="modal-body">
                             <div id="otpRequestSection">
-                                <p>To protect your account, we need to verify your identity before making changes to your profile.</p>
+                                <p>To protect your account, we need to verify your identity before we can ${purposeText}.</p>
                                 <p><strong>An OTP will be sent to:</strong> ${user.email}</p>
                                 <button id="sendOTPButton" class="btn btn-primary btn-block">Send OTP</button>
                             </div>
@@ -148,9 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
         // Add event listeners
-        document.getElementById('sendOTPButton').addEventListener('click', requestOTP);
+        document.getElementById('sendOTPButton').addEventListener('click', () => requestOTP(purpose));
         document.getElementById('verifyOTPButton').addEventListener('click', verifyOTP);
-        document.getElementById('resendOTPButton').addEventListener('click', requestOTP);
+        document.getElementById('resendOTPButton').addEventListener('click', () => requestOTP(purpose));
         document.getElementById('cancelOTPButton').addEventListener('click', cancelOTPVerification);
 
         // Auto-focus on OTP input when it becomes visible
@@ -166,8 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Request OTP from server
-    async function requestOTP() {
-        console.log('🔐 [OTP REQUEST] Requesting OTP...');
+    async function requestOTP(purpose = 'profile_update') {
+        console.log(`🔐 [OTP REQUEST] Requesting OTP for ${purpose}...`);
         
         const sendButton = document.getElementById('sendOTPButton');
         const resendButton = document.getElementById('resendOTPButton');
@@ -192,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({
                     email: user.email,
-                    purpose: 'profile_update'
+                    purpose: purpose
                 })
             });
 
@@ -233,130 +238,131 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Verify OTP with server
- async function verifyOTP() {
-    const otpInput = document.getElementById('otpInput');
-    const otpCode = otpInput.value.trim();
+    async function verifyOTP() {
+        const otpInput = document.getElementById('otpInput');
+        const otpCode = otpInput.value.trim();
 
-    if (!otpCode || otpCode.length !== 6) {
-        showAlert('Please enter a valid 6-digit OTP', 'warning');
-        otpInput.focus();
-        return;
-    }
-
-    console.log('🔐 [OTP VERIFY] Verifying OTP...');
-
-    const verifyButton = document.getElementById('verifyOTPButton');
-    verifyButton.disabled = true;
-    verifyButton.textContent = 'Verifying...';
-
-    // Get user from localStorage
-    let user = null;
-    try {
-        user = JSON.parse(localStorage.getItem('user'));
-    } catch (e) {
-        console.warn('⚠️ Could not parse user from localStorage:', e);
-    }
-
-    if (!user?.email || !user?.id) {
-        showAlert('User authentication error. Please log in again.', 'danger');
-        verifyButton.disabled = false;
-        verifyButton.textContent = 'Verify OTP';
-        return;
-    }
-
-    try {
-        const response = await fetch(`${BACKEND_URL}/api/auth/verify-password-otp`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-User-ID': user.id
-            },
-            body: JSON.stringify({
-                email: user.email,
-                otp: otpCode,
-                purpose: 'profile_update'
-            })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.error || 'OTP verification failed');
+        if (!otpCode || otpCode.length !== 6) {
+            showAlert('Please enter a valid 6-digit OTP', 'warning');
+            otpInput.focus();
+            return;
         }
 
-        console.log('✅ [OTP VERIFY] OTP verified successfully');
-        console.log('🔑 [OTP VERIFY] New token from server:', result.token);
+        console.log('🔐 [OTP VERIFY] Verifying OTP...');
 
-        // ✅ Save new authToken and user info
-        if (result.token) {
-            localStorage.setItem('authToken', result.token);
-            console.log('🔑 [OTP VERIFY] Token saved to localStorage');
-        } else {
-            console.warn('⚠️ [OTP VERIFY] No token received from server');
+        const verifyButton = document.getElementById('verifyOTPButton');
+        verifyButton.disabled = true;
+        verifyButton.textContent = 'Verifying...';
+
+        // Get user from localStorage
+        let user = null;
+        try {
+            user = JSON.parse(localStorage.getItem('user'));
+        } catch (e) {
+            console.warn('⚠️ Could not parse user from localStorage:', e);
         }
 
-        if (result.user) {
-            localStorage.setItem('user', JSON.stringify(result.user));
-            console.log('👤 [OTP VERIFY] User data updated in localStorage');
+        if (!user?.email || !user?.id) {
+            showAlert('User authentication error. Please log in again.', 'danger');
+            verifyButton.disabled = false;
+            verifyButton.textContent = 'Verify OTP';
+            return;
         }
 
-        // Close modal and proceed
+        try {
+            // Determine the purpose based on what's pending
+            const purpose = pendingPasswordChange ? 'password_change' : 'profile_update';
+            
+            const response = await fetch(`${BACKEND_URL}/api/auth/verify-password-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-ID': user.id
+                },
+                body: JSON.stringify({
+                    email: user.email,
+                    otp: otpCode,
+                    purpose: purpose
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'OTP verification failed');
+            }
+
+            console.log('✅ [OTP VERIFY] OTP verified successfully');
+            console.log('🔑 [OTP VERIFY] New token from server:', result.token);
+
+            // ✅ Save new authToken and user info
+            if (result.token) {
+                localStorage.setItem('authToken', result.token);
+                console.log('🔑 [OTP VERIFY] Token saved to localStorage');
+            } else {
+                console.warn('⚠️ [OTP VERIFY] No token received from server');
+            }
+
+            if (result.user) {
+                localStorage.setItem('user', JSON.stringify(result.user));
+                console.log('👤 [OTP VERIFY] User data updated in localStorage');
+            }
+
+            // Close modal and proceed
+            $('#otpModal').modal('hide');
+            otpVerificationInProgress = false;
+
+            if (otpTimer) {
+                clearInterval(otpTimer);
+                otpTimer = null;
+            }
+
+            showAlert('Identity verified successfully!', 'success');
+
+            // 👉 Continue based on what was pending
+            if (pendingPasswordChange) {
+                console.log('🔐 [OTP SUCCESS] Proceeding with password change...');
+                await executePasswordChange(pendingPasswordChange, result.token);
+                pendingPasswordChange = null;
+            } else if (pendingProfileUpdate) {
+                console.log('🔐 [OTP SUCCESS] Proceeding with profile update...');
+                await executeProfileUpdate(pendingProfileUpdate);
+                pendingProfileUpdate = null;
+            }
+
+        } catch (error) {
+            console.error('❌ [OTP VERIFY] OTP verification failed:', error);
+            showAlert(error.message, 'danger');
+            otpInput.value = '';
+            otpInput.focus();
+        } finally {
+            verifyButton.disabled = false;
+            verifyButton.textContent = 'Verify OTP';
+        }
+    }
+
+    // Cancel OTP verification
+    function cancelOTPVerification() {
+        console.log('🔐 [OTP CANCEL] User cancelled OTP verification');
+        
         $('#otpModal').modal('hide');
         otpVerificationInProgress = false;
-
+        pendingProfileUpdate = null;
+        pendingPasswordChange = null;
+        
+        // Clear the timer
         if (otpTimer) {
             clearInterval(otpTimer);
             otpTimer = null;
         }
-
-        showAlert('Identity verified successfully!', 'success');
-
-        // 👉 Continue to profile update or password change - pass the token directly
-        if (pendingPasswordChange) {
-            console.log('🔐 [OTP SUCCESS] Proceeding with password change...');
-            // Pass the token directly to avoid localStorage issues
-            await executePasswordChange(pendingPasswordChange, result.token);
-            pendingPasswordChange = null;
-        } else if (pendingProfileUpdate) {
-            console.log('🔐 [OTP SUCCESS] Proceeding with profile update...');
-            await executeProfileUpdate(pendingProfileUpdate);
-            pendingProfileUpdate = null;
-        }
-
-    } catch (error) {
-        console.error('❌ [OTP VERIFY] OTP verification failed:', error);
-        showAlert(error.message, 'danger');
-        otpInput.value = '';
-        otpInput.focus();
-    } finally {
-        verifyButton.disabled = false;
-        verifyButton.textContent = 'Verify OTP';
+        
+        // Restore form button states
+        updateButton.disabled = false;
+        updateButton.textContent = 'Update Profile';
+        
+        changePasswordButton.disabled = false;
+        changePasswordButton.textContent = 'Change Password';
     }
-}
-
-    // Cancel OTP verification
-  function cancelOTPVerification() {
-    console.log('🔐 [OTP CANCEL] User cancelled OTP verification');
-    
-    $('#otpModal').modal('hide');
-    otpVerificationInProgress = false;
-    pendingProfileUpdate = null;
-    pendingPasswordChange = null; // Clear password change data too
-    
-    // Clear the timer
-    if (otpTimer) {
-        clearInterval(otpTimer);
-        otpTimer = null;
-    }
-    
-    // Restore form button states
-    updateButton.disabled = false;
-    updateButton.textContent = 'Update Profile';
-    
-    changePasswordButton.disabled = false;
-    changePasswordButton.textContent = 'Change Password';
-}
-
 
     // Start OTP countdown timer
     function startOTPCountdown() {
@@ -491,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 5. Enhanced Event Listener for Profile Form Submission with OTP ---
+    // --- 5. SIMPLIFIED Profile Form Submission (OTP only for email changes or profile picture uploads) ---
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -510,8 +516,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 profilePicFile: profilePicInput.files[0]
             };
             
+            // Clear any pending password change
+            pendingPasswordChange = null;
+            
             // Show OTP modal
-            createOTPModal();
+            createOTPModal('profile_update');
             $('#otpModal').modal('show');
             
             // Set flag to prevent double submission
@@ -520,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return; // Exit here, will continue after OTP verification
         }
 
-        // If no OTP required or already verified, proceed with update
+        // If no OTP required, proceed with update
         const formData = new FormData();
         formData.append('name', document.getElementById('name').value);
         formData.append('email', document.getElementById('email').value);
@@ -534,26 +543,28 @@ document.addEventListener('DOMContentLoaded', () => {
         await executeProfileUpdate({ formData, combinedAddress: combineAddressFields(), profilePicFile: profilePicInput.files[0] });
     });
 
-    // Check if OTP is required for current changes
+    // FIXED: Check if OTP is required for current changes (REMOVED name change requirement)
     async function checkIfOTPRequired() {
         try {
             // Get current user data
             const currentEmail = user.email;
-            const currentName = user.name;
             
             // Get form data
             const formEmail = document.getElementById('email').value;
-            const formName = document.getElementById('name').value;
             const hasNewProfilePic = profilePicInput.files[0] !== undefined;
             
-            // Check if email or name is changing, or if new profile picture is being uploaded
+            // Check if email is changing or if new profile picture is being uploaded
             const emailChanged = currentEmail !== formEmail;
-            const nameChanged = currentName !== formName;
             
-            return emailChanged || nameChanged || hasNewProfilePic;
+            console.log('🔍 [OTP CHECK] Email changed:', emailChanged);
+            console.log('🔍 [OTP CHECK] Has new profile pic:', hasNewProfilePic);
+            
+            // OTP required ONLY for email changes or profile picture uploads
+            // NAME CHANGES NO LONGER REQUIRE OTP
+            return emailChanged || hasNewProfilePic;
         } catch (error) {
             console.error('❌ [OTP CHECK] Error checking OTP requirement:', error);
-            return true; // Default to requiring OTP if there's an error
+            return false; // Default to NOT requiring OTP if there's an error
         }
     }
 
@@ -606,177 +617,126 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 6. Enhanced Password Change with OTP ---
+    // --- 6. SEPARATE Password Change with OTP (ALWAYS requires OTP) ---
     passwordForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    console.log('🔐 [PASSWORD CHANGE START] Password form submitted. Requiring OTP verification...');
+        e.preventDefault();
+        console.log('🔐 [PASSWORD CHANGE START] Password form submitted. Requiring OTP verification...');
 
-    // Password changes always require OTP
-    const currentPassword = document.getElementById('current_password').value;
-    const newPassword = document.getElementById('new_password').value;
-    const confirmPassword = document.getElementById('confirm_password').value;
+        // Password changes always require OTP
+        const currentPassword = document.getElementById('current_password').value;
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
 
-    // Client-side validation
-    if (newPassword !== confirmPassword) {
-        showAlert('New passwords do not match!', 'danger');
-        return;
-    }
-
-    if (newPassword.length < 8) {
-        showAlert('New password must be at least 8 characters long!', 'danger');
-        return;
-    }
-
-    if (currentPassword === newPassword) {
-        showAlert('New password must be different from current password!', 'warning');
-        return;
-    }
-
-    // Store password change data in the correct variable
-    pendingPasswordChange = {
-        currentPassword,
-        newPassword
-    };
-
-    // Clear profile update pending data
-    pendingProfileUpdate = null;
-
-    // Show OTP modal
-    createOTPModal();
-    $('#otpModal').modal('show');
-    
-    otpVerificationInProgress = true;
-});
-
-   // Execute password change after OTP verification
-async function executePasswordChange(passwordData, otpToken = null) {
-    console.log('🔐 [PASSWORD CHANGE EXECUTE] Executing password change...');
-
-    // Disable the button while processing
-    const changePasswordButton = document.getElementById('changePasswordButton');
-    const passwordForm = document.getElementById('passwordForm');
-    changePasswordButton.disabled = true;
-    changePasswordButton.textContent = 'Changing Password...';
-
-    // Try to get token from parameter first, then localStorage
-    let token = otpToken || localStorage.getItem('authToken');
-    let user = null;
-
-    try {
-        user = JSON.parse(localStorage.getItem('user'));
-    } catch (err) {
-        console.warn('⚠️ Could not parse user from localStorage:', err);
-    }
-
-    console.log('📦 Token (from parameter):', otpToken);
-    console.log('📦 Token (from localStorage):', localStorage.getItem('authToken'));
-    console.log('📦 Final token being used:', token);
-    console.log('👤 User:', user);
-
-    // Abort if token or user ID is missing
-    if (!token || !user || !user.id) {
-        showAlert('🔒 Authentication error. Please log in again.', 'danger');
-        changePasswordButton.disabled = false;
-        changePasswordButton.textContent = 'Change Password';
-        
-        // If no token, redirect to login
-        if (!token) {
-            console.error('❌ [PASSWORD CHANGE] No valid token found, redirecting to login');
-            setTimeout(() => {
-                localStorage.clear();
-                window.location.href = 'login.html';
-            }, 2000);
-        }
-        return;
-    }
-
-    try {
-        console.log('🚀 [PASSWORD CHANGE] Making API call to change password...');
-        
-        const response = await fetch(`${BACKEND_URL}/api/change-password`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-                'X-User-ID': user.id
-            },
-            body: JSON.stringify({
-                current_password: passwordData.currentPassword,
-                new_password: passwordData.newPassword
-            })
-        });
-
-        console.log('📡 [PASSWORD CHANGE] API Response status:', response.status);
-        
-        const result = await response.json();
-        console.log('📡 [PASSWORD CHANGE] API Response data:', result);
-
-        if (!response.ok) {
-            throw new Error(result.error || 'Failed to change password.');
-        }
-
-        console.log('✅ [PASSWORD CHANGE SUCCESS] Password changed successfully');
-        showAlert('✅ Password changed successfully!', 'success');
-        if (passwordForm) passwordForm.reset();
-
-    } catch (err) {
-        console.error('❌ [PASSWORD CHANGE FAILED]', err);
-        showAlert(err.message || 'Something went wrong. Please try again.', 'danger');
-    } finally {
-        changePasswordButton.disabled = false;
-        changePasswordButton.textContent = 'Change Password';
-        console.log('🔄 [PASSWORD CHANGE END] Button restored.');
-    }
-}
-
-
-
-
-    // --- Modified executeProfileUpdate to handle both profile and password changes ---
-    async function executeProfileUpdate(updateData) {
-        if (updateData.isPasswordChange) {
-            await executePasswordChange(updateData);
+        // Client-side validation
+        if (newPassword !== confirmPassword) {
+            showAlert('New passwords do not match!', 'danger');
             return;
         }
 
-        // Original profile update logic
-        console.log('🚀 [UPDATE EXECUTE] Executing profile update...');
+        if (newPassword.length < 8) {
+            showAlert('New password must be at least 8 characters long!', 'danger');
+            return;
+        }
+
+        if (currentPassword === newPassword) {
+            showAlert('New password must be different from current password!', 'warning');
+            return;
+        }
+
+        // Store password change data
+        pendingPasswordChange = {
+            currentPassword,
+            newPassword
+        };
+
+        // Clear profile update pending data
+        pendingProfileUpdate = null;
+
+        // Show OTP modal specifically for password change
+        createOTPModal('password_change');
+        $('#otpModal').modal('show');
         
-        updateButton.disabled = true;
-        updateButton.textContent = 'Updating...';
+        otpVerificationInProgress = true;
+    });
+
+    // Execute password change after OTP verification
+    async function executePasswordChange(passwordData, otpToken = null) {
+        console.log('🔐 [PASSWORD CHANGE EXECUTE] Executing password change...');
+
+        // Disable the button while processing
+        const changePasswordButton = document.getElementById('changePasswordButton');
+        const passwordForm = document.getElementById('passwordForm');
+        changePasswordButton.disabled = true;
+        changePasswordButton.textContent = 'Changing Password...';
+
+        // Try to get token from parameter first, then localStorage
+        let token = otpToken || localStorage.getItem('authToken');
+        let user = null;
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/profile`, {
-                method: 'PUT',
+            user = JSON.parse(localStorage.getItem('user'));
+        } catch (err) {
+            console.warn('⚠️ Could not parse user from localStorage:', err);
+        }
+
+        console.log('📦 Token (from parameter):', otpToken);
+        console.log('📦 Token (from localStorage):', localStorage.getItem('authToken'));
+        console.log('📦 Final token being used:', token);
+        console.log('👤 User:', user);
+
+        // Abort if token or user ID is missing
+        if (!token || !user || !user.id) {
+            showAlert('🔒 Authentication error. Please log in again.', 'danger');
+            changePasswordButton.disabled = false;
+            changePasswordButton.textContent = 'Change Password';
+            
+            // If no token, redirect to login
+            if (!token) {
+                console.error('❌ [PASSWORD CHANGE] No valid token found, redirecting to login');
+                setTimeout(() => {
+                    localStorage.clear();
+                    window.location.href = 'login.html';
+                }, 2000);
+            }
+            return;
+        }
+
+        try {
+            console.log('🚀 [PASSWORD CHANGE] Making API call to change password...');
+            
+            const response = await fetch(`${BACKEND_URL}/api/change-password`, {
+                method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
                     'X-User-ID': user.id
                 },
-                body: updateData.formData
+                body: JSON.stringify({
+                    current_password: passwordData.currentPassword,
+                    new_password: passwordData.newPassword
+                })
             });
 
+            console.log('📡 [PASSWORD CHANGE] API Response status:', response.status);
+            
             const result = await response.json();
+            console.log('📡 [PASSWORD CHANGE] API Response data:', result);
 
             if (!response.ok) {
-                throw new Error(result.error || `Failed to update profile. Status: ${response.status}`);
+                throw new Error(result.error || 'Failed to change password.');
             }
-            
-            console.log('💾 [UPDATE SUCCESS] New user data received from server:', result.user);
-            
-            localStorage.setItem('user', JSON.stringify(result.user));
-            console.log('💾 [UPDATE SUCCESS] localStorage has been updated.');
 
-            showAlert('Profile updated successfully!', 'success');
-            populateForm(result.user);
-            profilePicInput.value = '';
+            console.log('✅ [PASSWORD CHANGE SUCCESS] Password changed successfully');
+            showAlert('✅ Password changed successfully!', 'success');
+            if (passwordForm) passwordForm.reset();
 
-        } catch (error) {
-            console.error('❌ [UPDATE FAILED] An error occurred during profile update:', error);
-            showAlert(error.message, 'danger');
+        } catch (err) {
+            console.error('❌ [PASSWORD CHANGE FAILED]', err);
+            showAlert(err.message || 'Something went wrong. Please try again.', 'danger');
         } finally {
-            updateButton.disabled = false;
-            updateButton.textContent = 'Update Profile';
-            console.log('🔄 [UPDATE END] Process finished. Button restored.');
+            changePasswordButton.disabled = false;
+            changePasswordButton.textContent = 'Change Password';
+            console.log('🔄 [PASSWORD CHANGE END] Button restored.');
         }
     }
 
