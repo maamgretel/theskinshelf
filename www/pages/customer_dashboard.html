@@ -41,35 +41,70 @@
             padding-bottom: var(--bottom-nav-height) !important;
         }
 
-        /* Header Styles */
+        /* Header Styles - FIXED */
         .fixed-top {
             height: var(--header-height);
             z-index: 1030;
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #dee2e6;
         }
 
         .fixed-top .container {
             padding: 0 15px;
             height: 100%;
+            display: flex;
+            align-items: center;
+            max-width: 100%;
         }
 
-        .fixed-top .navbar-brand {
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            height: 100%;
+            gap: 10px;
+        }
+
+        .navbar-brand {
             font-size: 1rem;
-            margin-bottom: 0;
             font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin: 0;
         }
 
-        .fixed-top .form-control {
+        .search-form {
+            flex: 1;
+            margin: 0 10px;
+            min-width: 0;
+        }
+
+        .search-form .form-control {
             height: 36px;
             font-size: 0.9rem;
             border-radius: 20px;
+            border: 1px solid #ced4da;
+            width: 100%;
         }
 
-        .fixed-top .nav-link {
+        .nav-icons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .nav-icons .nav-link {
             padding: 8px 6px;
-            margin: 0 2px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
 
-        .fixed-top .fas {
+        .nav-icons .fas {
             font-size: 1.1rem;
         }
 
@@ -218,29 +253,58 @@
                 display: none !important;
             }
 
-            /* Adjust header for mobile */
+            /* Adjust header for mobile - CRITICAL FIXES */
+            body {
+                padding-top: 55px;
+            }
+
+            .fixed-top {
+                height: 55px;
+            }
+
             .fixed-top .container {
                 padding: 0 10px;
+                height: 100%;
             }
 
-            .fixed-top .navbar-brand {
-                font-size: 0.9rem;
+            .header-content {
+                gap: 8px;
             }
 
-            .fixed-top .form-control {
+            .navbar-brand {
+                font-size: 0.85rem;
+                min-width: fit-content;
+            }
+
+            .search-form {
+                margin: 0 8px;
+            }
+
+            .search-form .form-control {
                 height: 32px;
                 font-size: 0.85rem;
+                min-width: 100px;
             }
 
-            /* Profile icon and logout only visible on mobile header */
+            /* Mobile header icons positioning */
             .mobile-header-icons {
                 display: flex !important;
                 align-items: center;
-                gap: 10px;
+                gap: 6px;
+                flex-shrink: 0;
             }
 
             .mobile-header-icons .nav-link {
                 padding: 6px;
+                min-width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .mobile-header-icons .fas {
+                font-size: 1rem;
             }
 
             /* Adjust body padding */
@@ -291,19 +355,44 @@
         /* Extra small devices */
         @media (max-width: 575.98px) {
             body {
-                padding-top: 55px;
+                padding-top: 50px;
             }
 
             .fixed-top {
-                height: 55px;
+                height: 50px;
             }
 
             .fixed-top .container {
                 padding: 0 8px;
             }
 
-            .fixed-top .navbar-brand {
-                font-size: 0.85rem;
+            .header-content {
+                gap: 6px;
+            }
+
+            .navbar-brand {
+                font-size: 0.8rem;
+                font-weight: 600;
+            }
+
+            .search-form {
+                margin: 0 6px;
+            }
+
+            .search-form .form-control {
+                height: 30px;
+                font-size: 0.8rem;
+                min-width: 80px;
+            }
+
+            .mobile-header-icons .nav-link {
+                padding: 4px;
+                min-width: 28px;
+                height: 28px;
+            }
+
+            .mobile-header-icons .fas {
+                font-size: 0.9rem;
             }
 
             .product-card img {
@@ -336,7 +425,15 @@
 
             .fixed-top {
                 height: 70px;
-                padding: 0.75rem 0;
+            }
+
+            .fixed-top .container {
+                padding: 0.75rem 15px;
+            }
+
+            .search-form .form-control {
+                height: 38px;
+                font-size: 0.9rem;
             }
 
             .product-card img {
@@ -351,6 +448,12 @@
         /* Touch target optimization */
         input, select, textarea {
             font-size: 16px !important;
+        }
+
+        @media (max-width: 767.98px) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
         }
 
         /* Safe area support */
@@ -386,44 +489,56 @@
                 margin: 0.5rem;
             }
         }
+
+        /* Badge positioning fixes */
+        .position-relative .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <header class="p-3 mb-3 border-bottom bg-white shadow-sm fixed-top">
+    <header class="fixed-top bg-white shadow-sm">
         <div class="container">
-            <div class="d-flex flex-wrap align-items-center justify-content-between">
-                <a href="customer_dashboard.html" class="navbar-brand d-flex align-items-center text-dark text-decoration-none">
+            <div class="header-content">
+                <a href="customer_dashboard.html" class="navbar-brand text-dark text-decoration-none">
                     <strong>TheSkinShelf</strong>
                 </a>
 
-                <form class="flex-grow-1 mx-3" action="customer_dashboard.html" method="GET">
+                <form class="search-form" action="customer_dashboard.html" method="GET">
                     <input type="search" name="search" class="form-control" placeholder="Search products..." aria-label="Search">
                 </form>
 
                 <!-- Desktop Navigation (hidden on mobile) -->
-                <div class="desktop-nav-items text-end d-flex align-items-center">
-                    <a href="bag.html" class="nav-link px-2 text-dark position-relative">
-                        <i class="fas fa-shopping-bag fa-lg"></i>
-                        <span id="cart-badge" class="badge badge-danger" style="position: absolute; top: 0; right: 0; display: none;"></span>
+                <div class="desktop-nav-items nav-icons">
+                    <a href="bag.html" class="nav-link text-dark position-relative">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span id="cart-badge" class="badge badge-danger" style="display: none;"></span>
                     </a>
-                    <a href="notifications.html" class="nav-link px-2 text-dark position-relative">
-                        <i class="fas fa-bell fa-lg"></i>
-                        <span id="notifBadge" class="badge badge-danger" style="position: absolute; top: 0; right: 0; display: none;"></span>
+                    <a href="notifications.html" class="nav-link text-dark position-relative">
+                        <i class="fas fa-bell"></i>
+                        <span id="notifBadge" class="badge badge-danger" style="display: none;"></span>
                     </a>
-                    <a href="profile.html" class="nav-link px-2 text-dark">
-                        <i class="fas fa-user-circle fa-lg"></i>
+                    <a href="profile.html" class="nav-link text-dark">
+                        <i class="fas fa-user-circle"></i>
                     </a>
-                    <a href="login.html" id="logoutButton" class="nav-link px-2 text-dark" title="Logout">
-                        <i class="fas fa-sign-out-alt fa-lg"></i>
+                    <a href="login.html" id="logoutButton" class="nav-link text-dark" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
                     </a>
                 </div>
 
                 <!-- Mobile Header Icons (visible only on mobile) -->
-                <div class="mobile-header-icons" style="display: none;">
-                    <a href="orders.html" class="nav-link px-2 text-dark" title="My Orders">
+                <div class="mobile-header-icons nav-icons" style="display: none;">
+                    <a href="my_orders.html" class="nav-link text-dark" title="My Orders">
                         <i class="fas fa-receipt"></i>
                     </a>
-                    <a href="profile.html" class="nav-link px-2 text-dark">
+                    <a href="profile.html" class="nav-link text-dark">
                         <i class="fas fa-user-circle"></i>
                     </a>
                 </div>
@@ -626,6 +741,26 @@
                 }, false);
             }, false);
         }
+
+        // Demo: Add some cart items to test badges
+        setTimeout(function() {
+            const cartBadge = document.getElementById('cart-badge');
+            const notifBadge = document.getElementById('notifBadge');
+            
+            if (cartBadge) {
+                cartBadge.textContent = '3';
+                cartBadge.style.display = 'block';
+            }
+            
+            if (notifBadge) {
+                notifBadge.textContent = '2';
+                notifBadge.style.display = 'block';
+            }
+            
+            // Sync with mobile badges
+            syncCartBadges();
+            syncNotificationBadges();
+        }, 2000);
     </script>
     
     <!-- Your existing JavaScript files -->
