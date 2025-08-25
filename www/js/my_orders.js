@@ -265,9 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <div class="order-actions">
                         <div class="d-flex justify-content-between align-items-center">
-                            <button class="btn btn-outline-primary btn-sm" data-order-id="${orderGroup.order_ids.join(',')}">
-                                <i class="fas fa-eye mr-1"></i>View Details
-                            </button>
+                        
                             ${orderGroup.overall_status === 'delivered' ? 
                                 `<button class="btn btn-primary btn-sm" data-order-id="${orderGroup.order_ids.join(',')}">
                                     <i class="fas fa-redo mr-1"></i>Reorder
@@ -283,18 +281,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Handlers ---
     function setupEventHandlers() {
-        // Filter functionality
-        document.getElementById('statusFilter').addEventListener('change', function() {
-            const selectedStatus = this.value.toLowerCase();
-            const orderCards = document.querySelectorAll('.order-card');
-            
-            orderCards.forEach(card => {
-                const cardStatus = card.getAttribute('data-order-status').toLowerCase();
-                if (!selectedStatus || cardStatus === selectedStatus) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
+        // Tab filter functionality
+        const tabItems = document.querySelectorAll('.tab-item');
+        
+        tabItems.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabItems.forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Filter orders
+                const selectedStatus = this.getAttribute('data-status').toLowerCase();
+                filterOrdersByStatus(selectedStatus);
             });
         });
 
@@ -345,6 +344,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 reorderItems(orderId);
             }
         });
+    }
+    
+    // --- Filter function ---
+    function filterOrdersByStatus(selectedStatus) {
+        const orderCards = document.querySelectorAll('.order-card');
+        let visibleCount = 0;
+        
+        orderCards.forEach(card => {
+            const cardStatus = card.getAttribute('data-order-status').toLowerCase();
+            
+            if (!selectedStatus || cardStatus === selectedStatus) {
+                card.style.display = 'block';
+                card.style.animation = 'fadeIn 0.3s ease-out';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Update summary stats for filtered view
+        updateFilteredSummary(selectedStatus, visibleCount);
+    }
+    
+    // --- Update summary for filtered view ---
+    function updateFilteredSummary(status, visibleCount) {
+        const summaryAlert = document.querySelector('.alert-info');
+        if (!summaryAlert) return;
+        
+        const statusText = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'All';
+        const orderText = visibleCount === 1 ? 'Order' : 'Orders';
+        
+        // You can update the summary to show filtered stats if needed
+        // For now, we'll keep the original totals
     }
 
     // --- Helper functions for sorting ---

@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -22,7 +22,7 @@
         }
         
         .success-card {
-            background: white;
+            background: rgb(0, 0, 0);
             border-radius: 20px;
             padding: 50px 40px;
             text-align: center;
@@ -40,24 +40,24 @@
             left: 0;
             right: 0;
             height: 5px;
-            background: linear-gradient(90deg, #28a745, #20c997);
+            background: linear-gradient(90deg, #000000, #000000);
         }
         
         .check-animation {
             width: 120px;
             height: 120px;
             margin: 0 auto 30px;
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: linear-gradient(135deg, #fffdfd, #ffffff);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             animation: checkPulse 0.6s ease-in-out;
-            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
         }
         
         .check-mark {
-            color: white;
+            color: rgb(0, 0, 0);
             font-size: 60px;
             animation: checkScale 0.8s ease-in-out 0.3s both;
         }
@@ -88,7 +88,7 @@
         }
         
         .success-title {
-            color: #28a745;
+            color: #ffffff;
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 20px;
@@ -96,7 +96,7 @@
         }
         
         .success-message {
-            color: #6c757d;
+            color: #ffffff;
             font-size: 1.1rem;
             line-height: 1.6;
             margin-bottom: 30px;
@@ -128,7 +128,7 @@
         .order-total {
             font-size: 1.3rem;
             font-weight: 700;
-            color: #28a745;
+            color: #000000;
         }
         
         .order-date {
@@ -145,9 +145,9 @@
         }
         
         .btn-view-order {
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: linear-gradient(135deg, #ffffff, #ffffff);
             border: none;
-            color: white;
+            color: rgb(0, 0, 0);
             padding: 12px 30px;
             border-radius: 25px;
             font-weight: 600;
@@ -159,16 +159,17 @@
         }
         
         .btn-view-order:hover {
+            background: linear-gradient(135deg, #313231, #9f9f9f);
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
-            color: white;
+            color: rgb(255, 255, 255);
             text-decoration: none;
         }
         
         .btn-continue {
             background: white;
             border: 2px solid #dee2e6;
-            color: #6c757d;
+            color: #000000;
             padding: 12px 30px;
             border-radius: 25px;
             font-weight: 600;
@@ -180,9 +181,9 @@
         }
         
         .btn-continue:hover {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #313231, #9f9f9f);
             border-color: #adb5bd;
-            color: #495057;
+            color: #ffffff;
             text-decoration: none;
         }
         
@@ -209,7 +210,7 @@
         
         .floating-element {
             position: absolute;
-            opacity: 0.1;
+            opacity: 1;
             animation: float 6s ease-in-out infinite;
         }
         
@@ -267,9 +268,9 @@
     <div class="success-container">
         <div class="success-card">
             <div class="floating-elements">
-                <i class="fas fa-heart floating-element" style="font-size: 30px; color: #28a745;"></i>
-                <i class="fas fa-star floating-element" style="font-size: 25px; color: #ffc107;"></i>
-                <i class="fas fa-sparkles floating-element" style="font-size: 20px; color: #17a2b8;"></i>
+                <i class="fas fa-heart floating-element" style="font-size: 30px; color: #ff0000;"></i>
+                <i class="fas fa-star floating-element" style="font-size: 25px; color: #ffffff;"></i>
+                <i class="fas fa-sparkles floating-element" style="font-size: 20px; color: #ffffff;"></i>
             </div>
             
             <div class="check-animation">
