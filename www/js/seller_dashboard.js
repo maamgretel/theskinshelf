@@ -7,6 +7,66 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(`[SELLER DASHBOARD DEBUG] ${message}`, data);
   }
 
+  // Enhanced fetch function with better error handling and CORS support
+  async function safeFetch(url, options = {}) {
+    const defaultOptions = {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-ID': user?.id
+      }
+    };
+
+    // Merge options
+    const fetchOptions = {
+      ...defaultOptions,
+      ...options,
+      headers: {
+        ...defaultOptions.headers,
+        ...options.headers
+      }
+    };
+
+    // Add credentials for CORS
+    fetchOptions.credentials = 'omit'; // Try without credentials first
+
+    debugLog('Safe fetch request:', { url, options: fetchOptions });
+
+    try {
+      const response = await fetch(url, fetchOptions);
+      debugLog('Safe fetch response:', {
+        status: response.status,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
+      return response;
+    } catch (error) {
+      debugLog('Safe fetch error:', error);
+      
+      // If it's a CORS error, try with different approach
+      if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+        debugLog('Attempting CORS workaround...');
+        
+        // Try without custom headers for GET requests
+        if (!options.method || options.method === 'GET') {
+          const simpleOptions = {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'omit'
+          };
+          
+          try {
+            return await fetch(url, simpleOptions);
+          } catch (secondError) {
+            debugLog('CORS workaround failed:', secondError);
+          }
+        }
+      }
+      
+      throw error;
+    }
+  }
+
   debugLog('Page loaded, starting initialization...');
   debugLog('Backend URL:', BACKEND_URL);
   debugLog('User from localStorage:', user);
@@ -32,23 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const params = new URLSearchParams(filters);
       const url = `${BACKEND_URL}/api/seller/products?${params}`;
-      debugLog('Fetch URL:', url);
-      debugLog('Headers:', { 'X-User-ID': user.id });
 
       // Add loading indicator
       const container = document.getElementById('productListRow');
       container.innerHTML = '<div class="col-12 text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div><p class="mt-2">Loading products...</p></div>';
 
-      const response = await fetch(url, {
-        headers: { 
-          'X-User-ID': user.id,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      debugLog('Response status:', response.status);
-      debugLog('Response ok:', response.ok);
-      debugLog('Response headers:', Object.fromEntries(response.headers.entries()));
+      const response = await safeFetch(url);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -82,7 +131,10 @@ document.addEventListener('DOMContentLoaded', () => {
               <li>CORS policy blocking the request</li>
               <li>Invalid user authentication</li>
             </ul>
-            <button class="btn btn-primary btn-sm" onclick="location.reload()">Try Again</button>
+            <div class="mt-3">
+              <button class="btn btn-primary btn-sm me-2" onclick="location.reload()">Try Again</button>
+              <button class="btn btn-info btn-sm" onclick="testBackendDirectly()">Test Backend</button>
+            </div>
           </div>
         </div>
       `;
@@ -101,13 +153,13 @@ document.addEventListener('DOMContentLoaded', () => {
         stockText: 'Out of Stock ⚠️',
         alert: true
       };
-    } else if (stockNum <= 5) { // Low stock threshold
+    } else if (stockNum <= 5) {
       return {
         status: 'low-stock',
         badgeClass: 'badge-warning',
         cardClass: 'border-warning',
         stockText: `Low Stock: ${stockNum} ⚠️`,
-        alert: stockNum <= 3 // Alert for very low stock (3 or less)
+        alert: stockNum <= 3
       };
     } else {
       return {
@@ -149,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const productPrice = parseFloat(p.price).toFixed(2);
       const stockInfo = getStockStatus(p.stock);
       
-      // Count stock issues for alerts
       if (stockInfo.status === 'out-of-stock') outOfStockCount++;
       if (stockInfo.status === 'low-stock') lowStockCount++;
 
@@ -176,14 +227,12 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML += cardHTML;
     });
 
-    // Show stock alerts
     showStockAlerts(outOfStockCount, lowStockCount);
     debugLog('Products rendered successfully');
   }
 
   // --- Show stock alerts ---
   function showStockAlerts(outOfStockCount, lowStockCount) {
-    // Remove existing alerts
     const existingAlerts = document.querySelectorAll('.stock-alert');
     existingAlerts.forEach(alert => alert.remove());
 
@@ -222,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadCategories() {
     debugLog('Loading categories...');
     try {
-      const response = await fetch(`${BACKEND_URL}/api/categories`);
+      const response = await safeFetch(`${BACKEND_URL}/api/categories`);
       debugLog('Categories response status:', response.status);
       
       if (!response.ok) return;
@@ -251,13 +300,17 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchSellerProducts({ search, category_id: category });
   });
 
-  // --- Notification badge ---
+  // --- Notification badge with better error handling ---
   async function checkNotifications() {
     debugLog('Checking notifications...');
     try {
-      const response = await fetch(`${BACKEND_URL}/api/notifications/unread-count`, {
-        headers: { 'X-User-ID': user.id }
-      });
+      const response = await safeFetch(`${BACKEND_URL}/api/notifications/unread-count`);
+      
+      if (!response.ok) {
+        debugLog('Notifications endpoint not available:', response.status);
+        return; // Silently fail if notifications aren't implemented
+      }
+      
       const data = await response.json();
       debugLog('Notifications data:', data);
       
@@ -269,8 +322,8 @@ document.addEventListener('DOMContentLoaded', () => {
         badge.style.display = 'none';
       }
     } catch (e) {
-      debugLog('Notification check failed:', e);
-      // Ignore errors silently
+      debugLog('Notification check failed (will retry):', e);
+      // Silently ignore errors for notifications
     }
   }
 
@@ -286,35 +339,76 @@ document.addEventListener('DOMContentLoaded', () => {
   async function testBackendConnection() {
     debugLog('Testing backend connection...');
     try {
-      const response = await fetch(`${BACKEND_URL}/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
+      // Try multiple endpoints to test connectivity
+      const endpoints = ['/health', '/api/health', '/'];
+      
+      for (const endpoint of endpoints) {
+        try {
+          const response = await safeFetch(`${BACKEND_URL}${endpoint}`);
+          debugLog(`Backend test ${endpoint}:`, {
+            status: response.status,
+            ok: response.ok,
+            url: response.url
+          });
+          
+          if (response.ok) {
+            debugLog(`Backend is reachable via ${endpoint}`);
+            return true;
+          }
+        } catch (error) {
+          debugLog(`Backend test ${endpoint} failed:`, error);
+          continue;
         }
-      });
-      debugLog('Backend health check:', {
-        status: response.status,
-        ok: response.ok,
-        url: response.url
-      });
+      }
+      
+      debugLog('All backend connectivity tests failed');
+      return false;
     } catch (error) {
       debugLog('Backend connection test failed:', error);
+      return false;
     }
   }
 
-  // --- Initial load ---
+  // Global function for testing backend directly
+  window.testBackendDirectly = async function() {
+    const isConnected = await testBackendConnection();
+    if (isConnected) {
+      alert('✅ Backend is reachable! Try refreshing the page.');
+    } else {
+      alert('❌ Cannot reach backend server. Please check:\n\n1. Backend server is running\n2. CORS is properly configured\n3. Network connection is stable');
+    }
+  };
+
+  // --- Initial load with better error handling ---
   debugLog('Starting initial load sequence...');
   
-  // Test connection first
-  testBackendConnection();
-  
-  // Load data
-  loadCategories();
-  fetchSellerProducts();
-  checkNotifications();
-  setInterval(checkNotifications, 30000);
+  async function initializeDashboard() {
+    try {
+      // Test connection first
+      const isConnected = await testBackendConnection();
+      if (!isConnected) {
+        debugLog('Backend connection failed during initialization');
+        // Continue anyway - individual functions will handle their own errors
+      }
+      
+      // Load data with error handling for each
+      await Promise.allSettled([
+        loadCategories(),
+        fetchSellerProducts(),
+        checkNotifications()
+      ]);
+      
+      // Set up periodic notification checks (less frequent to reduce load)
+      setInterval(checkNotifications, 60000); // Check every minute instead of 30 seconds
+      
+      debugLog('Initialization complete');
+    } catch (error) {
+      debugLog('Initialization error:', error);
+    }
+  }
 
-  debugLog('Initialization complete');
+  // Start initialization
+  initializeDashboard();
 
   // --- Create Stock Management Modal ---
   function createStockModal() {
@@ -383,6 +477,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Create modal on page load
   createStockModal();
+
+  // Make safeFetch available globally for stock management
+  window.safeFetch = safeFetch;
 });
 
 // Global variables for stock management
@@ -399,22 +496,17 @@ function openAddStockModal(productId, productName, currentStock) {
   document.getElementById('modalNewTotalStock').value = currentStock;
   document.getElementById('modalStockNote').value = '';
   
-  // Use vanilla JavaScript instead of jQuery
   const modal = document.getElementById('addStockModal');
   if (typeof bootstrap !== 'undefined') {
-    // Bootstrap 5
     const bootstrapModal = new bootstrap.Modal(modal);
     bootstrapModal.show();
   } else if (typeof $ !== 'undefined') {
-    // Bootstrap 4 with jQuery
     $('#addStockModal').modal('show');
   } else {
-    // Fallback - show modal manually
     modal.style.display = 'block';
     modal.classList.add('show');
     document.body.classList.add('modal-open');
     
-    // Add backdrop
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop fade show';
     backdrop.id = 'modal-backdrop';
@@ -422,7 +514,7 @@ function openAddStockModal(productId, productName, currentStock) {
   }
 }
 
-// Handle Add Stock
+// Handle Add Stock with better error handling
 async function handleAddStock() {
   const stockToAdd = parseInt(document.getElementById('modalStockToAdd').value);
   const note = document.getElementById('modalStockNote').value.trim();
@@ -447,50 +539,82 @@ async function handleAddStock() {
 
     console.log(`[DEBUG] Adding stock:`, payload);
 
-    const response = await fetch(`${BACKEND_URL}/api/seller/add-stock`, {
+    // Use the safeFetch function for better CORS handling
+    let response = await window.safeFetch(`${BACKEND_URL}/api/seller/add-stock`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-ID': user.id
-      },
       body: JSON.stringify(payload)
     });
 
-    const result = await response.json();
-    console.log(`[DEBUG] Add stock response:`, result);
+    let result;
     
     if (!response.ok) {
-      throw new Error(result.error || 'Failed to add stock');
+      console.log(`[DEBUG] add-stock endpoint failed (${response.status}), trying fallback method...`);
+      
+      // Fallback: Use the existing edit product endpoint
+      const currentStock = parseInt(document.getElementById('modalCurrentStock').value) || 0;
+      const newStock = currentStock + stockToAdd;
+      
+      const formData = new FormData();
+      formData.append('stock', newStock.toString());
+      if (note) {
+        formData.append('note', `Added ${stockToAdd} items. Note: ${note}`);
+      }
+      
+      response = await window.safeFetch(`${BACKEND_URL}/products/${currentProductId}`, {
+        method: 'POST',
+        body: formData,
+        headers: {} // Remove Content-Type for FormData
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log(`[DEBUG] Fallback failed:`, errorText);
+        throw new Error(`Failed to update stock: ${response.status} ${errorText}`);
+      }
+      
+      result = await response.json();
+      result.new_stock = newStock;
+      console.log(`[DEBUG] Fallback successful:`, result);
+    } else {
+      result = await response.json();
     }
-
+    
+    console.log(`[DEBUG] Add stock response:`, result);
+    
     alert(`Successfully added ${stockToAdd} items to stock. New total: ${result.new_stock}`);
     
-    // Close modal using vanilla JavaScript
+    // Close modal
     const modal = document.getElementById('addStockModal');
     if (typeof bootstrap !== 'undefined') {
-      // Bootstrap 5
       const bootstrapModal = bootstrap.Modal.getInstance(modal);
       bootstrapModal.hide();
     } else if (typeof $ !== 'undefined') {
-      // Bootstrap 4 with jQuery
       $('#addStockModal').modal('hide');
     } else {
-      // Fallback - hide modal manually
       modal.style.display = 'none';
       modal.classList.remove('show');
       document.body.classList.remove('modal-open');
       
-      // Remove backdrop
       const backdrop = document.getElementById('modal-backdrop');
       if (backdrop) backdrop.remove();
     }
     
-    // Refresh the products list to show updated stock
+    // Refresh the products list
     location.reload();
 
   } catch (error) {
     console.error('Add stock error:', error);
-    alert(`Error adding stock: ${error.message}`);
+    
+    let errorMessage = 'Failed to add stock. ';
+    if (error.message.includes('CORS')) {
+      errorMessage += 'CORS configuration issue. Please contact system administrator.';
+    } else if (error.message.includes('Failed to fetch')) {
+      errorMessage += 'Network error. Please check your connection and try again.';
+    } else {
+      errorMessage += error.message;
+    }
+    
+    alert(errorMessage);
   } finally {
     confirmBtn.disabled = false;
     confirmBtn.innerHTML = '<i class="fas fa-plus"></i> Add Stock';
@@ -501,28 +625,25 @@ async function handleAddStock() {
 function closeModal() {
   const modal = document.getElementById('addStockModal');
   if (typeof bootstrap !== 'undefined') {
-    // Bootstrap 5
     const bootstrapModal = bootstrap.Modal.getInstance(modal);
     if (bootstrapModal) bootstrapModal.hide();
   } else if (typeof $ !== 'undefined') {
-    // Bootstrap 4 with jQuery
     $('#addStockModal').modal('hide');
   } else {
-    // Fallback - hide modal manually
     modal.style.display = 'none';
     modal.classList.remove('show');
     document.body.classList.remove('modal-open');
     
-    // Remove backdrop
     const backdrop = document.getElementById('modal-backdrop');
     if (backdrop) backdrop.remove();
   }
 }
 
-// Outside listener for inline onclick
+// Delete product function
 function deleteProduct(productId, productName) {
   console.log(`[DEBUG] Delete product called:`, { productId, productName });
   if (confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
-    alert(`Product with ID ${productId} would be deleted. (Add backend logic)`);
+    // You'll need to implement the actual delete logic here
+    alert(`Product deletion would be implemented here for ID: ${productId}`);
   }
 }
