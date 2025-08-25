@@ -8,131 +8,628 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/custom-dashboard.css">
-    <style>
-        /* Your existing styles are good and can remain here */
-        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-        .product-card .card { height: 100%; display: flex; flex-direction: column; }
-        .product-card .card-body { flex-grow: 1; }
-        .product-card img { height: 150px; width: 100%; object-fit: contain; }
-    </style>
-     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/product_view.css">
     <style>
-        /* Optional: Add a little space below the sticky header */
-        body {
-            padding-top: 70px;
+        /* --- Enhanced Mobile-First CSS --- */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-gray: #f8f9fa;
+            --dark-text: #343a40;
+            --body-font: 'Poppins', sans-serif;
+            --header-height: 60px;
+            --bottom-nav-height: 70px;
         }
-        .sticky-top {
-            top: -1px; /* Ensures the shadow is always visible */
+
+        body {
+            font-family: var(--body-font);
+            background-color: var(--light-gray);
+            color: var(--dark-text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding-top: var(--header-height);
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Device Detection Classes */
+        .is-mobile {
+            padding-bottom: var(--bottom-nav-height) !important;
+        }
+
+        /* Header Styles */
+        .fixed-top {
+            height: var(--header-height);
+            z-index: 1030;
+        }
+
+        .fixed-top .container {
+            padding: 0 15px;
+            height: 100%;
+        }
+
+        .fixed-top .navbar-brand {
+            font-size: 1rem;
+            margin-bottom: 0;
+            font-weight: 700;
+        }
+
+        .fixed-top .form-control {
+            height: 36px;
+            font-size: 0.9rem;
+            border-radius: 20px;
+        }
+
+        .fixed-top .nav-link {
+            padding: 8px 6px;
+            margin: 0 2px;
+        }
+
+        .fixed-top .fas {
+            font-size: 1.1rem;
+        }
+
+        /* Mobile Bottom Navigation */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid #e9ecef;
+            height: var(--bottom-nav-height);
+            z-index: 1040;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .mobile-bottom-nav .nav {
+            height: 100%;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .mobile-bottom-nav .nav-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .mobile-bottom-nav .nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--secondary-color);
+            text-decoration: none;
+            padding: 8px 4px;
+            font-size: 0.7rem;
+            transition: all 0.2s ease;
+        }
+
+        .mobile-bottom-nav .nav-link.active {
+            color: var(--primary-color);
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+
+        .mobile-bottom-nav .nav-link:hover {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .mobile-bottom-nav .nav-link i {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+
+        .mobile-bottom-nav .nav-link .badge {
+            position: absolute;
+            top: 8px;
+            right: 50%;
+            transform: translateX(50%);
+            font-size: 0.6rem;
+            padding: 2px 5px;
+            border-radius: 10px;
+        }
+
+        /* Hide desktop nav items on mobile */
+        .desktop-nav-items {
+            display: flex;
+        }
+
+        /* Product Cards */
+        .card {
+            border: none;
+            border-radius: 0.375rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .product-card img {
+            height: 150px;
+            width: 100%;
+            object-fit: contain;
+            padding: 0.5rem;
+            background-color: #ffffff;
+        }
+
+        .product-card .card-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            line-height: 1.3;
+        }
+
+        .product-card .card-text {
+            font-size: 0.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .product-card .card-body {
+            padding: 0.75rem;
+            flex-grow: 1;
+        }
+
+        /* Filter Form */
+        .filter-form {
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+
+        .filter-form .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .filter-form .form-control {
+            height: 40px;
+            font-size: 0.9rem;
+        }
+
+        /* Buttons */
+        .btn {
+            border-radius: 0.375rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            min-height: 44px;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 767.98px) {
+            /* Show mobile bottom nav */
+            .mobile-bottom-nav {
+                display: block !important;
+            }
+
+            /* Hide desktop nav items */
+            .desktop-nav-items {
+                display: none !important;
+            }
+
+            /* Adjust header for mobile */
+            .fixed-top .container {
+                padding: 0 10px;
+            }
+
+            .fixed-top .navbar-brand {
+                font-size: 0.9rem;
+            }
+
+            .fixed-top .form-control {
+                height: 32px;
+                font-size: 0.85rem;
+            }
+
+            /* Profile icon and logout only visible on mobile header */
+            .mobile-header-icons {
+                display: flex !important;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .mobile-header-icons .nav-link {
+                padding: 6px;
+            }
+
+            /* Adjust body padding */
+            body.is-mobile {
+                padding-bottom: var(--bottom-nav-height);
+            }
+
+            /* Product grid adjustments */
+            .product-card {
+                margin-bottom: 0.75rem;
+            }
+
+            .product-card img {
+                height: 120px;
+            }
+
+            .product-card .card-title {
+                font-size: 0.85rem;
+            }
+
+            .product-card .card-text {
+                font-size: 0.75rem;
+            }
+
+            /* Container adjustments */
+            .container {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .container.mt-4 {
+                margin-top: 0.75rem !important;
+                padding-top: 0.5rem;
+            }
+
+            /* Filter form mobile */
+            .filter-form {
+                padding: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+
+            h4 {
+                font-size: 1.1rem;
+                margin-bottom: 0.75rem;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 575.98px) {
+            body {
+                padding-top: 55px;
+            }
+
+            .fixed-top {
+                height: 55px;
+            }
+
+            .fixed-top .container {
+                padding: 0 8px;
+            }
+
+            .fixed-top .navbar-brand {
+                font-size: 0.85rem;
+            }
+
+            .product-card img {
+                height: 100px;
+            }
+
+            .container {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+        }
+
+        /* Tablet and Desktop */
+        @media (min-width: 768px) {
+            .mobile-bottom-nav {
+                display: none !important;
+            }
+
+            .desktop-nav-items {
+                display: flex !important;
+            }
+
+            .mobile-header-icons {
+                display: none !important;
+            }
+
+            body {
+                padding-top: 70px;
+            }
+
+            .fixed-top {
+                height: 70px;
+                padding: 0.75rem 0;
+            }
+
+            .product-card img {
+                height: 160px;
+            }
+
+            .container.mt-4 {
+                margin-top: 1.5rem !important;
+            }
+        }
+
+        /* Touch target optimization */
+        input, select, textarea {
+            font-size: 16px !important;
+        }
+
+        /* Safe area support */
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(15px, env(safe-area-inset-left));
+                padding-right: max(15px, env(safe-area-inset-right));
+            }
+
+            .mobile-bottom-nav {
+                padding-bottom: max(0px, env(safe-area-inset-bottom));
+            }
+
+            .fixed-top {
+                padding-top: max(0.5rem, env(safe-area-inset-top));
+            }
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--secondary-color);
+        }
+
+        /* Modal responsiveness */
+        .modal-dialog {
+            margin: 1rem;
+        }
+
+        @media (max-width: 575.98px) {
+            .modal-dialog {
+                margin: 0.5rem;
+            }
         }
     </style>
 </head>
 <body>
     <header class="p-3 mb-3 border-bottom bg-white shadow-sm fixed-top">
-    <div class="container">
-        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-            <a href="customer_dashboard.html" class="navbar-brand d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
-                <strong>TheSkinShelf</strong>
-            </a>
-
-            <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-auto ml-lg-4 flex-grow-1" action="customer_dashboard.html" method="GET">
-                <input type="search" name="search" class="form-control" placeholder="Search for products..." aria-label="Search">
-            </form>
-
-            <div class="text-end d-flex align-items-center">
-                <a href="bag.html" class="nav-link px-2 text-dark position-relative">
-                    <i class="fas fa-shopping-bag fa-lg"></i>
-                    <span id="cart-badge" class="badge badge-danger" style="position: absolute; top: 0; right: 0; display: none;"></span>
+        <div class="container">
+            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                <a href="customer_dashboard.html" class="navbar-brand d-flex align-items-center text-dark text-decoration-none">
+                    <strong>TheSkinShelf</strong>
                 </a>
-                <a href="profile.html" class="nav-link px-2 text-dark">
-                    <i class="fas fa-user-circle fa-lg"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</header>
-<div class="container mt-4 mb-5">
-    <div class="d-flex align-items-center mb-3">
-        <img id="profilePic" src="" width="40" height="40" class="rounded-circle mr-2" alt="Profile Picture">
-        <h2 class="mb-0 h4">Welcome, <span id="userName"></span></h2>
-    </div>
 
-    <div class="mb-3 d-flex flex-wrap">
-        <a href="profile.html" class="btn btn-outline-primary mb-2 mr-2">👤 My Profile</a>
-        <a href="notifications.html" class="btn btn-outline-info position-relative mb-2 mr-2">
-            🔔 Notifications
-            <span id="notifBadge" class="badge badge-danger" style="position: absolute; top: -5px; right: -10px; display: none;"></span>
-        </a>
-        <a href="login.html" id="logoutButton" class="btn btn-danger btn-sm mb-2">Logout</a>
-    </div>
+                <form class="flex-grow-1 mx-3" action="customer_dashboard.html" method="GET">
+                    <input type="search" name="search" class="form-control" placeholder="Search products..." aria-label="Search">
+                </form>
 
-    <hr>
-    <h4>Available Products</h4>
+                <!-- Desktop Navigation (hidden on mobile) -->
+                <div class="desktop-nav-items text-end d-flex align-items-center">
+                    <a href="bag.html" class="nav-link px-2 text-dark position-relative">
+                        <i class="fas fa-shopping-bag fa-lg"></i>
+                        <span id="cart-badge" class="badge badge-danger" style="position: absolute; top: 0; right: 0; display: none;"></span>
+                    </a>
+                    <a href="notifications.html" class="nav-link px-2 text-dark position-relative">
+                        <i class="fas fa-bell fa-lg"></i>
+                        <span id="notifBadge" class="badge badge-danger" style="position: absolute; top: 0; right: 0; display: none;"></span>
+                    </a>
+                    <a href="profile.html" class="nav-link px-2 text-dark">
+                        <i class="fas fa-user-circle fa-lg"></i>
+                    </a>
+                    <a href="login.html" id="logoutButton" class="nav-link px-2 text-dark" title="Logout">
+                        <i class="fas fa-sign-out-alt fa-lg"></i>
+                    </a>
+                </div>
 
-    <form id="filterForm" class="p-3 bg-light rounded filter-form mb-4">
-        <div class="row">
-            <div class="col-12 col-md-6 form-group">
-                <input type="text" name="search" id="searchInput" placeholder="Search by name..." class="form-control">
-            </div>
-            
-            <div class="col-12 col-md-6 form-group">
-                <select name="category_id" id="categoryFilterDropdown" class="form-control">
-                    <option value="">All Categories</option>
-                    </select>
-            </div>
-
-            <div class="col-6 col-md-3 form-group">
-                <input type="number" step="0.01" name="min_price" id="minPriceInput" placeholder="Min Price" class="form-control">
-            </div>
-            <div class="col-6 col-md-3 form-group">
-                <input type="number" step="0.01" name="max_price" id="maxPriceInput" placeholder="Max Price" class="form-control">
-            </div>
-            <div class="col-12 col-md-6 d-flex">
-                <button type="submit" class="btn btn-primary flex-grow-1 mr-2">Filter</button>
-                <a href="customer_dashboard.html" class="btn btn-secondary flex-grow-1">Reset</a>
-            </div>
-        </div>
-    </form>
-
-    <div id="productListContainer" class="row">
-        <div class="col-12 text-center"><p>Loading products...</p></div>
-    </div>
-</div>
-
-<div class="modal fade" id="quantityModal" tabindex="-1" aria-labelledby="quantityModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="quantityModalLabel">Add to Bag 🛍️</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Product:</strong> <span id="modalProductName"></span></p>
-                <p class="text-muted">Available Stock: <span id="modalProductStock"></span></p>
-                <div class="form-group">
-                    <label for="quantityInput">How many would you like to add?</label>
-                    <input type="number" class="form-control" id="quantityInput" value="1" min="1">
-                    <div class="invalid-feedback" id="quantityError"></div>
+                <!-- Mobile Header Icons (visible only on mobile) -->
+                <div class="mobile-header-icons" style="display: none;">
+                    <a href="orders.html" class="nav-link px-2 text-dark" title="My Orders">
+                        <i class="fas fa-receipt"></i>
+                    </a>
+                    <a href="profile.html" class="nav-link px-2 text-dark">
+                        <i class="fas fa-user-circle"></i>
+                    </a>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="confirmPurchaseBtn">Add to Bag</button>
+        </div>
+    </header>
+
+    <!-- Mobile Bottom Navigation (hidden on desktop) -->
+    <nav class="mobile-bottom-nav">
+        <ul class="nav">
+            <li class="nav-item">
+                <a class="nav-link active position-relative" href="customer_dashboard.html">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link position-relative" href="bag.html">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Bag</span>
+                    <span id="mobile-cart-badge" class="badge badge-danger" style="display: none;"></span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link position-relative" href="notifications.html">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                    <span id="mobile-notif-badge" class="badge badge-danger" style="display: none;"></span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="profile.html">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container mt-4 mb-5">
+        <!-- Hidden elements for JavaScript compatibility -->
+        <img id="profilePic" style="display: none;">
+        <span id="userName" style="display: none;"></span>
+        
+        <h4>Available Products</h4>
+
+        <div id="filterForm" class="p-3 bg-light rounded filter-form mb-4">
+            <div class="row">
+                <!-- Hidden search input to maintain JavaScript functionality -->
+                <input type="text" name="search" id="searchInput" style="display: none;" class="form-control">
+                
+                <div class="col-12 col-md-4 form-group">
+                    <select name="category_id" id="categoryFilterDropdown" class="form-control">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-4 form-group">
+                    <input type="number" step="0.01" name="min_price" id="minPriceInput" placeholder="Min Price" class="form-control">
+                </div>
+                <div class="col-6 col-md-4 form-group">
+                    <input type="number" step="0.01" name="max_price" id="maxPriceInput" placeholder="Max Price" class="form-control">
+                </div>
+            </div>
+        </div>
+
+        <div id="productListContainer" class="row">
+            <div class="col-12 text-center"><p>Loading products...</p></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="quantityModal" tabindex="-1" aria-labelledby="quantityModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quantityModalLabel">Add to Bag 🛍️</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Product:</strong> <span id="modalProductName"></span></p>
+                    <p class="text-muted">Available Stock: <span id="modalProductStock"></span></p>
+                    <div class="form-group">
+                        <label for="quantityInput">How many would you like to add?</label>
+                        <input type="number" class="form-control" id="quantityInput" value="1" min="1">
+                        <div class="invalid-feedback" id="quantityError"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="confirmPurchaseBtn">Add to Bag</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="../js/shared.js"></script>
-<script src="../js/customer_dashboard.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Device Detection and Mobile Optimization
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   window.innerWidth <= 767;
+        }
 
+        function initializeMobileFeatures() {
+            if (isMobileDevice()) {
+                document.body.classList.add('is-mobile');
+                
+                // Sync cart badges between header and bottom nav
+                syncCartBadges();
+                
+                // Sync notification badges
+                syncNotificationBadges();
+                
+                // Handle active nav state
+                updateActiveNavState();
+            }
+        }
+
+        function syncCartBadges() {
+            const headerBadge = document.getElementById('cart-badge');
+            const mobileBadge = document.getElementById('mobile-cart-badge');
+            
+            if (headerBadge && mobileBadge) {
+                // Sync visibility and content
+                if (headerBadge.style.display !== 'none' && headerBadge.textContent) {
+                    mobileBadge.textContent = headerBadge.textContent;
+                    mobileBadge.style.display = 'block';
+                } else {
+                    mobileBadge.style.display = 'none';
+                }
+            }
+        }
+
+        function syncNotificationBadges() {
+            const headerBadge = document.getElementById('notifBadge');
+            const mobileBadge = document.getElementById('mobile-notif-badge');
+            
+            if (headerBadge && mobileBadge) {
+                // Sync visibility and content
+                if (headerBadge.style.display !== 'none' && headerBadge.textContent) {
+                    mobileBadge.textContent = headerBadge.textContent;
+                    mobileBadge.style.display = 'block';
+                } else {
+                    mobileBadge.style.display = 'none';
+                }
+            }
+        }
+
+        function updateActiveNavState() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.mobile-bottom-nav .nav-link');
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                const href = link.getAttribute('href');
+                if (currentPath.includes(href) || (href === 'customer_dashboard.html' && currentPath.includes('dashboard'))) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMobileFeatures();
+            
+            // Re-check on window resize
+            window.addEventListener('resize', function() {
+                initializeMobileFeatures();
+            });
+            
+            // Periodically sync badges (in case they're updated by other scripts)
+            setInterval(function() {
+                if (isMobileDevice()) {
+                    syncCartBadges();
+                    syncNotificationBadges();
+                }
+            }, 1000);
+        });
+
+        // Prevent zoom on input focus (iOS)
+        document.addEventListener('touchstart', function() {
+            document.querySelectorAll('input, select, textarea').forEach(function(element) {
+                element.style.fontSize = '16px';
+            });
+        });
+
+        // Handle Cordova deviceready event if present
+        if (typeof window.cordova !== 'undefined') {
+            document.addEventListener('deviceready', function() {
+                console.log('Cordova device ready');
+                initializeMobileFeatures();
+                
+                // Handle hardware back button if needed
+                document.addEventListener('backbutton', function(e) {
+                    e.preventDefault();
+                    // Add your back button logic here
+                }, false);
+            }, false);
+        }
+    </script>
+    
+    <!-- Your existing JavaScript files -->
+    <script src="../js/shared.js"></script>
+    <script src="../js/customer_dashboard.js"></script>
 </body>
 </html>
