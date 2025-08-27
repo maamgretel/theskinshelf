@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    // Merge options
+    // Merge options, but don't override Content-Type for FormData
     const fetchOptions = {
       ...defaultOptions,
       ...options,
@@ -26,8 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
+    // Remove Content-Type header for FormData requests to let browser set it
+    if (options.body instanceof FormData) {
+      delete fetchOptions.headers['Content-Type'];
+    }
+
     // Add credentials for CORS
-    fetchOptions.credentials = 'omit'; // Try without credentials first
+    fetchOptions.credentials = 'omit';
 
     debugLog('Safe fetch request:', { url, options: fetchOptions });
 
@@ -43,11 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       debugLog('Safe fetch error:', error);
       
-      // If it's a CORS error, try with different approach
       if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
         debugLog('Attempting CORS workaround...');
         
-        // Try without custom headers for GET requests
         if (!options.method || options.method === 'GET') {
           const simpleOptions = {
             method: 'GET',
@@ -93,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(filters);
       const url = `${BACKEND_URL}/api/seller/products?${params}`;
 
-      // Add loading indicator
       const container = document.getElementById('productListRow');
       container.innerHTML = '<div class="col-12 text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div><p class="mt-2">Loading products...</p></div>';
 
@@ -216,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <strong>₱${productPrice}</strong><br />
               <small class="badge ${stockInfo.badgeClass} mt-1">${stockInfo.stockText}</small><br />
               <div class="mt-2">
-                <a href="edit_product.html?id=${p.id}" class="btn btn-sm btn-warning">✏️ Edit</a>
+                <button class="btn btn-sm btn-warning" onclick="openEditProductModal(${p.id})">✏️ Edit</button>
                 <button class="btn btn-sm btn-success" onclick="openAddStockModal(${p.id}, '${p.name}', ${p.stock})">📦 Add Stock</button>
                 <a href="#" class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id}, '${p.name}')">🗑 Delete</a>
               </div>
@@ -286,6 +288,17 @@ document.addEventListener('DOMContentLoaded', () => {
         option.textContent = cat.name;
         categoryFilter.appendChild(option);
       });
+
+      const editCategoryDropdown = document.getElementById('editCategoryDropdown');
+      if (editCategoryDropdown) {
+        editCategoryDropdown.innerHTML = '<option value="">Select a Category</option>';
+        categories.forEach((cat) => {
+          const option = document.createElement('option');
+          option.value = cat.id;
+          option.textContent = cat.name;
+          editCategoryDropdown.appendChild(option);
+        });
+      }
     } catch (err) { 
       debugLog('Failed to load categories:', err);
       console.warn('Failed to load categories:', err);
@@ -308,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (!response.ok) {
         debugLog('Notifications endpoint not available:', response.status);
-        return; // Silently fail if notifications aren't implemented
+        return;
       }
       
       const data = await response.json();
@@ -323,7 +336,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (e) {
       debugLog('Notification check failed (will retry):', e);
-      // Silently ignore errors for notifications
     }
   }
 
@@ -339,7 +351,6 @@ document.addEventListener('DOMContentLoaded', () => {
   async function testBackendConnection() {
     debugLog('Testing backend connection...');
     try {
-      // Try multiple endpoints to test connectivity
       const endpoints = ['/health', '/api/health', '/'];
       
       for (const endpoint of endpoints) {
@@ -369,7 +380,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Global function for testing backend directly
   window.testBackendDirectly = async function() {
     const isConnected = await testBackendConnection();
     if (isConnected) {
@@ -384,22 +394,18 @@ document.addEventListener('DOMContentLoaded', () => {
   
   async function initializeDashboard() {
     try {
-      // Test connection first
       const isConnected = await testBackendConnection();
       if (!isConnected) {
         debugLog('Backend connection failed during initialization');
-        // Continue anyway - individual functions will handle their own errors
       }
       
-      // Load data with error handling for each
       await Promise.allSettled([
         loadCategories(),
         fetchSellerProducts(),
         checkNotifications()
       ]);
       
-      // Set up periodic notification checks (less frequent to reduce load)
-      setInterval(checkNotifications, 60000); // Check every minute instead of 30 seconds
+      setInterval(checkNotifications, 60000);
       
       debugLog('Initialization complete');
     } catch (error) {
@@ -407,7 +413,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Start initialization
   initializeDashboard();
 
   // --- Create Stock Management Modal ---
@@ -418,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title" id="addStockModalLabel">Add Stock</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModal()">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModal('addStockModal')">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
@@ -448,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </form>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+              <button type="button" class="btn btn-secondary" onclick="closeModal('addStockModal')">Cancel</button>
               <button type="button" class="btn btn-success" id="confirmAddStock">
                 <i class="fas fa-plus"></i> Add Stock
               </button>
@@ -459,7 +464,6 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-    // Add event listeners for the modal
     document.addEventListener('input', (e) => {
       if (e.target.id === 'modalStockToAdd') {
         const currentStock = parseInt(document.getElementById('modalCurrentStock').value) || 0;
@@ -475,15 +479,115 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Create modal on page load
-  createStockModal();
+  // --- Create Edit Product Modal - STOCK FIELD HIDDEN ---
+  function createEditProductModal() {
+    const modalHTML = `
+      <div class="modal fade" id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModal('editProductModal')">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="editProductForm" enctype="multipart/form-data">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="editProductName">Product Name: <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="editProductName" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="editProductDescription">Description:</label>
+                      <textarea class="form-control" id="editProductDescription" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="editProductPrice">Price (₱): <span class="text-danger">*</span></label>
+                      <input type="number" class="form-control" id="editProductPrice" name="price" step="0.01" min="0" required>
+                    </div>
+                    
+                    <!-- STOCK FIELD REMOVED/HIDDEN -->
+                    <!-- <div class="form-group" style="display: none;">
+                      <label for="editProductStock">Current Stock:</label>
+                      <input type="number" class="form-control" id="editProductStock" name="stock" readonly style="background-color: #f8f9fa;">
+                      <small class="form-text text-muted">Stock is managed through the "Add Stock" button. This field shows current inventory.</small>
+                    </div> -->
+                    
+                    <div class="form-group">
+                      <label for="editCategoryDropdown">Category:</label>
+                      <select class="form-control" id="editCategoryDropdown" name="category_id">
+                        <option value="">Select a Category</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="editProductImage">Product Image:</label>
+                      <input type="file" class="form-control-file" id="editProductImage" name="image" accept="image/*">
+                      <small class="form-text text-muted">Leave empty to keep current image</small>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label>Current Image:</label>
+                      <div id="editImagePreviewContainer" style="text-align: center;">
+                        <img id="editImagePreview" src="" alt="Product Image" class="img-fluid" style="max-height: 200px; display: none;">
+                        <div id="editNoImageText" class="text-muted">No image uploaded</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="closeModal('editProductModal')">Cancel</button>
+              <button type="button" class="btn btn-primary" id="confirmEditProduct">
+                <i class="fas fa-save"></i> Update Product
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-  // Make safeFetch available globally for stock management
+    document.addEventListener('click', async (e) => {
+      if (e.target.id === 'confirmEditProduct') {
+        await handleEditProduct();
+      }
+    });
+
+    document.addEventListener('change', (e) => {
+      if (e.target.id === 'editProductImage') {
+        const file = e.target.files[0];
+        const preview = document.getElementById('editImagePreview');
+        const noImageText = document.getElementById('editNoImageText');
+        
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            noImageText.style.display = 'none';
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    });
+  }
+
+  createStockModal();
+  createEditProductModal();
   window.safeFetch = safeFetch;
 });
 
 // Global variables for stock management
 let currentProductId = null;
+let currentEditProductId = null;
 
 // Open Add Stock Modal
 function openAddStockModal(productId, productName, currentStock) {
@@ -496,25 +600,130 @@ function openAddStockModal(productId, productName, currentStock) {
   document.getElementById('modalNewTotalStock').value = currentStock;
   document.getElementById('modalStockNote').value = '';
   
-  const modal = document.getElementById('addStockModal');
-  if (typeof bootstrap !== 'undefined') {
-    const bootstrapModal = new bootstrap.Modal(modal);
-    bootstrapModal.show();
-  } else if (typeof $ !== 'undefined') {
-    $('#addStockModal').modal('show');
-  } else {
-    modal.style.display = 'block';
-    modal.classList.add('show');
-    document.body.classList.add('modal-open');
+  showModal('addStockModal');
+}
+
+// Open Edit Product Modal - STOCK FIELD HANDLING REMOVED
+async function openEditProductModal(productId) {
+  console.log(`[DEBUG] Opening edit modal for product ID:`, productId);
+  
+  currentEditProductId = productId;
+  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const user = JSON.parse(localStorage.getItem('user'));
+  
+  try {
+    document.getElementById('editProductModalLabel').textContent = 'Loading Product...';
+    showModal('editProductModal');
     
-    const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop fade show';
-    backdrop.id = 'modal-backdrop';
-    document.body.appendChild(backdrop);
+    const response = await window.safeFetch(`${BACKEND_URL}/api/products/${productId}`, {
+      headers: { 'X-User-ID': user.id }
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log(`[DEBUG] Error fetching product:`, errorText);
+      throw new Error(`Could not fetch product data: ${response.status} - ${errorText}`);
+    }
+    
+    const response_data = await response.json();
+    console.log(`[DEBUG] Product data loaded:`, response_data);
+    
+    const product = response_data.details || response_data;
+    
+    // Populate form with product data - STOCK FIELD REMOVED
+    document.getElementById('editProductModalLabel').textContent = `Edit Product: ${product.name}`;
+    document.getElementById('editProductName').value = product.name || '';
+    document.getElementById('editProductDescription').value = product.description || '';
+    document.getElementById('editProductPrice').value = product.price || '';
+    // Stock field is now hidden, so no need to populate it
+    
+    // Set category if available
+    const categoryDropdown = document.getElementById('editCategoryDropdown');
+    if (product.category_id) {
+      categoryDropdown.value = product.category_id;
+    } else {
+      categoryDropdown.value = '';
+    }
+    
+    // Handle image preview
+    const imagePreview = document.getElementById('editImagePreview');
+    const noImageText = document.getElementById('editNoImageText');
+    
+    if (product.image) {
+      imagePreview.src = product.image;
+      imagePreview.style.display = 'block';
+      noImageText.style.display = 'none';
+    } else {
+      imagePreview.style.display = 'none';
+      noImageText.style.display = 'block';
+    }
+    
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    alert(`Error loading product: ${error.message}`);
+    closeModal('editProductModal');
   }
 }
 
-// Handle Add Stock with better error handling
+// Handle Edit Product - UPDATED WITH BETTER MODAL CLOSING
+// Handle Edit Product - UPDATED WITH STOCK PRESERVATION
+async function handleEditProduct() {
+  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const user = JSON.parse(localStorage.getItem('user'));
+  
+  const confirmBtn = document.getElementById('confirmEditProduct');
+  confirmBtn.disabled = true;
+  confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+  try {
+    const form = document.getElementById('editProductForm');
+    const formData = new FormData();
+    
+    // Add only the fields we want to update (excluding stock)
+    formData.append('name', document.getElementById('editProductName').value);
+    formData.append('description', document.getElementById('editProductDescription').value);
+    formData.append('price', document.getElementById('editProductPrice').value);
+    formData.append('category_id', document.getElementById('editCategoryDropdown').value);
+    
+    // Only add image if a new one is selected
+    const imageInput = document.getElementById('editProductImage');
+    if (imageInput.files && imageInput.files[0]) {
+      formData.append('image', imageInput.files[0]);
+    }
+    
+    console.log(`[DEBUG] Updating product ${currentEditProductId} - stock preservation enabled`);
+    
+    const response = await fetch(`${BACKEND_URL}/api/products/${currentEditProductId}`, {
+      method: 'POST',
+      headers: { 'X-User-ID': user.id },
+      body: formData
+    });
+
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to update product.');
+    }
+    
+    alert('Product updated successfully! Stock has been preserved.');
+    closeModal('editProductModal');
+    
+    // Add a small delay before redirect to ensure modal is properly closed
+    setTimeout(() => {
+      window.location.href = 'seller_dashboard.html';
+    }, 500);
+
+  } catch (error) {
+    console.error('Update error:', error);
+    alert(`Error: ${error.message}`);
+  } finally {
+    confirmBtn.disabled = false;
+    confirmBtn.innerHTML = '<i class="fas fa-save"></i> Update Product';
+  }
+}
+
+// Handle Add Stock - IMPROVED VERSION
+// Handle Add Stock - CORRECTED VERSION
 async function handleAddStock() {
   const stockToAdd = parseInt(document.getElementById('modalStockToAdd').value);
   const note = document.getElementById('modalStockNote').value.trim();
@@ -531,75 +740,36 @@ async function handleAddStock() {
   confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
 
   try {
+    // Use the correct dedicated add-stock endpoint
     const payload = {
       product_id: currentProductId,
       stock_to_add: stockToAdd,
       note: note
     };
 
-    console.log(`[DEBUG] Adding stock:`, payload);
+    console.log(`[DEBUG] Adding stock using dedicated endpoint:`, payload);
 
-    // Use the safeFetch function for better CORS handling
-    let response = await window.safeFetch(`${BACKEND_URL}/api/seller/add-stock`, {
+    const response = await window.safeFetch(`${BACKEND_URL}/api/seller/add-stock`, {
       method: 'POST',
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-ID': user.id
+      }
     });
 
-    let result;
-    
     if (!response.ok) {
-      console.log(`[DEBUG] add-stock endpoint failed (${response.status}), trying fallback method...`);
-      
-      // Fallback: Use the existing edit product endpoint
-      const currentStock = parseInt(document.getElementById('modalCurrentStock').value) || 0;
-      const newStock = currentStock + stockToAdd;
-      
-      const formData = new FormData();
-      formData.append('stock', newStock.toString());
-      if (note) {
-        formData.append('note', `Added ${stockToAdd} items. Note: ${note}`);
-      }
-      
-      response = await window.safeFetch(`${BACKEND_URL}/products/${currentProductId}`, {
-        method: 'POST',
-        body: formData,
-        headers: {} // Remove Content-Type for FormData
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log(`[DEBUG] Fallback failed:`, errorText);
-        throw new Error(`Failed to update stock: ${response.status} ${errorText}`);
-      }
-      
-      result = await response.json();
-      result.new_stock = newStock;
-      console.log(`[DEBUG] Fallback successful:`, result);
-    } else {
-      result = await response.json();
+      const errorText = await response.text();
+      console.log(`[DEBUG] add-stock endpoint failed (${response.status}):`, errorText);
+      throw new Error(`Failed to add stock: ${response.status} - ${errorText}`);
     }
-    
-    console.log(`[DEBUG] Add stock response:`, result);
+
+    const result = await response.json();
+    console.log(`[DEBUG] Add stock successful:`, result);
     
     alert(`Successfully added ${stockToAdd} items to stock. New total: ${result.new_stock}`);
     
-    // Close modal
-    const modal = document.getElementById('addStockModal');
-    if (typeof bootstrap !== 'undefined') {
-      const bootstrapModal = bootstrap.Modal.getInstance(modal);
-      bootstrapModal.hide();
-    } else if (typeof $ !== 'undefined') {
-      $('#addStockModal').modal('hide');
-    } else {
-      modal.style.display = 'none';
-      modal.classList.remove('show');
-      document.body.classList.remove('modal-open');
-      
-      const backdrop = document.getElementById('modal-backdrop');
-      if (backdrop) backdrop.remove();
-    }
-    
-    // Refresh the products list
+    closeModal('addStockModal');
     location.reload();
 
   } catch (error) {
@@ -621,29 +791,171 @@ async function handleAddStock() {
   }
 }
 
-// Close Modal Function
-function closeModal() {
-  const modal = document.getElementById('addStockModal');
-  if (typeof bootstrap !== 'undefined') {
-    const bootstrapModal = bootstrap.Modal.getInstance(modal);
-    if (bootstrapModal) bootstrapModal.hide();
-  } else if (typeof $ !== 'undefined') {
-    $('#addStockModal').modal('hide');
-  } else {
-    modal.style.display = 'none';
-    modal.classList.remove('show');
-    document.body.classList.remove('modal-open');
-    
-    const backdrop = document.getElementById('modal-backdrop');
-    if (backdrop) backdrop.remove();
+// IMPROVED Modal Management Functions - Fixed Bootstrap compatibility
+function showModal(modalId) {
+  const modal = document.getElementById(modalId);
+  
+  // Try Bootstrap 5 first
+  if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    try {
+      const bootstrapModal = new bootstrap.Modal(modal);
+      bootstrapModal.show();
+      return;
+    } catch (error) {
+      console.log('[DEBUG] Bootstrap 5 modal failed:', error);
+    }
   }
+  
+  // Try Bootstrap 4/jQuery
+  if (typeof $ !== 'undefined' && $.fn.modal) {
+    try {
+      $(`#${modalId}`).modal('show');
+      return;
+    } catch (error) {
+      console.log('[DEBUG] jQuery modal failed:', error);
+    }
+  }
+  
+  // Fallback to manual modal display
+  console.log('[DEBUG] Using manual modal display');
+  modal.style.display = 'block';
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+  
+  // Create backdrop
+  let backdrop = document.getElementById(`modal-backdrop-${modalId}`);
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop fade show';
+    backdrop.id = `modal-backdrop-${modalId}`;
+    document.body.appendChild(backdrop);
+    
+    // Close modal when clicking backdrop
+    backdrop.addEventListener('click', () => closeModal(modalId));
+  }
+  
+  // Close modal with Escape key
+  const escapeHandler = (e) => {
+    if (e.key === 'Escape') {
+      closeModal(modalId);
+      document.removeEventListener('keydown', escapeHandler);
+    }
+  };
+  document.addEventListener('keydown', escapeHandler);
 }
 
-// Delete product function
-function deleteProduct(productId, productName) {
+// Close Modal Function - Fixed Bootstrap compatibility
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  
+  // Try Bootstrap 5 first
+  if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    try {
+      const bootstrapModal = bootstrap.Modal.getInstance(modal);
+      if (bootstrapModal) {
+        bootstrapModal.hide();
+        return;
+      }
+    } catch (error) {
+      console.log('[DEBUG] Bootstrap 5 modal close failed:', error);
+    }
+  }
+  
+  // Try Bootstrap 4/jQuery
+  if (typeof $ !== 'undefined' && $.fn.modal) {
+    try {
+      $(`#${modalId}`).modal('hide');
+      return;
+    } catch (error) {
+      console.log('[DEBUG] jQuery modal close failed:', error);
+    }
+  }
+  
+  // Fallback to manual modal close
+  console.log('[DEBUG] Using manual modal close');
+  modal.style.display = 'none';
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('modal-open');
+  
+  // Remove backdrop
+  const backdrop = document.getElementById(`modal-backdrop-${modalId}`);
+  if (backdrop) {
+    backdrop.remove();
+  }
+  
+  // Remove any lingering modal-open class and backdrops
+  setTimeout(() => {
+    document.body.classList.remove('modal-open');
+    const allBackdrops = document.querySelectorAll('.modal-backdrop');
+    allBackdrops.forEach(b => {
+      if (b.id.includes(modalId)) {
+        b.remove();
+      }
+    });
+  }, 150);
+}
+
+// Delete product function - IMPROVED VERSION
+async function deleteProduct(productId, productName) {
   console.log(`[DEBUG] Delete product called:`, { productId, productName });
-  if (confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
-    // You'll need to implement the actual delete logic here
-    alert(`Product deletion would be implemented here for ID: ${productId}`);
+  
+  if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
+    return;
+  }
+  
+  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const user = JSON.parse(localStorage.getItem('user'));
+  
+  try {
+    const methods = ['DELETE', 'POST']; // Try DELETE first, then POST as fallback
+    let success = false;
+    
+    for (const method of methods) {
+      try {
+        console.log(`[DEBUG] Trying to delete with ${method} method...`);
+        
+        let requestOptions = {
+          method: method,
+          headers: { 'X-User-ID': user.id }
+        };
+        
+        // For POST method, include action in body
+        if (method === 'POST') {
+          requestOptions.headers['Content-Type'] = 'application/json';
+          requestOptions.body = JSON.stringify({ action: 'delete' });
+        }
+        
+        const response = await window.safeFetch(`${BACKEND_URL}/api/products/${productId}`, requestOptions);
+        
+        if (response.ok) {
+          console.log(`[DEBUG] Delete successful with ${method}`);
+          success = true;
+          break;
+        } else {
+          const errorText = await response.text();
+          console.log(`[DEBUG] Delete failed with ${method} (${response.status}):`, errorText);
+          
+          if (response.status === 405 && method !== 'POST') {
+            continue; // Try next method
+          }
+        }
+      } catch (error) {
+        console.log(`[DEBUG] Delete ${method} error:`, error.message);
+        continue;
+      }
+    }
+    
+    if (success) {
+      alert(`"${productName}" has been deleted successfully.`);
+      location.reload();
+    } else {
+      alert(`Failed to delete "${productName}". Please try again or contact support.`);
+    }
+    
+  } catch (error) {
+    console.error('Delete error:', error);
+    alert(`Error deleting product: ${error.message}`);
   }
 }
