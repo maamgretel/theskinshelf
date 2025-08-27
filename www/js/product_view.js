@@ -23,9 +23,190 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // ⭐ NEW: Simple and reliable modal function
+    // ⭐ NEW: Function to show cart exists modal
+    const showCartExistsModal = (existingQuantity, requestedQuantity, productName, productStock, onConfirm) => {
+        console.log('Showing cart exists modal:', existingQuantity, requestedQuantity, productName, productStock);
+        
+        // Remove existing modal if any
+        const existingModal = document.getElementById('cartExistsModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const totalQuantity = existingQuantity + requestedQuantity;
+        const willExceedStock = totalQuantity > productStock;
+
+        // Create modal element
+        const modalDiv = document.createElement('div');
+        modalDiv.id = 'cartExistsModal';
+        modalDiv.innerHTML = `
+            <div style="
+                position: fixed; 
+                top: 0; 
+                left: 0; 
+                width: 100%; 
+                height: 100%; 
+                background-color: rgba(0,0,0,0.5); 
+                z-index: 9999; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center;
+            ">
+                <div style="
+                    background: white; 
+                    border-radius: 8px; 
+                    padding: 0; 
+                    max-width: 550px; 
+                    width: 90%; 
+                    max-height: 90vh; 
+                    overflow: auto;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+                ">
+                    <div class="modal-header" style="padding: 20px; border-bottom: 1px solid #dee2e6; background-color: #f8f9fa;">
+                        <h5 class="modal-title ${willExceedStock ? 'text-warning' : 'text-info'}" style="margin: 0; display: flex; align-items: center;">
+                            <i class="fas fa-${willExceedStock ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
+                            ${willExceedStock ? 'Stock Limit Warning' : 'Item Already in Bag'}
+                        </h5>
+                        <button type="button" id="closeCartModalBtn" style="
+                            background: none; 
+                            border: none; 
+                            font-size: 24px; 
+                            cursor: pointer; 
+                            color: #6c757d;
+                            padding: 0;
+                            width: 30px;
+                            height: 30px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 30px 20px;">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-shopping-bag" style="font-size: 3rem; color: #007bff; margin-bottom: 1rem;"></i>
+                        </div>
+                        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+                            <h6 style="margin: 0 0 10px 0; color: #495057;">Current Status:</h6>
+                            <p style="margin: 0; font-size: 14px; line-height: 1.4;">
+                                You have <strong>${existingQuantity}</strong> ${existingQuantity === 1 ? 'item' : 'items'} of 
+                                "<strong>${productName}</strong>" in your bag.
+                            </p>
+                        </div>
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <p style="font-size: 16px; margin-bottom: 10px;">
+                                You're trying to add <strong>${requestedQuantity}</strong> more ${requestedQuantity === 1 ? 'item' : 'items'}.
+                            </p>
+                            <p style="font-size: 16px; margin-bottom: 15px;">
+                                Total would be: <strong>${totalQuantity}</strong> ${totalQuantity === 1 ? 'item' : 'items'}
+                            </p>
+                            ${willExceedStock ? `
+                                <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; color: #856404;">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                                    <strong>Warning:</strong> Only <strong>${productStock}</strong> ${productStock === 1 ? 'item is' : 'items are'} available in stock.
+                                    Adding ${requestedQuantity} more would exceed available inventory.
+                                </div>
+                            ` : `
+                                <div style="background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 6px; color: #0c5460;">
+                                    <i class="fas fa-check-circle mr-2"></i>
+                                    Stock available: <strong>${productStock}</strong> ${productStock === 1 ? 'item' : 'items'}
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="padding: 20px; border-top: 1px solid #dee2e6; display: flex; justify-content: center; gap: 10px;">
+                        ${willExceedStock ? `
+                            <button type="button" class="btn btn-secondary" id="cancelCartModalBtn" style="
+                                background-color: #6c757d; 
+                                border-color: #6c757d; 
+                                color: white; 
+                                padding: 8px 24px; 
+                                border-radius: 4px; 
+                                border: 1px solid transparent; 
+                                cursor: pointer;
+                                font-size: 14px;
+                                margin-right: 5px;
+                            ">
+                                <i class="fas fa-times mr-2"></i>Cancel
+                            </button>
+                        ` : `
+                            <button type="button" class="btn btn-secondary" id="cancelCartModalBtn" style="
+                                background-color: #6c757d; 
+                                border-color: #6c757d; 
+                                color: white; 
+                                padding: 8px 24px; 
+                                border-radius: 4px; 
+                                border: 1px solid transparent; 
+                                cursor: pointer;
+                                font-size: 14px;
+                                margin-right: 5px;
+                            ">
+                                <i class="fas fa-times mr-2"></i>Cancel
+                            </button>
+                            <button type="button" class="btn btn-success" id="confirmCartModalBtn" style="
+                                background-color: #28a745; 
+                                border-color: #28a745; 
+                                color: white; 
+                                padding: 8px 24px; 
+                                border-radius: 4px; 
+                                border: 1px solid transparent; 
+                                cursor: pointer;
+                                font-size: 14px;
+                            ">
+                                <i class="fas fa-plus mr-2"></i>Yes, Add ${requestedQuantity} More
+                            </button>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add to document
+        document.body.appendChild(modalDiv);
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+        
+        // Close modal function
+        const closeModal = () => {
+            console.log('Closing cart exists modal');
+            modalDiv.remove();
+            document.body.style.overflow = 'auto';
+        };
+        
+        // Add event listeners
+        const closeBtn = document.getElementById('closeCartModalBtn');
+        const cancelBtn = document.getElementById('cancelCartModalBtn');
+        const confirmBtn = document.getElementById('confirmCartModalBtn');
+        
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                closeModal();
+                onConfirm();
+            });
+        }
+        
+        // Close on backdrop click
+        modalDiv.addEventListener('click', (e) => {
+            if (e.target === modalDiv) {
+                closeModal();
+            }
+        });
+        
+        // Close on Escape key
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    };
+
+    // ⭐ EXISTING: Simple and reliable modal function for stock errors
     const showStockError = (requestedQuantity, availableStock, productName) => {
-        console.log('Showing stock error modal:', requestedQuantity, availableStock, productName); // Debug log
+        console.log('Showing stock error modal:', requestedQuantity, availableStock, productName);
         
         // Remove existing modal if any
         const existingModal = document.getElementById('stockErrorModal');
@@ -115,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Close modal function
         const closeModal = () => {
-            console.log('Closing modal'); // Debug log
+            console.log('Closing modal');
             modalDiv.remove();
             document.body.style.overflow = 'auto';
             
@@ -148,6 +329,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
         document.addEventListener('keydown', escapeHandler);
+    };
+
+    // ⭐ NEW: Function to check if product exists in cart
+    const checkCartForProduct = async (productId) => {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/cart`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-ID': user.id.toString()
+                }
+            });
+            
+            if (response.ok) {
+                const cartItems = await response.json();
+                const existingItem = cartItems.find(item => item.product_id.toString() === productId.toString());
+                return existingItem ? existingItem.quantity : 0;
+            }
+            return 0;
+        } catch (error) {
+            console.error('Error checking cart:', error);
+            return 0;
+        }
     };
 
     const fetchProductData = async () => {
@@ -254,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const plusBtn = document.getElementById('plus-btn');
         const quantityInput = document.getElementById('quantity-input');
 
-        console.log('Setting up quantity controls for:', productName, 'Max stock:', maxStock); // Debug log
+        console.log('Setting up quantity controls for:', productName, 'Max stock:', maxStock);
 
         // ⭐ MODIFIED: Enhanced quantity validation with modal trigger
         const validateQuantity = (showModalOnError = false, originalValue = null) => {
@@ -263,16 +466,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const valueToCheck = originalValue || currentValue;
             const addToBagBtn = document.getElementById('add-to-bag-btn');
             
-            console.log('Validating quantity:', valueToCheck, 'vs max:', maxStock, 'Show modal:', showModalOnError); // Debug log
+            console.log('Validating quantity:', valueToCheck, 'vs max:', maxStock, 'Show modal:', showModalOnError);
             
             // Don't validate if input is empty (user is typing)
             if (rawValue === '' && !showModalOnError) {
-                console.log('Empty input, skipping validation'); // Debug log
+                console.log('Empty input, skipping validation');
                 return;
             }
             
             if (valueToCheck > maxStock && maxStock > 0) {
-                console.log('Quantity exceeds stock, showing modal:', showModalOnError); // Debug log
+                console.log('Quantity exceeds stock, showing modal:', showModalOnError);
                 
                 if (showModalOnError) {
                     showStockError(valueToCheck, maxStock, productName);
@@ -312,24 +515,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ⭐ ENHANCED: Track user input before validation changes it
         quantityInput.addEventListener('focus', () => {
-            console.log('Input focused'); // Debug log
+            console.log('Input focused');
             userInputValue = parseInt(quantityInput.value) || 0;
         });
 
         quantityInput.addEventListener('input', (e) => {
-            console.log('Input event triggered'); // Debug log
+            console.log('Input event triggered');
             const currentValue = parseInt(e.target.value) || 0;
             const rawValue = e.target.value; // Get the raw string value
             
             // Allow empty input temporarily (user might be typing)
             if (rawValue === '' || rawValue === '0') {
-                console.log('User cleared input, allowing temporarily'); // Debug log
+                console.log('User cleared input, allowing temporarily');
                 return; // Don't validate yet, let user continue typing
             }
             
             // ⭐ NEW: Show modal IMMEDIATELY when user types over limit
             if (currentValue > maxStock && maxStock > 0) {
-                console.log('User typed over limit:', currentValue, 'Showing modal immediately'); // Debug log
+                console.log('User typed over limit:', currentValue, 'Showing modal immediately');
                 showStockError(currentValue, maxStock, productName);
                 
                 // Auto-correct the input after showing modal
@@ -348,14 +551,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         quantityInput.addEventListener('blur', () => {
-            console.log('Blur event triggered'); // Debug log
+            console.log('Blur event triggered');
             
             const currentValue = parseInt(quantityInput.value) || 0;
             const rawValue = quantityInput.value;
             
             // If input is empty or 0, set to 1
             if (rawValue === '' || currentValue === 0) {
-                console.log('Empty input on blur, setting to 1'); // Debug log
+                console.log('Empty input on blur, setting to 1');
                 quantityInput.value = 1;
             }
             
@@ -364,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         quantityInput.addEventListener('change', () => {
-            console.log('Change event triggered'); // Debug log
+            console.log('Change event triggered');
             // Just validate without modal (modal already shown in input event)
             validateQuantity(false);
         });
@@ -372,11 +575,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // ⭐ ENHANCED: Better Enter key handling
         quantityInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                console.log('Enter key pressed, userInputValue:', userInputValue); // Debug log
+                console.log('Enter key pressed, userInputValue:', userInputValue);
                 const currentValue = parseInt(quantityInput.value) || 0;
                 
                 if (currentValue > maxStock && maxStock > 0) {
-                    console.log('Will show modal on Enter with value:', currentValue); // Debug log
+                    console.log('Will show modal on Enter with value:', currentValue);
                     showStockError(currentValue, maxStock, productName);
                     quantityInput.value = maxStock;
                     quantityInput.classList.add('is-invalid');
@@ -387,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // ⭐ MODIFIED: Enhanced add to bag function with stock validation
+    // ⭐ ENHANCED: Modified add to bag function with cart checking
     const addEventListenerToBagButton = (productId, productName, productStock) => {
         const addToBagBtn = document.getElementById('add-to-bag-btn');
         if (addToBagBtn) {
@@ -395,11 +598,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const quantityInput = document.getElementById('quantity-input');
                 const quantity = parseInt(quantityInput.value) || 0;
                 
-                console.log('Add to bag clicked with quantity:', quantity, 'vs stock:', productStock); // Debug log
+                console.log('Add to bag clicked with quantity:', quantity, 'vs stock:', productStock);
                 
-                // ⭐ NEW: Pre-validation before API call
+                // ⭐ VALIDATION: Pre-validation before API call
                 if (quantity > productStock) {
-                    console.log('Showing modal from add to bag button'); // Debug log
+                    console.log('Showing stock modal from add to bag button');
                     showStockError(quantity, productStock, productName);
                     return;
                 }
@@ -409,65 +612,98 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
-                // Disable button to prevent multiple clicks
-                addToBagBtn.disabled = true;
-                addToBagBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adding...';
-
-                try {
-                    const response = await fetch(`${BACKEND_URL}/api/cart`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-User-ID': user.id.toString()
-                        },
-                        body: JSON.stringify({
-                            product_id: productId,
-                            quantity: quantity
-                        })
-                    });
-
-                    if (response.ok) {
-                        // Success feedback
-                        addToBagBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Added!';
-                        addToBagBtn.classList.remove('btn-outline-primary');
-                        addToBagBtn.classList.add('btn-success');
-                        
-                        // Update cart badge if function exists
-                        if (typeof updateCartBadge === 'function') {
-                            updateCartBadge();
+                // ⭐ NEW: Check if product already exists in cart
+                const existingQuantity = await checkCartForProduct(productId);
+                
+                if (existingQuantity > 0) {
+                    const totalQuantity = existingQuantity + quantity;
+                    
+                    // Show the cart exists modal
+                    showCartExistsModal(
+                        existingQuantity, 
+                        quantity, 
+                        productName, 
+                        productStock,
+                        () => {
+                            // This callback runs when user confirms they want to add more
+                            if (totalQuantity <= productStock) {
+                                performAddToBag(productId, quantity, productName);
+                            } else {
+                                // Show stock error if total would exceed stock
+                                showStockError(totalQuantity, productStock, productName);
+                            }
                         }
-                        
-                        // Reset button after 2 seconds
-                        setTimeout(() => {
-                            addToBagBtn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
-                            addToBagBtn.classList.remove('btn-success');
-                            addToBagBtn.classList.add('btn-outline-primary');
-                        }, 2000);
-                        
-                    } else {
-                        const errorData = await response.json();
-                        
-                        // ⭐ NEW: Check if error is related to stock
-                        if (errorData.message && errorData.message.toLowerCase().includes('stock')) {
-                            // If server provides current stock info, use it; otherwise use local stock
-                            const availableStock = errorData.available_stock || productStock;
-                            showStockError(quantity, availableStock, productName);
-                        } else {
-                            alert(`Error: ${errorData.message}`);
-                        }
-                    }
-
-                } catch (error) {
-                    console.error('Failed to add item to bag:', error);
-                    alert('An error occurred. Please try again.');
-                } finally {
-                    // Re-enable button
-                    addToBagBtn.disabled = false;
-                    if (addToBagBtn.innerHTML.includes('Adding...')) {
-                        addToBagBtn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
-                    }
+                    );
+                    return; // Exit early to wait for user decision
                 }
+                
+                // If product doesn't exist in cart, proceed normally
+                performAddToBag(productId, quantity, productName);
             });
+        }
+    };
+
+    // ⭐ NEW: Separated the actual add to bag functionality
+    const performAddToBag = async (productId, quantity, productName) => {
+        const addToBagBtn = document.getElementById('add-to-bag-btn');
+        
+        // Disable button to prevent multiple clicks
+        addToBagBtn.disabled = true;
+        addToBagBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adding...';
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/cart`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-ID': user.id.toString()
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: quantity
+                })
+            });
+
+            if (response.ok) {
+                // Success feedback
+                addToBagBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Added!';
+                addToBagBtn.classList.remove('btn-outline-primary');
+                addToBagBtn.classList.add('btn-success');
+                
+                // Update cart badge if function exists
+                if (typeof updateCartBadge === 'function') {
+                    updateCartBadge();
+                }
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    addToBagBtn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
+                    addToBagBtn.classList.remove('btn-success');
+                    addToBagBtn.classList.add('btn-outline-primary');
+                }, 2000);
+                
+            } else {
+                const errorData = await response.json();
+                
+                // Check if error is related to stock
+                if (errorData.message && errorData.message.toLowerCase().includes('stock')) {
+                    // If server provides current stock info, use it; otherwise use local stock
+                    const availableStock = errorData.available_stock || productStock;
+                    showStockError(quantity, availableStock, productName);
+                } else {
+                    alert(`Error: ${errorData.message}`);
+                }
+            }
+
+        } catch (error) {
+            console.error('Failed to add item to bag:', error);
+            alert('An error occurred. Please try again.');
+        } finally {
+            // Re-enable button
+            addToBagBtn.disabled = false;
+            if (addToBagBtn.innerHTML.includes('Adding...')) {
+                addToBagBtn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
+            }
         }
     };
 
