@@ -19,7 +19,7 @@
                     <i class="fas fa-users-cog"></i>
                     User Management
                 </h1>
-                <p class="page-subtitle">Manage sellers, customers, and all user accounts</p>
+                <p class="page-subtitle">Manage sellers, buyers, and all user accounts</p>
             </div>
             <a href="admin_dashboard.html" class="back-btn">
                 <i class="fas fa-arrow-left"></i>
@@ -39,9 +39,9 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="customers-tab" data-toggle="tab" href="#customers" role="tab">
-                        <i class="fas fa-shopping-cart me-2"></i>Customers
-                        <span id="customersCount" class="badge badge-light ml-2">0</span>
+                    <a class="nav-link" id="buyers-tab" data-toggle="tab" href="#buyers" role="tab">
+                        <i class="fas fa-shopping-cart me-2"></i>Buyers
+                        <span id="buyersCount" class="badge badge-light ml-2">0</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -84,33 +84,33 @@
                 <nav id="sellersPagination" class="pagination-nav"></nav>
             </div>
 
-            <!-- Customers Tab -->
-            <div class="tab-pane fade" id="customers" role="tabpanel">
+            <!-- Buyers Tab -->
+            <div class="tab-pane fade" id="buyers" role="tabpanel">
                 <div class="filters-section">
                     <div class="filter-group">
-                        <input type="text" id="customerSearch" class="filter-input" placeholder="Search customers...">
-                        <select id="customerSort" class="filter-input">
+                        <input type="text" id="buyerSearch" class="filter-input" placeholder="Search buyers...">
+                        <select id="buyerSort" class="filter-input">
                             <option value="name">Sort by Name</option>
                             <option value="orders">Sort by Orders</option>
                             <option value="spent">Sort by Total Spent</option>
                             <option value="date">Sort by Join Date</option>
                         </select>
-                        <button class="filter-btn" onclick="applyCustomerFilters()">
+                        <button class="filter-btn" onclick="applyBuyerFilters()">
                             <i class="fas fa-filter me-2"></i>Apply
                         </button>
-                        <button class="filter-btn" onclick="clearCustomerFilters()">
+                        <button class="filter-btn" onclick="clearBuyerFilters()">
                             <i class="fas fa-times me-2"></i>Clear
                         </button>
                     </div>
                 </div>
 
-                <div id="customersLoadingSpinner" class="loading-spinner">
+                <div id="buyersLoadingSpinner" class="loading-spinner">
                     <div class="spinner"></div>
-                    <div class="loading-text">Loading customers...</div>
+                    <div class="loading-text">Loading buyers...</div>
                 </div>
                 
-                <div id="customersContainer" class="row" style="display: none;"></div>
-                <nav id="customersPagination" class="pagination-nav"></nav>
+                <div id="buyersContainer" class="row" style="display: none;"></div>
+                <nav id="buyersPagination" class="pagination-nav"></nav>
             </div>
 
             <!-- All Users Tab -->
@@ -121,7 +121,7 @@
                         <select id="roleFilter" class="filter-input">
                             <option value="">All Roles</option>
                             <option value="seller">Sellers</option>
-                            <option value="customer">Customers</option>
+                            <option value="buyer">Buyers</option>
                             <option value="admin">Admins</option>
                         </select>
                         <select id="allUsersSort" class="filter-input">
@@ -251,7 +251,7 @@
     </div>
 </div>
 
-<!-- Orders Modal (for customers) -->
+<!-- Orders Modal (for buyers) -->
 <div class="modal fade" id="ordersModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">

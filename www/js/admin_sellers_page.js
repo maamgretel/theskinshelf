@@ -15,10 +15,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentTab = 'sellers';
     let currentPage = 1;
     let allSellers = [];
-    let allCustomers = [];
+    let allCustomers = []; // Keep variable name for backend compatibility
     let allUsers = [];
     let filteredSellers = [];
-    let filteredCustomers = [];
+    let filteredCustomers = []; // Keep variable name for backend compatibility
     let filteredAllUsers = [];
 
     // Currency formatter
@@ -36,15 +36,25 @@ document.addEventListener('DOMContentLoaded', function() {
         renderCurrentTab();
     }
 
-    function setupTabListeners() {
-        $('#userTabs a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-            const target = $(e.target).attr("href").substring(1);
-            currentTab = target === 'all-users' ? 'allUsers' : target;
-            currentPage = 1;
-            renderCurrentTab();
-        });
-    }
-
+function setupTabListeners() {
+    $('#userTabs a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        const target = $(e.target).attr("href").substring(1);
+        console.log('Tab clicked, href target:', target); // DEBUG
+        
+        // Map HTML tab names to JavaScript variable names
+        if (target === 'buyers') {
+            currentTab = 'customers'; // Keep using 'customers' internally for consistency
+        } else if (target === 'all-users') {
+            currentTab = 'allUsers';
+        } else {
+            currentTab = target; // sellers stays as sellers
+        }
+        
+        console.log('Current tab set to:', currentTab); // DEBUG
+        currentPage = 1;
+        renderCurrentTab();
+    });
+}
     async function loadAllData() {
         await Promise.all([
             fetchSellers(),
@@ -68,20 +78,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function fetchCustomers() {
-        showLoading('customers');
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/admin/customers`);
-            if (!response.ok) throw new Error('Failed to fetch customers');
-            const data = await response.json();
-            allCustomers = data.customers || [];
-            filteredCustomers = [...allCustomers];
-            updateTabCount('customersCount', allCustomers.length);
-        } catch (error) {
-            console.error('Error fetching customers:', error);
-            showErrorState('customers', 'Failed to load customers');
-        }
+async function fetchCustomers() {
+    showLoading('buyers'); // Changed: use 'buyers' to match HTML
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/admin/customers`);
+        if (!response.ok) throw new Error('Failed to fetch buyers');
+        const data = await response.json();
+        
+        console.log('Raw customer data:', data);
+        
+        allCustomers = (data.customers || []).filter(customer => {
+            return customer && customer.id && customer.role !== 'admin';
+        });
+        
+        filteredCustomers = [...allCustomers];
+        updateTabCount('buyersCount', allCustomers.length); // Changed: 'buyersCount' instead of 'customersCount'
+        
+        console.log('Processed customers:', allCustomers);
+        
+    } catch (error) {
+        console.error('Error fetching buyers:', error);
+        showErrorState('buyers', 'Failed to load buyers'); // Changed: 'buyers' instead of 'customers'
     }
+}
 
     async function fetchAllUsers() {
         showLoading('allUsers');
@@ -138,188 +157,249 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function renderCurrentTab() {
-        switch (currentTab) {
-            case 'sellers':
-                renderUsers(filteredSellers, 'sellers', 'seller');
-                break;
-            case 'customers':
-                renderUsers(filteredCustomers, 'customers', 'customer');
-                break;
-            case 'allUsers':
-                renderUsers(filteredAllUsers, 'allUsers', 'all');
-                break;
-        }
+  function renderCurrentTab() {
+    console.log('renderCurrentTab called with currentTab:', currentTab);
+    console.log('Available data lengths:', {
+        sellers: filteredSellers.length,
+        customers: filteredCustomers.length,
+        allUsers: filteredAllUsers.length
+    });
+    
+    switch (currentTab) {
+        case 'sellers':
+            console.log('Rendering sellers:', filteredSellers.length, 'items');
+            renderUsers(filteredSellers, 'sellers', 'seller');
+            break;
+        case 'customers':
+            console.log('Rendering customers:', filteredCustomers.length, 'items');
+            // Use 'buyers' container ID to match HTML, but keep 'buyer' as userType
+            renderUsers(filteredCustomers, 'buyers', 'buyer'); // Changed: 'buyers' instead of 'customers'
+            break;
+        case 'allUsers':
+            console.log('Rendering allUsers:', filteredAllUsers.length, 'items');
+            renderUsers(filteredAllUsers, 'allUsers', 'all');
+            break;
+        default:
+            console.log('Unknown tab:', currentTab);
     }
+}
+
+// Check your HTML tab structure - it should look like this:
+// <ul class="nav nav-tabs" id="userTabs">
+//   <li class="nav-item">
+//     <a class="nav-link active" data-toggle="tab" href="#sellers">Sellers</a>
+//   </li>
+//   <li class="nav-item">
+//     <a class="nav-link" data-toggle="tab" href="#customers">Buyers</a>
+//   </li>
+//   <li class="nav-item">
+//     <a class="nav-link" data-toggle="tab" href="#all-users">All Users</a>
+//   </li>
+// </ul>
+function checkContainers() {
+    console.log('Container elements:', {
+        sellers: !!document.getElementById('sellersContainer'),
+        customers: !!document.getElementById('customersContainer'),
+        allUsers: !!document.getElementById('allUsersContainer')
+    });
+}
+$(document).ready(function() {
+    checkContainers();
+});
+
 
     function renderUsers(users, containerType, userType) {
-        const container = document.getElementById(`${containerType}Container`);
-        const pagination = document.getElementById(`${containerType}Pagination`);
+    const container = document.getElementById(`${containerType}Container`);
+    const pagination = document.getElementById(`${containerType}Pagination`);
+    
+    if (!container) return;
+
+    container.innerHTML = '';
+    
+    // Debug log
+    console.log(`Rendering ${containerType}:`, users);
+    
+    if (!users || users.length === 0) {
+        const displayType = userType === 'buyer' ? 'Buyers' : 
+                           userType === 'all' ? 'Users' : 
+                           userType.charAt(0).toUpperCase() + userType.slice(1);
+        const displayTypePlural = userType === 'buyer' ? 'buyers' :
+                                userType === 'all' ? 'users' : 
+                                userType + 's';
         
-        if (!container) return;
-
-        container.innerHTML = '';
-        
-        if (!users || users.length === 0) {
-            container.innerHTML = `
-                <div class="col-12">
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>No ${userType === 'all' ? 'Users' : userType.charAt(0).toUpperCase() + userType.slice(1)} Found</h3>
-                        <p>No ${userType === 'all' ? 'users' : userType + 's'} match your current filters.</p>
-                    </div>
-                </div>`;
-            hideLoading(containerType);
-            return;
-        }
-
-        const startIndex = (currentPage - 1) * USERS_PER_PAGE;
-        const usersOnPage = users.slice(startIndex, startIndex + USERS_PER_PAGE);
-
-        usersOnPage.forEach(user => {
-            const cardCol = document.createElement('div');
-            cardCol.className = 'col-md-4 col-lg-3 mb-4 d-flex';
-            
-            const profilePic = user.profile_pic || DEFAULT_AVATAR;
-            const userRole = user.role || 'customer';
-            const badgeClass = userRole === 'seller' ? '' : 'customer';
-            
-            // User stats based on role
-            let statsHtml = '';
-            if (userRole === 'seller') {
-                statsHtml = `
-                    <div class="user-stats">
-                        <div class="user-stat">
-                            <i class="fas fa-box"></i>
-                            <span>${user.product_count || 0} Products</span>
-                        </div>
-                        <div class="user-stat">
-                            <i class="fas fa-peso-sign"></i>
-                            <span>${pesoFormatter.format(user.total_sales || 0)}</span>
-                        </div>
-                    </div>`;
-            } else if (userRole === 'customer') {
-                statsHtml = `
-                    <div class="user-stats">
-                        <div class="user-stat">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span>${user.total_orders || 0} Orders</span>
-                        </div>
-                        <div class="user-stat">
-                            <i class="fas fa-peso-sign"></i>
-                            <span>${pesoFormatter.format(user.total_spent || 0)}</span>
-                        </div>
-                    </div>`;
-            }
-
-            // Action buttons based on role
-            let actionButtons = `
-                <button class="btn btn-sm action-btn" data-action="view" data-user-id="${user.id}" data-user-role="${userRole}" title="View Details">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn btn-sm action-btn" data-action="edit" data-user-id="${user.id}" data-user-role="${userRole}" title="Edit User">
-                    <i class="fas fa-edit"></i>
-                </button>`;
-            
-            if (userRole === 'seller') {
-                actionButtons += `
-                    <button class="btn btn-sm action-btn" data-action="products" data-user-id="${user.id}" data-user-name="${user.name}" title="View Products">
-                        <i class="fas fa-box-open"></i>
-                    </button>`;
-            } else if (userRole === 'customer') {
-                actionButtons += `
-                    <button class="btn btn-sm action-btn" data-action="orders" data-user-id="${user.id}" data-user-name="${user.name}" title="View Orders">
-                        <i class="fas fa-shopping-cart"></i>
-                    </button>`;
-            }
-            
-            // Remove the check for admin role since we've already filtered them out
-            actionButtons += `
-                <button class="btn btn-sm action-btn" data-action="delete" data-user-id="${user.id}" data-user-role="${userRole}" title="Delete User">
-                    <i class="fas fa-trash-alt"></i>
-                </button>`;
-
-            cardCol.innerHTML = `
-                <div class="card user-card w-100">
-                    <div class="card-body text-center d-flex flex-column">
-                        <div class="flex-grow-1">
-                            <img src="${profilePic}" class="user-img mb-3" alt="${user.name}" onerror="this.src='${DEFAULT_AVATAR}';">
-                            <div class="user-role-badge ${badgeClass}">${userRole.toUpperCase()}</div>
-                            <h5 class="user-name">${user.name}</h5>
-                            <p class="user-email">${user.email}</p>
-                            ${statsHtml}
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <div class="btn-group w-100" role="group">
-                            ${actionButtons}
-                        </div>
-                    </div>
-                </div>`;
-            
-            container.appendChild(cardCol);
-        });
-
-        renderPagination(users, containerType);
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>No ${displayType} Found</h3>
+                    <p>No ${displayTypePlural} match your current filters.</p>
+                </div>
+            </div>`;
         hideLoading(containerType);
+        return;
     }
 
-    function renderPagination(users, containerType) {
-        const pagination = document.getElementById(`${containerType}Pagination`);
-        if (!pagination) return;
+    const startIndex = (currentPage - 1) * USERS_PER_PAGE;
+    const usersOnPage = users.slice(startIndex, startIndex + USERS_PER_PAGE);
 
-        const pageCount = Math.ceil(users.length / USERS_PER_PAGE);
-        if (pageCount <= 1) {
-            pagination.innerHTML = '';
-            return;
+    usersOnPage.forEach(user => {
+        const cardCol = document.createElement('div');
+        cardCol.className = 'col-md-4 col-lg-3 mb-4 d-flex';
+        
+        const profilePic = user.profile_pic || DEFAULT_AVATAR;
+        const userRole = userType === 'seller' ? 'seller' : (userType === 'buyer' ? 'customer' : (user.role || 'customer'));
+        const badgeClass = userRole === 'seller' ? '' : 'customer';
+        
+        // Handle empty names and emails gracefully
+        const displayName = user.name && user.name.trim() ? user.name.trim() : 'No Name';
+        const displayEmail = user.email && user.email.trim() ? user.email.trim() : 'No Email';
+        
+        // User stats based on role
+        let statsHtml = '';
+        if (userRole === 'seller') {
+            statsHtml = `
+                <div class="user-stats">
+                    <div class="user-stat">
+                        <i class="fas fa-box"></i>
+                        <span>${user.product_count || 0} Products</span>
+                    </div>
+                    <div class="user-stat">
+                        <i class="fas fa-peso-sign"></i>
+                        <span>${pesoFormatter.format(user.total_sales || 0)}</span>
+                    </div>
+                </div>`;
+        } else if (userRole === 'customer') {
+            statsHtml = `
+                <div class="user-stats">
+                    <div class="user-stat">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>${user.total_orders || 0} Orders</span>
+                    </div>
+                    <div class="user-stat">
+                        <i class="fas fa-peso-sign"></i>
+                        <span>${pesoFormatter.format(user.total_spent || 0)}</span>
+                    </div>
+                </div>`;
         }
 
-        let paginationHtml = '<ul class="pagination">';
+        // Action buttons based on role
+        let actionButtons = `
+            <button class="btn btn-sm action-btn" data-action="view" data-user-id="${user.id}" data-user-role="${userRole}" title="View Details">
+                <i class="fas fa-eye"></i>
+            </button>
+            <button class="btn btn-sm action-btn" data-action="edit" data-user-id="${user.id}" data-user-role="${userRole}" title="Edit User">
+                <i class="fas fa-edit"></i>
+            </button>`;
         
-        // Previous button
-        paginationHtml += `
-            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${currentPage - 1}" data-container="${containerType}">
-                    <i class="fas fa-chevron-left"></i>
-                </a>
-            </li>`;
-        
-        // Page numbers
-        for (let i = 1; i <= pageCount; i++) {
-            paginationHtml += `
-                <li class="page-item ${i === currentPage ? 'active' : ''}">
-                    <a class="page-link" href="#" data-page="${i}" data-container="${containerType}">${i}</a>
-                </li>`;
+        if (userRole === 'seller') {
+            actionButtons += `
+                <button class="btn btn-sm action-btn" data-action="products" data-user-id="${user.id}" data-user-name="${displayName}" title="View Products">
+                    <i class="fas fa-box-open"></i>
+                </button>`;
+        } else if (userRole === 'customer') {
+            actionButtons += `
+                <button class="btn btn-sm action-btn" data-action="orders" data-user-id="${user.id}" data-user-name="${displayName}" title="View Orders">
+                    <i class="fas fa-shopping-cart"></i>
+                </button>`;
         }
         
-        // Next button
-        paginationHtml += `
-            <li class="page-item ${currentPage === pageCount ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${currentPage + 1}" data-container="${containerType}">
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-            </li>`;
-        
-        paginationHtml += '</ul>';
-        pagination.innerHTML = paginationHtml;
+        actionButtons += `
+            <button class="btn btn-sm action-btn" data-action="delete" data-user-id="${user.id}" data-user-role="${userRole}" title="Delete User">
+                <i class="fas fa-trash-alt"></i>
+            </button>`;
 
-        // Add click listeners
-        pagination.querySelectorAll('.page-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = parseInt(this.dataset.page);
-                const container = this.dataset.container;
-                
-                if (page >= 1 && page <= pageCount && page !== currentPage) {
-                    currentPage = page;
-                    renderCurrentTab();
-                    document.querySelector('.header-section').scrollIntoView({ 
-                        behavior: 'smooth' 
-                    });
-                }
-            });
+        // Display role badge - show "BUYER" instead of "CUSTOMER"
+        const displayRole = userRole === 'customer' ? 'BUYER' : userRole.toUpperCase();
+
+        cardCol.innerHTML = `
+            <div class="card user-card w-100">
+                <div class="card-body text-center d-flex flex-column">
+                    <div class="flex-grow-1">
+                        <img src="${profilePic}" class="user-img mb-3" alt="${displayName}" onerror="this.src='${DEFAULT_AVATAR}';">
+                        <div class="user-role-badge ${badgeClass}">${displayRole}</div>
+                        <h5 class="user-name">${displayName}</h5>
+                        <p class="user-email">${displayEmail}</p>
+                        ${statsHtml}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group w-100" role="group">
+                        ${actionButtons}
+                    </div>
+                </div>
+            </div>`;
+        
+        container.appendChild(cardCol);
+    });
+
+    renderPagination(users, containerType);
+    hideLoading(containerType);
+}
+// Add debug function to check data
+function debugCustomerData() {
+    console.log('All customers:', allCustomers);
+    console.log('Filtered customers:', filteredCustomers);
+    console.log('Current tab:', currentTab);
+    console.log('Current page:', currentPage);
+}
+
+   function renderPagination(users, containerType) {
+    // containerType will now be 'buyers' for customers, which matches your HTML
+    const pagination = document.getElementById(`${containerType}Pagination`);
+    if (!pagination) return;
+
+    const pageCount = Math.ceil(users.length / USERS_PER_PAGE);
+    if (pageCount <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+
+    let paginationHtml = '<ul class="pagination">';
+    
+    // Previous button
+    paginationHtml += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage - 1}" data-container="${containerType}">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </li>`;
+    
+    // Page numbers
+    for (let i = 1; i <= pageCount; i++) {
+        paginationHtml += `
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}" data-container="${containerType}">${i}</a>
+            </li>`;
+    }
+    
+    // Next button
+    paginationHtml += `
+        <li class="page-item ${currentPage === pageCount ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage + 1}" data-container="${containerType}">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>`;
+    
+    paginationHtml += '</ul>';
+    pagination.innerHTML = paginationHtml;
+
+    // Add click listeners
+    pagination.querySelectorAll('.page-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = parseInt(this.dataset.page);
+            const container = this.dataset.container;
+            
+            if (page >= 1 && page <= pageCount && page !== currentPage) {
+                currentPage = page;
+                renderCurrentTab();
+                document.querySelector('.header-section').scrollIntoView({ 
+                    behavior: 'smooth' 
+                });
+            }
         });
-    }
+    });
+}
 
     // Event delegation for action buttons
     document.addEventListener('click', function(e) {
@@ -350,121 +430,243 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    async function showUserDetails(userId, userRole) {
-        const modalBody = document.getElementById('userDetailsBody');
-        modalBody.innerHTML = `
-            <div class="loading-spinner">
-                <div class="spinner"></div>
-                <div class="loading-text">Loading user details...</div>
-            </div>`;
-        
-        $('#userDetailsModal').modal('show');
+   async function showUserDetails(userId, userRole) {
+    const modalBody = document.getElementById('userDetailsBody');
+    modalBody.innerHTML = `
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading user details...</div>
+        </div>`;
+    
+    $('#userDetailsModal').modal('show');
 
-        try {
-            const endpoint = userRole === 'seller' ? 
-                `${BACKEND_URL}/api/admin/sellers/${userId}` :
-                `${BACKEND_URL}/api/admin/users/${userId}`;
-                
-            const response = await fetch(endpoint);
-            if (!response.ok) throw new Error('Failed to fetch user details');
+    try {
+        const endpoint = userRole === 'seller' ? 
+            `${BACKEND_URL}/api/admin/sellers/${userId}` :
+            `${BACKEND_URL}/api/admin/users/${userId}`;
             
-            const userData = await response.json();
-            const profilePic = userData.profile_pic || DEFAULT_AVATAR;
+        const response = await fetch(endpoint);
+        if (!response.ok) throw new Error('Failed to fetch user details');
+        
+        const userData = await response.json();
+        const profilePic = userData.profile_pic || DEFAULT_AVATAR;
 
-            let detailsHtml = `
-                <div class="text-center mb-4">
-                    <img src="${profilePic}" class="rounded-circle mb-3" alt="${userData.name}" 
-                         style="width: 100px; height: 100px; object-fit: cover;" 
-                         onerror="this.src='${DEFAULT_AVATAR}';">
-                    <h5>${userData.name}</h5>
-                    <p class="text-muted">${userData.email}</p>
-                    <span class="badge badge-${userData.role === 'seller' ? 'dark' : 'secondary'} p-2">
-                        ${userData.role.toUpperCase()}
-                    </span>
+        // Display role - show "BUYER" instead of "CUSTOMER"
+        const displayRole = userData.role === 'customer' ? 'BUYER' : userData.role.toUpperCase();
+
+        let detailsHtml = `
+            <div class="text-center mb-4">
+                <img src="${profilePic}" class="rounded-circle mb-3" alt="${userData.name}" 
+                     style="width: 100px; height: 100px; object-fit: cover;" 
+                     onerror="this.src='${DEFAULT_AVATAR}';">
+                <h5>${userData.name}</h5>
+                <p class="text-muted">${userData.email}</p>
+                <span class="badge badge-${userData.role === 'seller' ? 'dark' : 'secondary'} p-2">
+                    ${displayRole}
+                </span>
+            </div>`;
+
+        if (userData.role === 'seller') {
+            detailsHtml += `
+                <div class="user-detail-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">${pesoFormatter.format(userData.total_sales || 0)}</div>
+                        <div class="stat-label">Total Sales</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${userData.total_products_sold || 0}</div>
+                        <div class="stat-label">Products Sold</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${userData.product_count || 0}</div>
+                        <div class="stat-label">Total Products</div>
+                    </div>
                 </div>`;
-
-            if (userData.role === 'seller') {
-                detailsHtml += `
-                    <div class="user-detail-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">${pesoFormatter.format(userData.total_sales || 0)}</div>
-                            <div class="stat-label">Total Sales</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${userData.total_products_sold || 0}</div>
-                            <div class="stat-label">Products Sold</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${userData.product_count || 0}</div>
-                            <div class="stat-label">Total Products</div>
-                        </div>
-                    </div>`;
+                
+            // Fetch seller's products
+            try {
+                const productsResponse = await fetch(`${BACKEND_URL}/api/admin/sellers/${userId}/products`);
+                if (productsResponse.ok) {
+                    const productsData = await productsResponse.json();
+                    const products = productsData.products || [];
                     
-                if (userData.top_selling_products && userData.top_selling_products.length > 0) {
-                    detailsHtml += `
-                        <h6 class="mt-4"><i class="fas fa-trophy text-warning me-2"></i>Top Selling Products</h6>
-                        <div class="list-group list-group-flush">`;
-                    
-                    userData.top_selling_products.forEach(product => {
+                    if (products.length > 0) {
                         detailsHtml += `
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                ${product.name}
-                                <span class="badge badge-primary">${product.units_sold} sold</span>
+                            <hr>
+                            <h6 class="mt-4 mb-3"><i class="fas fa-box text-primary me-2"></i>Products (${products.length})</h6>
+                            <div class="seller-products-list" style="max-height: 300px; overflow-y: auto;">`;
+                        
+                        products.forEach(product => {
+                            const productImage = product.image || 'path/to/default-product.png';
+                            const stockStatus = product.stock < 10 ? 'low-stock' : 'in-stock';
+                            const stockBadge = product.stock < 10 ? 
+                                `<span class="badge badge-warning">Low Stock (${product.stock})</span>` :
+                                `<span class="badge badge-success">${product.stock} in stock</span>`;
+                            
+                            detailsHtml += `
+                                <div class="product-item mb-3 p-3" style="border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
+                                    <div class="row align-items-center">
+                                        <div class="col-3">
+                                            <img src="${productImage}" alt="${product.name}" 
+                                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;"
+                                                 onerror="this.src='path/to/default-product.png';">
+                                        </div>
+                                        <div class="col-9">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1" style="font-size: 14px; font-weight: 600;">${product.name}</h6>
+                                                    <p class="text-muted mb-1" style="font-size: 12px; margin: 0;">
+                                                        ${product.description ? 
+                                                            (product.description.length > 50 ? 
+                                                                product.description.substring(0, 50) + '...' : 
+                                                                product.description) 
+                                                            : 'No description'}
+                                                    </p>
+                                                    <div class="product-meta">
+                                                        <span class="badge badge-success">${pesoFormatter.format(product.price)}</span>
+                                                        ${stockBadge}
+                                                        ${product.category_name ? 
+                                                            `<span class="badge badge-light">${product.category_name}</span>` : 
+                                                            ''}
+                                                    </div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <small class="text-muted">
+                                                        ${product.created_at ? 
+                                                            'Added ' + new Date(product.created_at).toLocaleDateString() : 
+                                                            'Date unknown'}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                        });
+                        
+                        detailsHtml += '</div>';
+                        
+                        // Add products summary
+                        const lowStockCount = products.filter(p => p.stock < 10).length;
+                        const totalValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+                        
+                        detailsHtml += `
+                            <div class="products-summary mt-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+                                <h6 class="mb-2">Product Summary</h6>
+                                <div class="row">
+                                    <div class="col-4 text-center">
+                                        <div class="summary-stat">
+                                            <div class="stat-value">${products.length}</div>
+                                            <div class="stat-label">Total Products</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4 text-center">
+                                        <div class="summary-stat">
+                                            <div class="stat-value ${lowStockCount > 0 ? 'text-warning' : 'text-success'}">${lowStockCount}</div>
+                                            <div class="stat-label">Low Stock Items</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4 text-center">
+                                        <div class="summary-stat">
+                                            <div class="stat-value">${pesoFormatter.format(totalValue)}</div>
+                                            <div class="stat-label">Inventory Value</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>`;
-                    });
-                    
-                    detailsHtml += '</div>';
+                    } else {
+                        detailsHtml += `
+                            <hr>
+                            <div class="no-products text-center py-4">
+                                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No Products Listed</h6>
+                                <p class="text-muted mb-0">This seller hasn't added any products yet.</p>
+                            </div>`;
+                    }
+                } else {
+                    console.error('Failed to fetch seller products');
+                    detailsHtml += `
+                        <hr>
+                        <div class="products-error text-center py-3">
+                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                            <p class="text-muted mb-0">Could not load products at this time.</p>
+                        </div>`;
                 }
-            } else if (userData.role === 'customer') {
-                detailsHtml += `
-                    <div class="user-detail-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">${pesoFormatter.format(userData.total_spent || 0)}</div>
-                            <div class="stat-label">Total Spent</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${userData.total_orders || 0}</div>
-                            <div class="stat-label">Total Orders</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${userData.avg_order_value ? pesoFormatter.format(userData.avg_order_value) : pesoFormatter.format(0)}</div>
-                            <div class="stat-label">Avg Order Value</div>
-                        </div>
-                    </div>`;
-            }
-
-            // Contact information
-            if (userData.contact_number || userData.address) {
+            } catch (productsError) {
+                console.error('Error fetching seller products:', productsError);
                 detailsHtml += `
                     <hr>
-                    <h6><i class="fas fa-address-book me-2"></i>Contact Information</h6>
-                    <div class="row">`;
+                    <div class="products-error text-center py-3">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        <p class="text-muted mb-0">Error loading products: ${productsError.message}</p>
+                    </div>`;
+            }
                 
-                if (userData.contact_number) {
-                    detailsHtml += `
-                        <div class="col-md-6">
-                            <strong>Phone:</strong><br>
-                            <span class="text-muted">${userData.contact_number}</span>
-                        </div>`;
-                }
+            if (userData.top_selling_products && userData.top_selling_products.length > 0) {
+                detailsHtml += `
+                    <hr>
+                    <h6 class="mt-4"><i class="fas fa-trophy text-warning me-2"></i>Top Selling Products</h6>
+                    <div class="list-group list-group-flush">`;
                 
-                if (userData.address) {
+                userData.top_selling_products.forEach(product => {
                     detailsHtml += `
-                        <div class="col-md-6">
-                            <strong>Address:</strong><br>
-                            <span class="text-muted">${userData.address}</span>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            ${product.name}
+                            <span class="badge badge-primary">${product.units_sold} sold</span>
                         </div>`;
-                }
+                });
                 
                 detailsHtml += '</div>';
             }
-
-            modalBody.innerHTML = detailsHtml;
-        } catch (error) {
-            console.error('Error fetching user details:', error);
-            modalBody.innerHTML = `<p class="text-danger text-center">Error loading user details: ${error.message}</p>`;
+        } else if (userData.role === 'customer') {
+            detailsHtml += `
+                <div class="user-detail-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">${pesoFormatter.format(userData.total_spent || 0)}</div>
+                        <div class="stat-label">Total Spent</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${userData.total_orders || 0}</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${userData.avg_order_value ? pesoFormatter.format(userData.avg_order_value) : pesoFormatter.format(0)}</div>
+                        <div class="stat-label">Avg Order Value</div>
+                    </div>
+                </div>`;
         }
+
+        // Contact information
+        if (userData.contact_number || userData.address) {
+            detailsHtml += `
+                <hr>
+                <h6><i class="fas fa-address-book me-2"></i>Contact Information</h6>
+                <div class="row">`;
+            
+            if (userData.contact_number) {
+                detailsHtml += `
+                    <div class="col-md-6">
+                        <strong>Phone:</strong><br>
+                        <span class="text-muted">${userData.contact_number}</span>
+                    </div>`;
+            }
+            
+            if (userData.address) {
+                detailsHtml += `
+                    <div class="col-md-6">
+                        <strong>Address:</strong><br>
+                        <span class="text-muted">${userData.address}</span>
+                    </div>`;
+            }
+            
+            detailsHtml += '</div>';
+        }
+
+        modalBody.innerHTML = detailsHtml;
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        modalBody.innerHTML = `<p class="text-danger text-center">Error loading user details: ${error.message}</p>`;
     }
+}
 
     async function openEditModal(userId, userRole) {
         try {
@@ -580,7 +782,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>`;
                 }).join('');
             } else {
-                modalBody.innerHTML = '<p class="text-center text-muted">This customer has no orders.</p>';
+                modalBody.innerHTML = '<p class="text-center text-muted">This buyer has no orders.</p>'; // Changed "customer" to "buyer"
             }
         } catch (error) {
             console.error('Error fetching orders:', error);
@@ -589,7 +791,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function deleteUser(userId, userRole) {
-        const confirmMessage = `Are you sure you want to delete this ${userRole}?\n\nThis action cannot be undone.`;
+        const displayRole = userRole === 'customer' ? 'buyer' : userRole; // Changed for confirmation message
+        const confirmMessage = `Are you sure you want to delete this ${displayRole}?\n\nThis action cannot be undone.`;
         if (!confirm(confirmMessage)) return;
         
         try {
@@ -600,7 +803,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(endpoint, { method: 'DELETE' });
             
             if (response.ok) {
-                showSuccessMessage(`${userRole.charAt(0).toUpperCase() + userRole.slice(1)} deleted successfully!`);
+                const successRole = userRole === 'customer' ? 'Buyer' : userRole.charAt(0).toUpperCase() + userRole.slice(1);
+                showSuccessMessage(`${successRole} deleted successfully!`); // Changed success message
                 await loadAllData();
                 renderCurrentTab();
             } else {
@@ -708,40 +912,41 @@ document.addEventListener('DOMContentLoaded', function() {
         renderCurrentTab();
     };
 
-    window.applyCustomerFilters = function() {
-        const search = document.getElementById('customerSearch').value.toLowerCase();
-        const sort = document.getElementById('customerSort').value;
-        
-        filteredCustomers = [...allCustomers];
-        
-        if (search) {
-            filteredCustomers = filteredCustomers.filter(customer => 
-                customer.name.toLowerCase().includes(search) ||
-                customer.email.toLowerCase().includes(search)
-            );
-        }
-        
-        filteredCustomers.sort((a, b) => {
-            switch (sort) {
-                case 'name': return a.name.localeCompare(b.name);
-                case 'orders': return (b.total_orders || 0) - (a.total_orders || 0);
-                case 'spent': return (b.total_spent || 0) - (a.total_spent || 0);
-                case 'date': return new Date(b.created_at) - new Date(a.created_at);
-                default: return 0;
-            }
-        });
-        
-        currentPage = 1;
-        renderCurrentTab();
-    };
 
-    window.clearCustomerFilters = function() {
-        document.getElementById('customerSearch').value = '';
-        document.getElementById('customerSort').value = 'name';
-        filteredCustomers = [...allCustomers];
-        currentPage = 1;
-        renderCurrentTab();
-    };
+window.applyBuyerFilters = function() { // Changed function name to match HTML
+    const search = document.getElementById('buyerSearch').value.toLowerCase(); // Changed ID
+    const sort = document.getElementById('buyerSort').value; // Changed ID
+    
+    filteredCustomers = [...allCustomers];
+    
+    if (search) {
+        filteredCustomers = filteredCustomers.filter(customer => 
+            customer.name.toLowerCase().includes(search) ||
+            customer.email.toLowerCase().includes(search)
+        );
+    }
+    
+    filteredCustomers.sort((a, b) => {
+        switch (sort) {
+            case 'name': return a.name.localeCompare(b.name);
+            case 'orders': return (b.total_orders || 0) - (a.total_orders || 0);
+            case 'spent': return (b.total_spent || 0) - (a.total_spent || 0);
+            case 'date': return new Date(b.created_at) - new Date(a.created_at);
+            default: return 0;
+        }
+    });
+    
+    currentPage = 1;
+    renderCurrentTab();
+};
+
+window.clearBuyerFilters = function() { // Changed function name to match HTML
+    document.getElementById('buyerSearch').value = ''; // Changed ID
+    document.getElementById('buyerSort').value = 'name'; // Changed ID
+    filteredCustomers = [...allCustomers];
+    currentPage = 1;
+    renderCurrentTab();
+};
 
     window.applyAllUsersFilters = function() {
         const search = document.getElementById('allUsersSearch').value.toLowerCase();
