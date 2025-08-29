@@ -1,4 +1,4 @@
- // Enhanced Admin Dashboard JavaScript - REAL DATA ONLY
+// Enhanced Admin Dashboard JavaScript - REAL DATA ONLY
     const API_URL = 'https://backend-rj0a.onrender.com';
     let currentUser = null;
     let revenueChart = null;
@@ -86,9 +86,9 @@
         
         showLoadingState();
         
-        // Load basic stats with proper error handling
+        // Load basic stats with proper error handling - FIXED: Use /users endpoint for total users
         const [usersRes, productsRes, ordersRes] = await Promise.allSettled([
-          fetch(`${API_URL}/api/admin/sellers`, {
+          fetch(`${API_URL}/api/admin/users`, {  // Changed from /sellers to /users
             headers: getAuthHeaders()
           }),
           fetch(`${API_URL}/api/admin/products`, {
@@ -102,14 +102,14 @@
         console.log('API responses:', { usersRes, productsRes, ordersRes });
 
         // Handle each response separately
-        let sellersData = { sellers: [] };
+        let usersData = { users: [] };  // Changed from sellers to users
         let productsData = { products: [] };
         let ordersData = { orders: [] };
 
         if (usersRes.status === 'fulfilled' && usersRes.value.ok) {
-          sellersData = await usersRes.value.json();
+          usersData = await usersRes.value.json();
         } else {
-          console.error('Failed to fetch sellers:', usersRes.reason || usersRes.value?.status);
+          console.error('Failed to fetch users:', usersRes.reason || usersRes.value?.status);
         }
 
         if (productsRes.status === 'fulfilled' && productsRes.value.ok) {
@@ -124,14 +124,28 @@
           console.error('Failed to fetch orders:', ordersRes.reason || ordersRes.value?.status);
         }
 
-        console.log('Processed data:', { sellersData, productsData, ordersData });
+        console.log('Processed data:', { usersData, productsData, ordersData });
 
-        // Update stats with real data or 0 if no data
-        const totalSellers = sellersData.sellers?.length || 0;
+        // Filter out admin users - only count sellers and customers
+        const allUsers = usersData.users || [];
+        const sellers = allUsers.filter(user => user.role === 'seller').length || 0;
+        const customers = allUsers.filter(user => user.role === 'customer').length || 0;
+        const totalUsers = sellers + customers;  // Only sellers + customers, no admins
+        
         const totalProducts = productsData.products?.length || 0;
         const totalOrders = ordersData.orders?.length || 0;
 
-        document.getElementById('totalUsers').textContent = totalSellers;
+        console.log(`Total users: ${totalUsers} (${sellers} sellers, ${customers} customers)`);
+
+        // Display total users count (sellers + customers only)
+        document.getElementById('totalUsers').textContent = totalUsers;
+        
+        // Add breakdown info as tooltip only
+        const userCardElement = document.getElementById('totalUsers').closest('.stat-card') || 
+                               document.getElementById('totalUsers').parentElement;
+        if (userCardElement) {
+          userCardElement.title = `${totalUsers} users (${customers} customers, ${sellers} sellers)`;
+        }
         document.getElementById('totalProducts').textContent = totalProducts;
         document.getElementById('totalOrders').textContent = totalOrders;
 
@@ -143,7 +157,7 @@
         document.getElementById('totalRevenue').textContent = `₱${revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
         // Calculate and show growth percentages (simplified - you can enhance this)
-        updateGrowthIndicators(totalSellers, totalProducts, totalOrders, revenue);
+        updateGrowthIndicators(totalUsers, totalProducts, totalOrders, revenue);
 
         // Update charts with real data
         updateChartsWithRealData(ordersData.orders || []);
@@ -156,7 +170,56 @@
       }
     }
 
-    function updateGrowthIndicators(sellers, products, orders, revenue) {
+    // Add function to load detailed user stats (optional enhancement)
+    async function loadDetailedUserStats() {
+      try {
+        const [sellersRes, customersRes] = await Promise.allSettled([
+          fetch(`${API_URL}/api/admin/sellers`, {
+            headers: getAuthHeaders()
+          }),
+          fetch(`${API_URL}/api/admin/customers`, {
+            headers: getAuthHeaders()
+          })
+        ]);
+
+        let sellersData = { sellers: [] };
+        let customersData = { customers: [] };
+
+        if (sellersRes.status === 'fulfilled' && sellersRes.value.ok) {
+          sellersData = await sellersRes.value.json();
+        }
+
+        if (customersRes.status === 'fulfilled' && customersRes.value.ok) {
+          customersData = await customersRes.value.json();
+        }
+
+        // You can use this data to show detailed breakdowns
+        console.log('Detailed stats:', {
+          sellers: sellersData.sellers?.length || 0,
+          customers: customersData.customers?.length || 0
+        });
+
+        // Optional: Update UI with detailed stats
+        updateDetailedStatsDisplay(sellersData.sellers || [], customersData.customers || []);
+
+      } catch (error) {
+        console.error('Error loading detailed user stats:', error);
+      }
+    }
+
+    function updateDetailedStatsDisplay(sellers, customers) {
+      // Optional: Add detailed stats to your dashboard
+      // For example, you could show seller/customer breakdown in tooltips or additional cards
+      const totalUsers = sellers.length + customers.length;
+      
+      // Update tooltip or additional info
+      const userCard = document.getElementById('totalUsers').closest('.stat-card');
+      if (userCard) {
+        userCard.title = `Total Users: ${totalUsers} (${sellers.length} sellers, ${customers.length} customers)`;
+      }
+    }
+
+    function updateGrowthIndicators(users, products, orders, revenue) {
       // For now, we'll show 0% growth since we don't have historical data
       // You can enhance this by storing previous values and calculating real growth
       
@@ -516,7 +579,7 @@
         let endpoint;
         switch (type) {
           case 'users':
-            endpoint = '/api/admin/sellers';
+            endpoint = '/api/admin/users';  // Changed to use the users endpoint
             break;
           case 'orders':
             endpoint = '/api/admin/orders';
@@ -541,7 +604,7 @@
         let exportData = [];
         switch (type) {
           case 'users':
-            exportData = data.sellers || [];
+            exportData = data.users || [];  // Changed from sellers to users
             break;
           case 'orders':
             exportData = data.orders || [];
