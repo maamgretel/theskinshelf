@@ -307,7 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="text-right">₱${parseFloat(item.price).toFixed(2)}</td>
                     <td class="text-center">
                         <div class="d-flex align-items-center justify-content-center gap-2">
-                            <button class="btn btn-sm btn-outline-secondary" onclick="updateItemQuantity('${item.product_id || item.id}', ${Math.max(1, item.quantity - 5)}, '${item.name}', ${stockInfo})">--</button>
                             <button class="btn btn-sm btn-outline-secondary" onclick="updateItemQuantity('${item.product_id || item.id}', ${Math.max(1, item.quantity - 1)}, '${item.name}', ${stockInfo})" ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
                             <input type="number" 
                                    class="form-control quantity-input text-center" 
@@ -320,7 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                    onchange="manualUpdateQuantity('${item.product_id || item.id}')"
                                    onkeypress="if(event.key==='Enter') manualUpdateQuantity('${item.product_id || item.id}')">
                             <button class="btn btn-sm btn-outline-secondary" onclick="updateItemQuantity('${item.product_id || item.id}', ${item.quantity + 1}, '${item.name}', ${stockInfo})" ${isOutOfStock || item.quantity >= stockInfo ? 'disabled' : ''}>+</button>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="updateItemQuantity('${item.product_id || item.id}', ${Math.min(stockInfo, item.quantity + 5)}, '${item.name}', ${stockInfo})" ${isOutOfStock || item.quantity >= stockInfo ? 'disabled' : ''}>++</button>
                         </div>
                         <button class="btn btn-sm btn-primary update-btn mt-1" 
                                 style="display: none;" 

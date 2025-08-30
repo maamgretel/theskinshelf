@@ -16,22 +16,59 @@
         .sticky-top {
             top: -1px; /* Ensures the shadow is always visible */
         }
+        .back-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            font-size: 1.1rem;
+            padding: 8px 12px;
+            margin-right: 15px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .back-btn:hover {
+            background: #f8f9fa;
+            color: #495057;
+        }
+        .header-content {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .navbar-brand {
+            flex: 1;
+        }
+        .search-form {
+            flex: 2;
+            max-width: 400px;
+            margin: 0 20px;
+        }
+        .nav-actions {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
     </style>
 </head>
 <body>
 
 <header class="p-3 mb-3 border-bottom bg-white shadow-sm fixed-top">
     <div class="container">
-        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+        <div class="header-content">
+            <button class="back-btn" onclick="goBack()" title="Go Back">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            
             <a href="customer_dashboard.html" class="navbar-brand d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
                 <strong>TheSkinShelf</strong>
             </a>
 
-            <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-auto ml-lg-4 flex-grow-1" action="customer_dashboard.html" method="GET">
+            <form class="search-form" action="customer_dashboard.html" method="GET">
                 <input type="search" name="search" class="form-control" placeholder="Search for products..." aria-label="Search">
             </form>
 
-            <div class="text-end d-flex align-items-center">
+            <div class="nav-actions">
                 <a href="bag.html" class="nav-link px-2 text-dark position-relative">
                     <i class="fas fa-shopping-bag fa-lg"></i>
                     <span id="cart-badge" class="badge badge-danger" style="position: absolute; top: 0; right: 0; display: none;"></span>
@@ -66,6 +103,18 @@
 
 <script src="../js/shared.js"></script>
 <script src="../js/product_view.js"></script>
+
+<script>
+function goBack() {
+    // Check if there's a previous page in history
+    if (document.referrer && document.referrer !== window.location.href) {
+        window.history.back();
+    } else {
+        // Fallback to dashboard if no referrer
+        window.location.href = 'customer_dashboard.html';
+    }
+}
+</script>
 
 </body>
 </html>
