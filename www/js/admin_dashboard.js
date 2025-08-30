@@ -65,10 +65,10 @@
           localStorage.removeItem('user');
           localStorage.removeItem('token');
           localStorage.clear();
-          window.location.href = '../login.html';
+          window.location.href = '../pages/login.html';
         } catch (error) {
           console.error('Error during logout:', error);
-          window.location.replace('../login.html');
+          window.location.replace('../pages/login.html');
         }
       }
     }
