@@ -18,419 +18,7 @@
   <!-- Chart.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
   
-  <style>
-    :root {
-      --primary-color: #6366f1;
-      --secondary-color: #8b5cf6;
-      --success-color: #10b981;
-      --warning-color: #f59e0b;
-      --danger-color: #ef4444;
-      --info-color: #3b82f6;
-      --dark-color: #1f2937;
-      --light-color: #f8fafc;
-      --border-radius: 16px;
-      --shadow: 0 10px 25px rgba(0,0,0,0.1);
-      --shadow-hover: 0 20px 40px rgba(0,0,0,0.15);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      color: var(--dark-color);
-    }
-
-    .dashboard-container {
-      background: var(--light-color);
-      border-radius: var(--border-radius);
-      margin: 20px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .header-section {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: white;
-      padding: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .header-section::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 100%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-      border-radius: 50%;
-    }
-
-    .admin-profile {
-      display: flex;
-      align-items: center;
-      position: relative;
-      z-index: 2;
-    }
-
-    .admin-avatar {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      border: 4px solid rgba(255,255,255,0.3);
-      margin-right: 1rem;
-      object-fit: cover;
-    }
-
-    .admin-info h2 {
-      font-weight: 700;
-      margin-bottom: 0.2rem;
-      font-size: 1.8rem;
-    }
-
-    .admin-info small {
-      opacity: 0.9;
-      font-size: 1rem;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      padding: 2rem;
-      background: var(--light-color);
-    }
-
-    .stat-card {
-      background: white;
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow-hover);
-    }
-
-    .stat-card:active {
-      transform: translateY(-2px) scale(0.98);
-    }
-
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: var(--primary-color);
-    }
-
-    .stat-card.success::before { background: var(--success-color); }
-    .stat-card.warning::before { background: var(--warning-color); }
-    .stat-card.danger::before { background: var(--danger-color); }
-    .stat-card.info::before { background: var(--info-color); }
-
-    .stat-card::after {
-      content: 'Click to view details';
-      position: absolute;
-      bottom: 10px;
-      right: 15px;
-      font-size: 0.75rem;
-      color: #9ca3af;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
-    }
-
-    .stat-card:hover::after {
-      opacity: 1;
-    }
-
-    .stat-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .stat-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      color: white;
-      transition: transform 0.3s ease;
-    }
-
-    .stat-card:hover .stat-icon {
-      transform: scale(1.1);
-    }
-
-    .stat-icon.success { background: var(--success-color); }
-    .stat-icon.warning { background: var(--warning-color); }
-    .stat-icon.danger { background: var(--danger-color); }
-    .stat-icon.info { background: var(--info-color); }
-
-    .stat-value {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: var(--dark-color);
-      margin-bottom: 0.2rem;
-    }
-
-    .stat-label {
-      color: #6b7280;
-      font-weight: 500;
-      margin-bottom: 0.8rem;
-    }
-
-    .stat-change {
-      display: flex;
-      align-items: center;
-      font-size: 0.875rem;
-      font-weight: 600;
-    }
-
-    .stat-change.positive {
-      color: var(--success-color);
-    }
-
-    .stat-change.negative {
-      color: var(--danger-color);
-    }
-
-    .content-section {
-      padding: 2rem;
-    }
-
-    .section-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--dark-color);
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-    }
-
-    .section-title i {
-      margin-right: 0.5rem;
-      color: var(--primary-color);
-    }
-
-    .charts-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 2rem;
-      margin-bottom: 3rem;
-    }
-
-    @media (max-width: 768px) {
-      .charts-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .chart-card {
-      background: white;
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      min-height: 300px;
-    }
-
-    .chart-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--dark-color);
-      margin-bottom: 1rem;
-    }
-
-    .chart-container {
-      position: relative;
-      height: 250px;
-      width: 100%;
-    }
-
-    .chart-container canvas {
-      max-width: 100%;
-      max-height: 100%;
-    }
-
-    .recent-activity {
-      background: white;
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      margin-bottom: 2rem;
-    }
-
-    .activity-item {
-      display: flex;
-      align-items: center;
-      padding: 1rem;
-      border-bottom: 1px solid #e5e7eb;
-      transition: background 0.2s ease;
-    }
-
-    .activity-item:hover {
-      background: #f9fafb;
-    }
-
-    .activity-item:last-child {
-      border-bottom: none;
-    }
-
-    .activity-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 1rem;
-      font-size: 0.875rem;
-    }
-
-    .activity-content h6 {
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-    }
-
-    .activity-content small {
-      color: #6b7280;
-    }
-
-    .quick-actions {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .action-btn {
-      background: white;
-      border: 2px solid #e5e7eb;
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      text-align: center;
-      text-decoration: none;
-      color: var(--dark-color);
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .action-btn:hover {
-      text-decoration: none;
-      color: var(--primary-color);
-      border-color: var(--primary-color);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow);
-    }
-
-    .action-btn i {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      color: var(--primary-color);
-    }
-
-    .action-btn span {
-      font-weight: 600;
-    }
-
-    .modal-content {
-      border: none;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow-hover);
-    }
-
-    .modal-header {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: white;
-      border-radius: var(--border-radius) var(--border-radius) 0 0;
-    }
-
-    .btn {
-      border-radius: 10px;
-      font-weight: 500;
-      padding: 0.5rem 1.5rem;
-      transition: all 0.3s ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-    }
-
-    .btn-primary {
-      background: var(--primary-color);
-      border-color: var(--primary-color);
-    }
-
-    .btn-success {
-      background: var(--success-color);
-      border-color: var(--success-color);
-    }
-
-    .loading-spinner {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255,255,255,.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 1s ease-in-out infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .alert {
-      border: none;
-      border-radius: 12px;
-      padding: 1rem 1.5rem;
-    }
-
-    .form-control {
-      border-radius: 10px;
-      border: 2px solid #e5e7eb;
-      padding: 0.75rem 1rem;
-      transition: all 0.3s ease;
-    }
-
-    .form-control:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
-    }
-
-    .error-state {
-      color: #ef4444;
-      font-size: 1rem;
-    }
-
-    .loading-state {
-      color: #6b7280;
-      font-size: 1rem;
-    }
-  </style>
+  <link rel="stylesheet" href="../css/admin_dashboard.css">
 </head>
 <body>
   <div class="dashboard-container">
@@ -458,8 +46,8 @@
             <div class="stat-value" id="totalUsers">Loading...</div>
             <div class="stat-label">Total Users</div>
             <div class="stat-change positive">
-              <i class="fas fa-arrow-up"></i>
-              <span id="usersChange">+0.0%</span>
+            
+              <span id="usersChange"></span>
             </div>
           </div>
           <div class="stat-icon info">
@@ -474,8 +62,8 @@
             <div class="stat-value" id="totalProducts">Loading...</div>
             <div class="stat-label">Total Products</div>
             <div class="stat-change positive">
-              <i class="fas fa-arrow-up"></i>
-              <span id="productsChange">+0.0%</span>
+            
+              <span id="productsChange"></span>
             </div>
           </div>
           <div class="stat-icon success">
@@ -490,8 +78,8 @@
             <div class="stat-value" id="totalOrders">Loading...</div>
             <div class="stat-label">Total Orders</div>
             <div class="stat-change positive">
-              <i class="fas fa-arrow-up"></i>
-              <span id="ordersChange">+0.0%</span>
+     
+              <span id="ordersChange"></span>
             </div>
           </div>
           <div class="stat-icon warning">
@@ -506,8 +94,8 @@
             <div class="stat-value" id="totalRevenue">Loading...</div>
             <div class="stat-label">Total Revenue</div>
             <div class="stat-change positive">
-              <i class="fas fa-arrow-up"></i>
-              <span id="revenueChange">+0.0%</span>
+             
+              <span id="revenueChange"></span>
             </div>
           </div>
           <div class="stat-icon danger">
@@ -519,28 +107,6 @@
 
     <!-- Content Section -->
     <div class="content-section">
-      <!-- Charts -->
-      <h3 class="section-title">
-        <i class="fas fa-chart-area"></i>
-        Analytics Overview
-      </h3>
-      
-      <div class="charts-grid">
-        <div class="chart-card">
-          <h4 class="chart-title">Revenue Trends (Last 7 Days)</h4>
-          <div class="chart-container">
-            <canvas id="revenueChart"></canvas>
-          </div>
-        </div>
-        
-        <div class="chart-card">
-          <h4 class="chart-title">Order Status Distribution</h4>
-          <div class="chart-container">
-            <canvas id="orderStatusChart"></canvas>
-          </div>
-        </div>
-      </div>
-
       <!-- Recent Activity -->
       <h3 class="section-title">
         <i class="fas fa-history"></i>

@@ -1,4 +1,4 @@
-// mobile-nav.js - Reusable Mobile Navigation Component
+// mobile-nav.js - Reusable Mobile Navigation Component with Dot Badge
 
 class MobileNavigation {
     constructor(options = {}) {
@@ -36,6 +36,7 @@ class MobileNavigation {
                 label: 'Bag', 
                 key: 'bag',
                 badge: 'mobile-cart-badge',
+                badgeType: 'number',
                 active: ['bag', 'cart']
             },
             { 
@@ -44,6 +45,7 @@ class MobileNavigation {
                 label: 'Notifications', 
                 key: 'notifications',
                 badge: 'mobile-notif-badge',
+                badgeType: 'dot',
                 active: ['notifications', 'notif']
             },
             { 
@@ -56,8 +58,14 @@ class MobileNavigation {
         ];
 
         const navItemsHTML = navItems.map(item => {
-            const badgeHTML = item.badge ? 
-                `<span id="${item.badge}" class="badge badge-danger" style="display: none;"></span>` : '';
+            let badgeHTML = '';
+            if (item.badge) {
+                if (item.badgeType === 'dot') {
+                    badgeHTML = `<span id="${item.badge}" class="badge badge-dot" style="display: none;"></span>`;
+                } else {
+                    badgeHTML = `<span id="${item.badge}" class="badge badge-danger" style="display: none;"></span>`;
+                }
+            }
             
             return `
                 <li class="nav-item">
@@ -173,6 +181,21 @@ class MobileNavigation {
                     border-radius: 10px;
                 }
 
+                /* Dot badge specific styling */
+                .mobile-bottom-nav .nav-link .badge-dot {
+                    width: 8px;
+                    height: 8px;
+                    background-color: #dc3545;
+                    border-radius: 50%;
+                    padding: 0;
+                    min-width: 8px;
+                    top: 6px;
+                    right: 45%;
+                    transform: translateX(50%);
+                    border: 2px solid #ffffff;
+                    box-shadow: 0 0 3px rgba(220, 53, 69, 0.5);
+                }
+
                 .mobile-header-icons {
                     display: none !important;
                     align-items: center;
@@ -266,9 +289,10 @@ class MobileNavigation {
         const mobileBadge = document.getElementById('mobile-notif-badge');
         
         if (headerBadge && mobileBadge) {
-            if (headerBadge.style.display !== 'none' && headerBadge.textContent) {
-                mobileBadge.textContent = headerBadge.textContent;
+            // For notification dot, just show/hide based on whether there are notifications
+            if (headerBadge.style.display !== 'none' && headerBadge.textContent && parseInt(headerBadge.textContent) > 0) {
                 mobileBadge.style.display = 'block';
+                // Don't set textContent for dot badge
             } else {
                 mobileBadge.style.display = 'none';
             }
@@ -386,16 +410,41 @@ class MobileNavigation {
         const headerBadge = document.getElementById(this.options.notifBadgeId);
         const mobileBadge = document.getElementById('mobile-notif-badge');
         
-        [headerBadge, mobileBadge].forEach(badge => {
-            if (badge) {
-                if (count > 0) {
-                    badge.textContent = count;
-                    badge.style.display = 'block';
-                } else {
-                    badge.style.display = 'none';
-                }
+        // Update header badge with number
+        if (headerBadge) {
+            if (count > 0) {
+                headerBadge.textContent = count;
+                headerBadge.style.display = 'block';
+            } else {
+                headerBadge.style.display = 'none';
             }
-        });
+        }
+        
+        // Update mobile badge as dot (no text content)
+        if (mobileBadge) {
+            if (count > 0) {
+                mobileBadge.style.display = 'block';
+                // Don't set textContent for dot badge
+            } else {
+                mobileBadge.style.display = 'none';
+            }
+        }
+    }
+
+    // Show notification dot (convenience method)
+    showNotificationDot() {
+        const mobileBadge = document.getElementById('mobile-notif-badge');
+        if (mobileBadge) {
+            mobileBadge.style.display = 'block';
+        }
+    }
+
+    // Hide notification dot (convenience method)
+    hideNotificationDot() {
+        const mobileBadge = document.getElementById('mobile-notif-badge');
+        if (mobileBadge) {
+            mobileBadge.style.display = 'none';
+        }
     }
 
     // Refresh navigation state
