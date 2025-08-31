@@ -4,259 +4,72 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Seller Dashboard</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
-    /* Sidebar CSS - Embedded for demonstration */
     :root {
-        --sidebar-width: 280px;
-        --sidebar-bg: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
-        --sidebar-text: rgba(255, 255, 255, 0.9);
-        --sidebar-text-hover: #ffffff;
-        --sidebar-active-bg: rgba(255, 255, 255, 0.15);
-        --sidebar-hover-bg: rgba(255, 255, 255, 0.1);
-        --sidebar-border: rgba(255, 255, 255, 0.1);
+        --primary-color: #6366f1;
+        --secondary-color: #8b5cf6;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --dark-color: #1f2937;
+        --light-color: #f8fafc;
     }
 
-    /* Sidebar Container */
+    body {
+        background-color: var(--light-color);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
     .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: var(--sidebar-width);
-        height: 100vh;
-        background: var(--sidebar-bg);
-        z-index: 1000;
-        transition: transform 0.3s ease;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        display: flex;
-        flex-direction: column;
-    }
-
-    .sidebar-header {
-        padding: 2rem 1.5rem 1.5rem;
-        border-bottom: 1px solid var(--sidebar-border);
-        flex-shrink: 0;
-    }
-
-    .sidebar-header h4 {
-        color: var(--sidebar-text-hover);
-        font-weight: 700;
-        font-size: 1.25rem;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .sidebar-header h4 i {
-        font-size: 1.5rem;
-    }
-
-    /* Sidebar Menu */
-    .sidebar-menu {
-        list-style: none;
-        padding: 1rem 0;
-        margin: 0;
-        flex: 1;
-        overflow-y: auto;
-    }
-
-    .sidebar-menu li {
-        margin: 0.25rem 1rem;
-        border-radius: 8px;
-        transition: all 0.2s ease;
-    }
-
-    .sidebar-menu li.nav-clicked {
-        transform: scale(0.98);
-    }
-
-    .sidebar-menu a {
-        display: flex;
-        align-items: center;
-        padding: 0.875rem 1rem;
-        color: var(--sidebar-text);
-        text-decoration: none;
-        border-radius: 8px;
-        transition: all 0.2s ease;
-        font-weight: 500;
-        font-size: 0.9rem;
-    }
-
-    .sidebar-menu a:hover {
-        background: var(--sidebar-hover-bg);
-        color: var(--sidebar-text-hover);
-        transform: translateX(4px);
-        text-decoration: none;
-    }
-
-    .sidebar-menu li.active a {
-        background: var(--sidebar-active-bg);
-        color: var(--sidebar-text-hover);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        font-weight: 600;
-    }
-
-    .sidebar-menu a i {
-        width: 20px;
-        margin-right: 0.75rem;
-        text-align: center;
-        font-size: 1rem;
-    }
-
-    /* Badge Styles in Sidebar */
-    .sidebar-menu .badge {
-        font-size: 0.7rem;
-        padding: 0.2rem 0.5rem;
-        border-radius: 10px;
-        font-weight: 600;
-        margin-left: auto;
-    }
-
-    .sidebar-menu .badge-warning {
-        background: #f59e0b;
-        color: white;
-    }
-
-    .sidebar-menu .badge-success {
-        background: #10b981;
-        color: white;
-    }
-
-    .sidebar-menu .badge-danger {
-        background: #ef4444;
-        color: white;
-    }
-
-    .sidebar-menu .badge-info {
-        background: #3b82f6;
-        color: white;
-    }
-
-    /* Sidebar Footer */
-    .sidebar-footer {
-        flex-shrink: 0;
-        padding: 1rem 1.5rem 1.5rem;
-        border-top: 1px solid var(--sidebar-border);
-    }
-
-    .user-info {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-        padding: 0.75rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 8px;
-    }
-
-    .user-avatar {
-        font-size: 2rem;
-        color: var(--sidebar-text-hover);
-    }
-
-    .user-details {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .user-name {
-        font-weight: 600;
-        color: var(--sidebar-text-hover);
-        font-size: 0.9rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .user-role {
-        font-size: 0.75rem;
-        color: var(--sidebar-text);
-        text-transform: capitalize;
-    }
-
-    .sidebar-divider {
-        border: none;
-        border-top: 1px solid var(--sidebar-border);
-        margin: 1rem 0 0.5rem;
-        opacity: 0.5;
-    }
-
-    /* Main Content Adjustment */
-    .main-content {
-        margin-left: var(--sidebar-width);
-        transition: margin-left 0.3s ease;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
         min-height: 100vh;
-        padding: 0;
+        transition: all 0.3s ease;
     }
 
-    /* Sidebar Toggle Button */
-    .sidebar-toggle {
-        display: none;
-        background: none;
-        border: none;
-        font-size: 1.25rem;
-        color: #6b7280;
-        cursor: pointer;
-        padding: 0.5rem;
+    .sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.8);
         border-radius: 8px;
+        margin: 4px 0;
         transition: all 0.2s ease;
-        position: fixed;
-        top: 1rem;
-        left: 1rem;
-        z-index: 1001;
     }
 
-    .sidebar-toggle:hover {
-        background: #f3f4f6;
-        color: #6366f1;
+    .sidebar .nav-link:hover, .sidebar .nav-link.active {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+        transform: translateX(5px);
     }
 
-    .sidebar-toggle:focus {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    .main-content {
+        transition: margin-left 0.3s ease;
     }
 
-    /* Mobile Styles */
-    @media (max-width: 1200px) {
+    .seller-avatar {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+    }
+
+    @media (max-width: 768px) {
         .sidebar {
-            transform: translateX(-100%);
+            margin-left: -250px;
         }
         
         .sidebar.show {
-            transform: translateX(0);
+            margin-left: 0;
         }
         
         .main-content {
             margin-left: 0 !important;
         }
-        
-        .sidebar-toggle {
-            display: block;
-        }
-    }
-
-    /* Sidebar Overlay */
-    .sidebar-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 999;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(2px);
-    }
-
-    .sidebar-overlay.show {
-        opacity: 1;
-        visibility: visible;
     }
 
     /* Additional styles for your content */
@@ -288,6 +101,44 @@
     .page-content {
         padding: 2rem;
     }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    /* Hide any spinners that might be added by JavaScript */
+    .spinner-border,
+    .spinner-grow {
+        display: none !important;
+    }
+
+    /* Fix stock quantity visibility */
+    .stock-quantity,
+    .text-muted,
+    .card-text,
+    .product-stock {
+        color: #374151 !important;
+    }
+
+    /* Ensure all text in product cards is visible */
+    .product-card .card-text,
+    .product-card p,
+    .product-card small,
+    .product-card span {
+        color: #374151 !important;
+    }
+
+    /* Prevent modal from closing too quickly */
+    .modal.fade.show {
+        animation: none !important;
+    }
   </style>
 
   <script>
@@ -299,76 +150,320 @@
   </script>
 </head>
 <body>
-  <!-- Mobile sidebar toggle button -->
-  <button class="sidebar-toggle" id="sidebarToggle">
-    <i class="fas fa-bars"></i>
-  </button>
-
-  <!-- Main content wrapper -->
-  <div class="main-content">
-    <div class="page-content">
-      <div class="container-fluid">
-        <div class="d-flex align-items-center mb-2">
-          <img id="profilePic" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23e5e7eb'/%3E%3Ccircle cx='20' cy='16' r='6' fill='%236b7280'/%3E%3Cpath d='M8 32c0-6.627 5.373-12 12-12s12 5.373 12 12' fill='%236b7280'/%3E%3C/svg%3E" width="40" height="40" class="rounded-circle mr-2" alt="Profile Picture" />
-          <h2 class="mb-0">Welcome, <span id="userName">Seller</span> (Seller)</h2>
-        </div>
-
-        <div class="mb-3">
-          <a href="profile.html" class="btn btn-outline-primary">👤 My Profile</a>
-          <a href="notifications.html" class="btn btn-outline-info position-relative">
-            🔔 Notifications
-            <span id="notifBadge" class="badge badge-danger" style="position: absolute; top: -5px; right: -10px; display: none;"></span>
-          </a>
-          <a href="#" id="logoutButton" class="btn btn-danger btn-sm">Logout</a>
-        </div>
-
-        <div class="mb-4">
-          <a href="add_product.html" class="btn btn-primary">➕ Add New Product</a>
-          <a href="orders.html" class="btn btn-secondary">📦 View Orders</a>
-        </div>
-
-        <hr />
-        <h3>Your Products</h3>
-
-        <div class="row mb-4">
-          <div class="col-md-4">
-            <input type="text" id="searchInput" class="form-control" placeholder="Search by product name" />
-          </div>
-          <div class="col-md-4">
-            <select id="categoryFilter" class="form-control">
-              <option value="">All Categories</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <button id="applyFiltersBtn" class="btn btn-success btn-block">Apply Filters</button>
-          </div>
-        </div>
-
-        <div id="productListRow" class="row">
-          <!-- Sample product card for demonstration -->
-          <div class="col-md-4 mb-4">
-            <div class="card">
-              <div class="card-body">
-                <div class="product-card">
-                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23f3f4f6'/%3E%3Ctext x='75' y='80' text-anchor='middle' fill='%236b7280' font-size='14'%3EProduct Image%3C/text%3E%3C/svg%3E" alt="Sample Product">
-                  <h5 class="card-title">Sample Product</h5>
-                  <p class="card-text">This is a sample product description.</p>
-                  <p class="text-success font-weight-bold">$99.99</p>
-                  <button class="btn btn-primary btn-sm">Edit</button>
-                  <button class="btn btn-danger btn-sm">Delete</button>
-                </div>
-              </div>
+    <!-- Sidebar -->
+    <div class="sidebar position-fixed" style="width: 250px; z-index: 1000;">
+        <div class="p-3">
+            <div class="d-flex align-items-center mb-4">
+                <i class="bi bi-shop text-white me-2" style="font-size: 1.5rem;"></i>
+                <h5 class="text-white mb-0">The TheSkinShelf</h5>
             </div>
-          </div>
+            
+            <!-- Seller Profile -->
+            <div class="text-center mb-4 p-3" style="background: rgba(255,255,255,0.1); border-radius: 8px;">
+                <a href="profile.html" style="text-decoration: none;">
+                    <img id="profilePic" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23e5e7eb'/%3E%3Ccircle cx='20' cy='16' r='6' fill='%236b7280'/%3E%3Cpath d='M8 32c0-6.627 5.373-12 12-12s12 5.373 12 12' fill='%236b7280'/%3E%3C/svg%3E" 
+                         class="rounded-circle seller-avatar mb-2" alt="Seller" style="cursor: pointer;">
+                </a>
+                <h6 id="userName" class="text-white mb-1">Seller</h6>
+                <small id="seller-email" class="text-white-50">Loading...</small>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="nav nav-pills flex-column">
+                <a class="nav-link active" href="seller_dashboard.html" data-section="dashboard">
+                    <i class="bi bi-house-door me-2"></i> Dashboard
+                </a>
+                <a class="nav-link" href="orders.html">
+                    <i class="bi bi-box-seam me-2"></i> Orders
+                </a>
+                <a class="nav-link" href="product_seller.html" data-section="products">
+                    <i class="bi bi-bag me-2"></i> Products
+                </a>
+              
+                <a class="nav-link" href="#" data-section="customers">
+                    <i class="bi bi-people me-2"></i> Customers
+                </a>
+            </nav>
         </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Include jQuery and Bootstrap JS -->
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  <script src="../js/seller_dashboard.js"></script>
-  <script src="../js/sidebar.js"></script>
+    <!-- Main Content -->
+    <div class="main-content" style="margin-left: 250px;">
+        <!-- Header -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container-fluid">
+                <button class="btn d-md-none" id="sidebarToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <h4 class="mb-0 ms-2">Seller Dashboard</h4>
+                
+                <div class="navbar-nav ms-auto d-flex flex-row">
+                    <div class="nav-item dropdown">
+                        <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-bell" style="font-size: 1.2rem;"></i>
+                            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                                0
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">Notifications</h6></li>
+                            <li id="no-notifications"><span class="dropdown-item-text">No new notifications</span></li>
+                        </ul>
+                    </div>
+                    
+                    <button class="btn btn-outline-primary ms-2" onclick="refreshDashboard()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="page-content">
+            <div class="container-fluid">
+                <!-- Hidden elements that JavaScript might need -->
+                <div style="display: none;">
+                    <button id="logoutButton"></button>
+                    <span id="notifBadge"></span>
+                </div>
+
+                <div class="mb-4">
+                    <a href="add_product.html" class="btn btn-primary">➕ Add New Product</a>
+                    <!-- Test button to verify modal works -->
+                    <button type="button" class="btn btn-success ms-2" onclick="testStockModal()">
+                        🧪 Test Stock Modal
+                    </button>
+                </div>
+
+                <hr />
+                <h3>Your Products</h3>
+
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by product name" />
+                    </div>
+                    <div class="col-md-4">
+                        <select id="categoryFilter" class="form-control">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button id="applyFiltersBtn" class="btn btn-success w-100">Apply Filters</button>
+                    </div>
+                </div>
+
+                <div id="productListRow" class="row">
+                    <!-- Products will be loaded here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Update Success Modal -->
+    <div class="modal fade" id="stockUpdateModal" tabindex="-1" aria-labelledby="stockUpdateModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="stockUpdateModalLabel">
+                        <i class="bi bi-check-circle me-2"></i>Stock Updated Successfully
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="handleModalClose()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3 mb-3">Success!</h4>
+                        <p id="stockUpdateMessage" class="lead">Stock updated successfully.</p>
+                        <div class="mt-3">
+                            <small class="text-muted">The page will refresh after you close this dialog.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="handleModalClose()">
+                        <i class="bi bi-check me-1"></i>OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/seller_dashboard.js"></script>
+   
+    <script>
+        // Global variables to track modal state
+        let stockModalInstance = null;
+        let shouldReloadAfterModal = false;
+
+        // Mobile sidebar toggle functionality
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('show');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            const sidebar = document.querySelector('.sidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !toggle.contains(e.target) && 
+                sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+            }
+        });
+
+        // Function to show stock update modal with proper event handling
+        function showStockUpdateModal(addedItems, newTotal) {
+            try {
+                const modalElement = document.getElementById('stockUpdateModal');
+                const messageElement = document.getElementById('stockUpdateMessage');
+                
+                if (modalElement && messageElement) {
+                    // Update the message
+                    messageElement.textContent = `Successfully added ${addedItems} items to stock. New total: ${newTotal}`;
+                    
+                    // Create modal instance if it doesn't exist
+                    if (!stockModalInstance) {
+                        stockModalInstance = new bootstrap.Modal(modalElement, {
+                            backdrop: 'static',
+                            keyboard: false
+                        });
+                    }
+                    
+                    // Set flag to reload after modal closes
+                    shouldReloadAfterModal = true;
+                    
+                    // Show the modal
+                    stockModalInstance.show();
+                    
+                    console.log('[DEBUG] Stock update modal shown successfully');
+                } else {
+                    console.error('Modal elements not found');
+                    // Fallback to alert if modal fails
+                    alert(`Successfully added ${addedItems} items to stock. New total: ${newTotal}`);
+                }
+            } catch (error) {
+                console.error('Error showing modal:', error);
+                alert(`Successfully added ${addedItems} items to stock. New total: ${newTotal}`);
+            }
+        }
+
+        // Handle modal close event
+        function handleModalClose() {
+            console.log('[DEBUG] Modal close requested');
+            
+            if (stockModalInstance) {
+                stockModalInstance.hide();
+            }
+            
+            // Only reload if this was a stock update modal
+            if (shouldReloadAfterModal) {
+                console.log('[DEBUG] Reloading page after stock update...');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500); // Small delay to ensure modal closes gracefully
+            }
+        }
+
+        // Listen for modal events
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalElement = document.getElementById('stockUpdateModal');
+            
+            if (modalElement) {
+                // When modal is fully hidden, handle the reload
+                modalElement.addEventListener('hidden.bs.modal', function () {
+                    console.log('[DEBUG] Modal hidden event fired');
+                    if (shouldReloadAfterModal) {
+                        shouldReloadAfterModal = false; // Reset flag
+                        console.log('[DEBUG] Reloading page...');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 200);
+                    }
+                });
+                
+                // When modal is shown, log for debugging
+                modalElement.addEventListener('shown.bs.modal', function () {
+                    console.log('[DEBUG] Modal shown event fired');
+                });
+            }
+        });
+
+        // Test function for the modal
+        function testStockModal() {
+            console.log('[DEBUG] Testing stock modal...');
+            showStockUpdateModal(19, 150);
+        }
+
+        // Improved alert override to handle stock success messages
+        const originalAlert = window.alert;
+        window.alert = function(message) {
+            console.log('[DEBUG] Alert intercepted:', message);
+            
+            // Check if it's a stock update message
+            if (message && typeof message === 'string' && 
+                message.includes("Successfully added") && 
+                message.includes("items to stock") && 
+                message.includes("New total:")) {
+                
+                // Extract numbers from the message
+                const addedMatch = message.match(/Successfully added (\d+) items/);
+                const totalMatch = message.match(/New total: (\d+)/);
+                
+                if (addedMatch && totalMatch) {
+                    console.log('[DEBUG] Stock update detected - showing modal');
+                    showStockUpdateModal(parseInt(addedMatch[1]), parseInt(totalMatch[1]));
+                    
+                    // Prevent any immediate reloads
+                    const originalReload = window.location.reload;
+                    window.location.reload = function() {
+                        console.log('[DEBUG] Page reload call intercepted during modal display');
+                        // Don't reload immediately - let the modal handle it
+                    };
+                    
+                    // Restore reload function after a longer delay to ensure modal has time to show
+                    setTimeout(() => {
+                        window.location.reload = originalReload;
+                        console.log('[DEBUG] location.reload function restored');
+                    }, 10000); // Increased timeout
+                    
+                    return; // Don't show the original alert
+                }
+            }
+            
+            // For other alerts, use the original alert
+            originalAlert(message);
+        };
+
+        // Make functions globally available
+        window.showStockUpdateModal = showStockUpdateModal;
+        window.testStockModal = testStockModal;
+        window.showStockAlert = showStockUpdateModal;
+        window.handleModalClose = handleModalClose;
+
+        // Additional safety: Prevent any automatic page reloads for a few seconds after page load
+        let pageLoadTime = Date.now();
+        const originalReload = window.location.reload;
+        
+        window.location.reload = function() {
+            const timeSinceLoad = Date.now() - pageLoadTime;
+            if (timeSinceLoad < 2000) {
+                console.log('[DEBUG] Preventing immediate reload after page load');
+                return;
+            }
+            originalReload.call(this);
+        };
+        
+        // Restore normal reload function after initial period
+        setTimeout(() => {
+            if (!shouldReloadAfterModal) {
+                window.location.reload = originalReload;
+            }
+        }, 3000);
+    </script>
 </body>
 </html>
