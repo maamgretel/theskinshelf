@@ -38,13 +38,7 @@ class SidebarNavigation {
                     href: 'product_seller.html',
                     badge: null
                 },
-                { 
-                    id: 'inventory', 
-                    label: 'Inventory', 
-                    icon: 'fas fa-warehouse', 
-                    href: 'inventory.html',
-                    badge: null
-                },
+              
                 { 
                     id: 'analytics', 
                     label: 'Analytics', 

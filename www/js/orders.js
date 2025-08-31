@@ -2,7 +2,9 @@
 const BACKEND_URL = 'https://backend-rj0a.onrender.com';
 const user = JSON.parse(localStorage.getItem('user'));
 let ordersData = [];
+let filteredOrdersData = [];
 let expandedOrders = new Set();
+let currentFilter = 'all';
 
 // Security check
 if (!user || user.role !== 'seller') {
@@ -101,9 +103,7 @@ function showAlert(message, type = 'info', duration = 4000) {
         <div class="d-flex align-items-center">
             ${icons[type] || icons.info}
             <span>${message}</span>
-            <button type="button" class="close ml-auto" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
     
@@ -118,11 +118,105 @@ function showAlert(message, type = 'info', duration = 4000) {
     }, duration);
     
     // Manual dismiss
-    alert.querySelector('.close').addEventListener('click', () => {
+    alert.querySelector('.btn-close').addEventListener('click', () => {
         clearTimeout(timeoutId);
         alert.classList.remove('show');
         setTimeout(() => alert.remove(), 300);
     });
+}
+
+// Status Filtering System
+function addFilterUI() {
+    const navbarRight = document.querySelector('.navbar-right .action-buttons');
+    
+    // Create filter dropdown
+    const filterContainer = document.createElement('div');
+    filterContainer.className = 'filter-container';
+    filterContainer.innerHTML = `
+        <div class="filter-dropdown">
+            <label for="statusFilter" class="filter-label">
+                <i class="fas fa-filter"></i> Filter:
+            </label>
+            <select id="statusFilter" class="form-select status-filter">
+                <option value="all">All Orders</option>
+                <option value="pending">Pending Only</option>
+                <option value="shipped">Shipped Only</option>
+                <option value="delivered">Delivered Only</option>
+                <option value="cancelled">Cancelled Only</option>
+            </select>
+        </div>
+    `;
+    
+    // Insert before existing buttons
+    navbarRight.insertBefore(filterContainer, navbarRight.firstChild);
+    
+    // Add event listener
+    document.getElementById('statusFilter').addEventListener('change', handleStatusFilter);
+}
+
+function handleStatusFilter(e) {
+    currentFilter = e.target.value;
+    applyStatusFilter();
+    updateFilteredStatistics();
+    
+    // Add visual feedback
+    const filterText = e.target.options[e.target.selectedIndex].text;
+    if (currentFilter !== 'all') {
+        showAlert(`Filter applied: ${filterText}`, 'info', 2000);
+    }
+}
+
+function applyStatusFilter() {
+    if (currentFilter === 'all') {
+        filteredOrdersData = [...ordersData];
+    } else {
+        filteredOrdersData = ordersData.filter(order => {
+            return order.products.some(product => {
+                switch (currentFilter) {
+                    case 'pending':
+                        return product.status === 'Pending';
+                    case 'shipped':
+                        return product.status === 'Shipped';
+                    case 'delivered':
+                        return product.status === 'Delivered';
+                    case 'cancelled':
+                        return product.status === 'Cancelled';
+                    default:
+                        return true;
+                }
+            });
+        });
+        
+        // Filter products within each order
+        filteredOrdersData = filteredOrdersData.map(order => ({
+            ...order,
+            products: order.products.filter(product => {
+                switch (currentFilter) {
+                    case 'pending':
+                        return product.status === 'Pending';
+                    case 'shipped':
+                        return product.status === 'Shipped';
+                    case 'delivered':
+                        return product.status === 'Delivered';
+                    case 'cancelled':
+                        return product.status === 'Cancelled';
+                    default:
+                        return true;
+                }
+            })
+        })).filter(order => order.products.length > 0);
+    }
+    
+    renderFilteredOrders();
+    updateOrderCount();
+}
+
+function clearFilter() {
+    currentFilter = 'all';
+    document.getElementById('statusFilter').value = 'all';
+    applyStatusFilter();
+    updateFilteredStatistics();
+    showAlert('Filter cleared', 'info', 2000);
 }
 
 // Original utility functions maintained for backend compatibility
@@ -176,7 +270,7 @@ function createImageElement(src, alt, productId) {
     return placeholder;
 }
 
-// Enhanced Progress Modal Functions
+// Fixed Progress Modal Functions (Bootstrap 5 compatible)
 function showProgressModal(title, subtitle) {
     document.getElementById('progressTitle').textContent = title;
     document.getElementById('progressSubtitle').textContent = subtitle;
@@ -193,7 +287,9 @@ function showProgressModal(title, subtitle) {
     statusMessages.innerHTML = '';
     document.getElementById('successCount').textContent = '0';
     
-    $('#progressModal').modal('show');
+    // Bootstrap 5 way to show modal (NO JQUERY)
+    const progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
+    progressModal.show();
 }
 
 function updateProgress(current, total, message = '') {
@@ -226,7 +322,7 @@ function addStatusMessage(message, type = 'info') {
     messageElement.innerHTML = `
         <div class="d-flex align-items-center">
             ${icons[type]}
-            <small class="ml-2">
+            <small class="ms-2">
                 <span class="text-muted">${timestamp}</span> - ${message}
             </small>
         </div>
@@ -246,8 +342,8 @@ function completeProgress(success, message) {
     progressBar.classList.add(success ? 'bg-success' : 'bg-danger');
     
     progressTitle.innerHTML = success 
-        ? '<i class="fas fa-check-circle mr-2"></i>Process Complete!' 
-        : '<i class="fas fa-times-circle mr-2"></i>Process Failed';
+        ? '<i class="fas fa-check-circle me-2"></i>Process Complete!' 
+        : '<i class="fas fa-times-circle me-2"></i>Process Failed';
     
     if (modalIcon) {
         modalIcon.className = success 
@@ -312,7 +408,7 @@ function showErrorState(errorMessage) {
             <h5>Error Loading Orders</h5>
             <p>Failed to load orders: ${errorMessage}</p>
             <button class="btn btn-primary mt-3" onclick="fetchOrders()">
-                <i class="fas fa-redo mr-2"></i>Try Again
+                <i class="fas fa-redo me-2"></i>Try Again
             </button>
         </div>
     `;
@@ -402,7 +498,66 @@ function updateStatistics() {
     animateNumber(pendingOrdersCell, pendingOrders);
     animateNumber(deliveredOrdersCell, deliveredOrders);
     
-    orderCount.textContent = `${ordersData.length} order groups`;
+    updateOrderCount();
+}
+
+function updateFilteredStatistics() {
+    let totalRevenue = 0;
+    let totalOrders = 0;
+    let pendingOrders = 0;
+    let deliveredOrders = 0;
+    
+    if (currentFilter === 'all') {
+        // Show all statistics when no filter is applied
+        ordersData.forEach(order => {
+            order.products.forEach(product => {
+                totalRevenue += product.totalPrice;
+                totalOrders += product.quantity;
+                if (product.status === 'Pending') pendingOrders += product.quantity;
+                if (product.status === 'Delivered') deliveredOrders += product.quantity;
+            });
+        });
+    } else {
+        // When filtering, show stats for ALL products in the filtered orders,
+        // not just the products that match the filter
+        const filteredOrderIds = new Set(filteredOrdersData.map(order => order.orderId));
+        
+        ordersData.forEach(order => {
+            // Only include orders that appear in the filtered results
+            if (filteredOrderIds.has(order.orderId)) {
+                order.products.forEach(product => {
+                    totalRevenue += product.totalPrice;
+                    totalOrders += product.quantity;
+                    if (product.status === 'Pending') pendingOrders += product.quantity;
+                    if (product.status === 'Delivered') deliveredOrders += product.quantity;
+                });
+            }
+        });
+    }
+    
+    // Animate number changes
+    animateNumber(totalRevenueCell, totalRevenue, '₱', 2);
+    animateNumber(totalOrdersCell, totalOrders);
+    animateNumber(pendingOrdersCell, pendingOrders);
+    animateNumber(deliveredOrdersCell, deliveredOrders);
+    
+    // Remove visual indicator classes (no more "Filtered View" labels)
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(card => {
+        card.classList.remove('filtered');
+    });
+}
+
+function updateOrderCount() {
+    const orderCountElement = document.getElementById('orderCount');
+    const filterSelect = document.getElementById('statusFilter');
+    
+    if (currentFilter === 'all') {
+        orderCountElement.textContent = `${ordersData.length} order groups`;
+    } else {
+        const filterText = filterSelect ? filterSelect.options[filterSelect.selectedIndex].text : '';
+        orderCountElement.textContent = `${filteredOrdersData.length} order groups (${filterText})`;
+    }
 }
 
 function animateNumber(element, targetValue, prefix = '', decimals = 0) {
@@ -426,8 +581,11 @@ function animateNumber(element, targetValue, prefix = '', decimals = 0) {
     }, 16);
 }
 
-// Enhanced rendering with maintained functionality
+// Enhanced rendering with filtering support
 function renderOrders() {
+    // Initialize filtered data
+    filteredOrdersData = [...ordersData];
+    
     if (ordersData.length === 0) {
         ordersContainer.innerHTML = `
             <div class="empty-state">
@@ -439,7 +597,27 @@ function renderOrders() {
         return;
     }
 
-    const ordersHtml = ordersData.map(order => {
+    // Apply current filter if any
+    applyStatusFilter();
+}
+
+function renderFilteredOrders() {
+    if (filteredOrdersData.length === 0) {
+        const filterText = currentFilter === 'all' ? 'orders' : `${currentFilter} orders`;
+        ordersContainer.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <h5>No ${filterText.charAt(0).toUpperCase() + filterText.slice(1)} Found</h5>
+                <p>There are no orders matching the selected filter criteria.</p>
+                <button class="btn btn-outline-primary mt-3" onclick="clearFilter()">
+                    <i class="fas fa-times me-2"></i>Clear Filter
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    const ordersHtml = filteredOrdersData.map(order => {
         const isExpanded = expandedOrders.has(order.orderId);
         const totalQuantity = order.products.reduce((sum, product) => sum + product.quantity, 0);
         
@@ -463,23 +641,23 @@ function renderOrders() {
 
 function createOrderCardHTML(order, isExpanded, totalQuantity) {
     return `
-        <div class="order-card">
+        <div class="order-card ${currentFilter !== 'all' ? 'filtered' : ''}">
             <div class="order-header ${isExpanded ? '' : 'collapsed'}" onclick="toggleOrder('${order.orderId}')">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="order-summary">
                         <div class="order-number">${order.orderId}</div>
                         <div class="order-meta">
-                            <span><i class="fas fa-user mr-1"></i><strong>${order.buyerName}</strong></span>
-                            <span><i class="fas fa-calendar mr-1"></i>${order.formattedDate}</span>
-                            <span><i class="fas fa-money-bill-wave mr-1"></i>₱${order.totalAmount.toFixed(2)}</span>
-                            <span><i class="fas fa-box mr-1"></i>${totalQuantity} items</span>
+                            <span><i class="fas fa-user me-1"></i><strong>${order.buyerName}</strong></span>
+                            <span><i class="fas fa-calendar me-1"></i>${order.formattedDate}</span>
+                            <span><i class="fas fa-money-bill-wave me-1"></i>₱${order.totalAmount.toFixed(2)}</span>
+                            <span><i class="fas fa-box me-1"></i>${totalQuantity} items</span>
                         </div>
                     </div>
                     <div class="d-flex align-items-center">
-                        <div class="mr-3">
-                            ${order.hasAllDelivered ? '<span class="badge badge-success">All Delivered</span>' : ''}
-                            ${order.hasAllShipped && !order.hasAllDelivered ? '<span class="badge badge-info">All Shipped</span>' : ''}
-                            ${order.hasPending ? '<span class="badge badge-warning">Has Pending</span>' : ''}
+                        <div class="me-3">
+                            ${order.hasAllDelivered ? '<span class="badge bg-success">All Delivered</span>' : ''}
+                            ${order.hasAllShipped && !order.hasAllDelivered ? '<span class="badge bg-info">All Shipped</span>' : ''}
+                            ${order.hasPending ? '<span class="badge bg-warning">Has Pending</span>' : ''}
                         </div>
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </div>
@@ -514,13 +692,13 @@ function createProductsHTML(products) {
                     <div class="product-price">₱${product.totalPrice.toFixed(2)}</div>
                 </div>
                 <div class="product-details">
-                    <div><i class="fas fa-clock mr-1"></i><strong>Time:</strong> ${product.orders[0].formattedTime}</div>
-                    <div><i class="fas fa-info-circle mr-1"></i><strong>Status:</strong> <span class="badge badge-${getStatusBadgeColor(product.status)}">${product.status}</span></div>
-                    ${product.quantity > 1 ? `<div><i class="fas fa-box mr-1"></i><strong>Quantity:</strong> ${product.quantity} items</div>` : ''}
-                    ${product.quantity > 1 ? `<div><i class="fas fa-calculator mr-1"></i><strong>Per Item:</strong> ₱${(product.totalPrice / product.quantity).toFixed(2)}</div>` : ''}
+                    <div><i class="fas fa-clock me-1"></i><strong>Time:</strong> ${product.orders[0].formattedTime}</div>
+                    <div><i class="fas fa-info-circle me-1"></i><strong>Status:</strong> <span class="badge bg-${getStatusBadgeColor(product.status)}">${product.status}</span></div>
+                    ${product.quantity > 1 ? `<div><i class="fas fa-box me-1"></i><strong>Quantity:</strong> ${product.quantity} items</div>` : ''}
+                    ${product.quantity > 1 ? `<div><i class="fas fa-calculator me-1"></i><strong>Per Item:</strong> ₱${(product.totalPrice / product.quantity).toFixed(2)}</div>` : ''}
                 </div>
                 <div class="status-update-form">
-                    <select class="form-control status-select" data-product-orders="${product.orders.map(o => o.id).join(',')}">
+                    <select class="form-select status-select" data-product-orders="${product.orders.map(o => o.id).join(',')}">
                         <option value="Pending" ${product.status === 'Pending' ? 'selected' : ''}>Pending</option>
                         <option value="Shipped" ${product.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
                         <option value="Delivered" ${product.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
@@ -546,12 +724,12 @@ function createBulkActionsHTML(order) {
                     ${order.hasPending ? `
                         <button class="btn btn-success btn-sm bulk-ship-btn" 
                                 data-order-id="${order.orderId}">
-                            <i class="fas fa-shipping-fast mr-1"></i> Ship All Pending
+                            <i class="fas fa-shipping-fast me-1"></i> Ship All Pending
                         </button>
                     ` : ''}
                     <button class="btn btn-info btn-sm bulk-deliver-btn" 
                             data-order-id="${order.orderId}">
-                        <i class="fas fa-check-circle mr-1"></i> Mark All Delivered
+                        <i class="fas fa-check-circle me-1"></i> Mark All Delivered
                     </button>
                 </div>
             </div>
@@ -559,18 +737,26 @@ function createBulkActionsHTML(order) {
     `;
 }
 
-// Toggle functionality maintained for backend compatibility
+// Fixed Toggle functionality for Bootstrap 5
 function toggleOrder(orderId) {
     const orderElement = document.getElementById(`order-${orderId}`);
     const headerElement = orderElement.previousElementSibling;
     
     if (expandedOrders.has(orderId)) {
         expandedOrders.delete(orderId);
-        $(orderElement).collapse('hide');
+        
+        // Bootstrap 5 way to hide collapse
+        const bsCollapse = bootstrap.Collapse.getOrCreateInstance(orderElement);
+        bsCollapse.hide();
+        
         headerElement.classList.add('collapsed');
     } else {
         expandedOrders.add(orderId);
-        $(orderElement).collapse('show');
+        
+        // Bootstrap 5 way to show collapse
+        const bsCollapse = bootstrap.Collapse.getOrCreateInstance(orderElement);
+        bsCollapse.show();
+        
         headerElement.classList.remove('collapsed');
     }
 }
@@ -625,7 +811,10 @@ async function updateProductStatus(orderIds, newStatus) {
 }
 
 async function bulkUpdateOrder(orderId, action) {
-    const order = ordersData.find(o => o.orderId === orderId);
+    const order = currentFilter === 'all' 
+        ? ordersData.find(o => o.orderId === orderId)
+        : filteredOrdersData.find(o => o.orderId === orderId);
+        
     if (!order) return;
 
     let allOrderIds = [];
@@ -697,23 +886,28 @@ async function bulkUpdateOrder(orderId, action) {
         );
         
         setTimeout(() => {
-            $('#progressModal').modal('hide');
+            const progressModal = bootstrap.Modal.getInstance(document.getElementById('progressModal'));
+            if (progressModal) {
+                progressModal.hide();
+            }
             fetchOrders(); // Refresh the display
         }, 2000);
     }, 500);
 }
 
-// Enhanced CSV export with maintained functionality
-function exportToCsv() {
-    if (ordersData.length === 0) {
-        showAlert('No orders to export', 'warning');
+// Enhanced CSV export with filtering support
+function exportFilteredToCsv() {
+    const dataToExport = currentFilter === 'all' ? ordersData : filteredOrdersData;
+    
+    if (dataToExport.length === 0) {
+        showAlert('No orders to export with current filter', 'warning');
         return;
     }
 
     const headers = ['Order ID', 'Product', 'Buyer', 'Quantity', 'Total Price', 'Price Per Item', 'Date', 'Time', 'Status'];
     const csvRows = [headers.join(',')];
 
-    ordersData.forEach(order => {
+    dataToExport.forEach(order => {
         order.products.forEach(product => {
             const row = [
                 order.orderId,
@@ -730,15 +924,18 @@ function exportToCsv() {
         });
     });
 
-    // Add summary
-    const totalRevenue = ordersData.reduce((sum, order) => 
+    // Add summary for filtered data
+    const totalRevenue = dataToExport.reduce((sum, order) => 
         sum + order.products.reduce((pSum, product) => pSum + product.totalPrice, 0), 0
     );
-    const totalItems = ordersData.reduce((sum, order) => 
+    const totalItems = dataToExport.reduce((sum, order) => 
         sum + order.products.reduce((pSum, product) => pSum + product.quantity, 0), 0
     );
     
     csvRows.push(['', 'SUMMARY', '', '', '', '', '', '', ''].join(','));
+    const filterSelect = document.getElementById('statusFilter');
+    const filterText = filterSelect ? filterSelect.options[filterSelect.selectedIndex].text : 'All Orders';
+    csvRows.push(['', `Filter: ${filterText}`, '', '', '', '', '', '', ''].join(','));
     csvRows.push(['', 'Total Revenue', '', '', totalRevenue.toFixed(2), '', '', '', ''].join(','));
     csvRows.push(['', 'Total Items', '', totalItems, '', '', '', '', ''].join(','));
     
@@ -748,13 +945,16 @@ function exportToCsv() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `seller_orders_${new Date().toISOString().split('T')[0]}.csv`);
+    
+    const filterSuffix = currentFilter === 'all' ? '' : `_${currentFilter}`;
+    link.setAttribute('download', `seller_orders${filterSuffix}_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
-    showAlert('Orders exported successfully! Check your downloads folder.', 'success');
+    const filterDisplayText = currentFilter === 'all' ? 'All orders' : `${currentFilter} orders`;
+    showAlert(`${filterDisplayText} exported successfully!`, 'success');
 }
 
 // Enhanced Event Listeners
@@ -777,46 +977,52 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Enhanced expand/collapse functionality
-expandAllBtn.addEventListener('click', () => {
-    const shouldExpandAll = expandedOrders.size < ordersData.length;
-    
-    if (shouldExpandAll) {
-        ordersData.forEach(order => expandedOrders.add(order.orderId));
-        expandAllBtn.innerHTML = '<i class="fas fa-compress-alt"></i> <span class="btn-text">Collapse All</span>';
+// Fixed expand/collapse functionality for Bootstrap 5
+function setupExpandAllButton() {
+    expandAllBtn.addEventListener('click', () => {
+        const dataToUse = currentFilter === 'all' ? ordersData : filteredOrdersData;
+        const shouldExpandAll = expandedOrders.size < dataToUse.length;
         
-        // Animate expansion
-        const collapsedElements = document.querySelectorAll('.order-header.collapsed');
-        collapsedElements.forEach((header, index) => {
-            setTimeout(() => {
-                header.click();
-            }, index * 100);
-        });
-    } else {
-        expandedOrders.clear();
-        expandAllBtn.innerHTML = '<i class="fas fa-expand-alt"></i> <span class="btn-text">Expand All</span>';
-        
-        // Animate collapse
-        const expandedElements = document.querySelectorAll('.order-header:not(.collapsed)');
-        expandedElements.forEach((header, index) => {
-            setTimeout(() => {
-                header.click();
-            }, index * 100);
-        });
-    }
-});
+        if (shouldExpandAll) {
+            dataToUse.forEach(order => expandedOrders.add(order.orderId));
+            expandAllBtn.innerHTML = '<i class="fas fa-compress-alt"></i> <span class="btn-text">Collapse All</span>';
+            
+            // Bootstrap 5 compatible expansion
+            dataToUse.forEach((order, index) => {
+                setTimeout(() => {
+                    const orderElement = document.getElementById(`order-${order.orderId}`);
+                    const headerElement = orderElement ? orderElement.previousElementSibling : null;
+                    
+                    if (headerElement && headerElement.classList.contains('collapsed')) {
+                        const bsCollapse = bootstrap.Collapse.getOrCreateInstance(orderElement);
+                        bsCollapse.show();
+                        headerElement.classList.remove('collapsed');
+                    }
+                }, index * 100);
+            });
+        } else {
+            expandedOrders.clear();
+            expandAllBtn.innerHTML = '<i class="fas fa-expand-alt"></i> <span class="btn-text">Expand All</span>';
+            
+            // Bootstrap 5 compatible collapse
+            dataToUse.forEach((order, index) => {
+                setTimeout(() => {
+                    const orderElement = document.getElementById(`order-${order.orderId}`);
+                    const headerElement = orderElement ? orderElement.previousElementSibling : null;
+                    
+                    if (headerElement && !headerElement.classList.contains('collapsed')) {
+                        const bsCollapse = bootstrap.Collapse.getOrCreateInstance(orderElement);
+                        bsCollapse.hide();
+                        headerElement.classList.add('collapsed');
+                    }
+                }, index * 100);
+            });
+        }
+    });
+}
 
-exportCsvBtn.addEventListener('click', exportToCsv);
-
-// Global function for toggling orders (called from onclick)
-window.toggleOrder = toggleOrder;
-
-// Enhanced initialization
-document.addEventListener('DOMContentLoaded', () => {
-    initializeUI();
-    fetchOrders();
-    
-    // Add keyboard shortcuts
+// Keyboard shortcuts with filter support
+function addKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
         if (e.ctrlKey || e.metaKey) {
             switch (e.key) {
@@ -829,9 +1035,80 @@ document.addEventListener('DOMContentLoaded', () => {
                     fetchOrders();
                     showAlert('Orders refreshed!', 'info', 2000);
                     break;
+                case 'f':
+                    e.preventDefault();
+                    const filterSelect = document.getElementById('statusFilter');
+                    if (filterSelect) filterSelect.focus();
+                    break;
+            }
+        }
+        
+        // Quick filter shortcuts (Alt + number)
+        if (e.altKey && !e.ctrlKey && !e.metaKey) {
+            switch (e.key) {
+                case '1':
+                    e.preventDefault();
+                    setFilter('all');
+                    break;
+                case '2':
+                    e.preventDefault();
+                    setFilter('pending');
+                    break;
+                case '3':
+                    e.preventDefault();
+                    setFilter('shipped');
+                    break;
+                case '4':
+                    e.preventDefault();
+                    setFilter('delivered');
+                    break;
+                case '5':
+                    e.preventDefault();
+                    setFilter('cancelled');
+                    break;
             }
         }
     });
+}
+
+function setFilter(filterValue) {
+    const filterSelect = document.getElementById('statusFilter');
+    if (filterSelect) {
+        filterSelect.value = filterValue;
+        currentFilter = filterValue;
+        applyStatusFilter();
+        updateFilteredStatistics();
+        
+        // Show feedback
+        const filterText = filterSelect.options[filterSelect.selectedIndex].text;
+        showAlert(`Filter applied: ${filterText}`, 'info', 2000);
+    }
+}
+
+// Global functions
+window.toggleOrder = toggleOrder;
+window.clearFilter = clearFilter;
+
+// Enhanced initialization
+document.addEventListener('DOMContentLoaded', () => {
+    initializeUI();
+    
+    // Setup buttons
+    setupExpandAllButton();
+    
+    // Replace export button functionality
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', exportFilteredToCsv);
+    }
+    
+    // Add filter UI and keyboard shortcuts
+    setTimeout(() => {
+        addFilterUI();
+        addKeyboardShortcuts();
+    }, 100);
+    
+    // Load orders
+    fetchOrders();
     
     // Auto-refresh every 5 minutes
     setInterval(() => {
