@@ -10,7 +10,7 @@
     
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-     <link rel="stylesheet" href="../css/sidebar.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     
     <!-- Chart.js for analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -187,45 +187,143 @@
         .status-shipped { background-color: var(--primary-color); }
         .status-delivered { background-color: var(--success-color); }
         .status-cancelled { background-color: var(--danger-color); }
+
+        /* Notification Dropdown Styles */
+        .notification-dropdown {
+            width: 320px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: none;
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background-color: #f0f9ff;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .notification-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .notification-icon.primary { background-color: rgba(99, 102, 241, 0.1); color: var(--primary-color); }
+        .notification-icon.warning { background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+        .notification-icon.success { background-color: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+        .notification-icon.info { background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+
+        .notification-message {
+            font-size: 0.8rem;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        .notification-unread-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+        }
+
+        .notification-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .notification-footer {
+            padding: 8px 16px;
+            border-top: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+            text-align: center;
+        }
+
+        .mark-all-read-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 0.8rem;
+            padding: 8px 16px;
+            width: 100%;
+            text-align: left;
+            transition: background-color 0.2s ease;
+        }
+
+        .mark-all-read-btn:hover {
+            background-color: #f0f9ff;
+        }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
-  <!-- Updated Sidebar for seller_dashboard.html -->
-<div class="sidebar position-fixed" style="width: 250px; z-index: 1000;">
-    <div class="p-3">
-        <div class="d-flex align-items-center mb-4">
-            <i class="bi bi-shop text-white me-2" style="font-size: 1.5rem;"></i>
-            <h5 class="text-white mb-0">The TheSkinShelf</h5>
+    <div class="sidebar position-fixed" style="width: 250px; z-index: 1000;">
+        <div class="p-3">
+            <div class="d-flex align-items-center mb-4">
+                <i class="bi bi-shop text-white me-2" style="font-size: 1.5rem;"></i>
+                <h5 class="text-white mb-0">The TheSkinShelf</h5>
+            </div>
+            
+            <!-- Seller Profile -->
+            <div class="text-center mb-4 p-3" style="background: rgba(255,255,255,0.1); border-radius: 8px;">
+                <img id="seller-avatar" src="https://res.cloudinary.com/dwgvlwkyt/image/upload/v1756085519/profile_pics/user_4_avatar.jpg" 
+                     class="rounded-circle seller-avatar mb-2" alt="Seller">
+                <h6 id="seller-name" class="text-white mb-1">Loading...</h6>
+                <small id="seller-email" class="text-white-50">Loading...</small>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="nav nav-pills flex-column">
+                <a class="nav-link active" href="seller_dashboard.html">
+                    <i class="bi bi-house-door me-2"></i> Dashboard
+                </a>
+                <a class="nav-link" href="orders.html">
+                    <i class="bi bi-box-seam me-2"></i> Orders
+                </a>
+                <a class="nav-link" href="product_seller.html">
+                    <i class="bi bi-bag me-2"></i> Products
+                </a>
+                <a class="nav-link" href="#" data-section="customers">
+                    <i class="bi bi-people me-2"></i> Customers
+                </a>
+            </nav>
         </div>
-        
-        <!-- Seller Profile -->
-        <div class="text-center mb-4 p-3" style="background: rgba(255,255,255,0.1); border-radius: 8px;">
-            <img id="seller-avatar" src="https://res.cloudinary.com/dwgvlwkyt/image/upload/v1756085519/profile_pics/user_4_avatar.jpg" 
-                 class="rounded-circle seller-avatar mb-2" alt="Seller">
-            <h6 id="seller-name" class="text-white mb-1">Loading...</h6>
-            <small id="seller-email" class="text-white-50">Loading...</small>
-        </div>
-        
-        <!-- Navigation -->
-        <nav class="nav nav-pills flex-column">
-            <a class="nav-link active" href="seller_dashboard.html">
-                <i class="bi bi-house-door me-2"></i> Dashboard
-            </a>
-            <!-- Change this line to navigate to your orders HTML file -->
-            <a class="nav-link" href="orders.html">
-                <i class="bi bi-box-seam me-2"></i> Orders
-            </a>
-            <a class="nav-link" href="product_seller.html" ">
-                <i class="bi bi-bag me-2"></i> Products
-            </a>
-         
-            <a class="nav-link" href="#" data-section="customers">
-                <i class="bi bi-people me-2"></i> Customers
-            </a>
-        </nav>
     </div>
-</div>
 
     <!-- Main Content -->
     <div class="main-content" style="margin-left: 250px;">
@@ -239,17 +337,26 @@
                 <h4 class="mb-0 ms-2">Seller Dashboard</h4>
                 
                 <div class="navbar-nav ms-auto d-flex flex-row">
+                    <!-- Fixed Notification Dropdown -->
                     <div class="nav-item dropdown">
-                        <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-bell" style="font-size: 1.2rem;"></i>
                             <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
                                 0
                             </span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><h6 class="dropdown-header">Notifications</h6></li>
-                            <li id="no-notifications"><span class="dropdown-item-text">No new notifications</span></li>
-                        </ul>
+                        <!-- Fixed dropdown menu structure -->
+                        <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
+                            <div class="notification-header">
+                                <i class="bi bi-bell me-2"></i>Notifications
+                            </div>
+                            <div id="notification-content">
+                                <div class="notification-item text-center text-muted">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                    Loading notifications...
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <button class="btn btn-outline-primary ms-2" onclick="refreshDashboard()">
