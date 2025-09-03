@@ -229,10 +229,7 @@
 
                 <div class="mb-4">
                     <a href="add_product.html" class="btn btn-primary">➕ Add New Product</a>
-                    <!-- Test button to verify modal works -->
-                    <button type="button" class="btn btn-success ms-2" onclick="testStockModal()">
-                        🧪 Test Stock Modal
-                    </button>
+                 
                 </div>
 
                 <hr />
@@ -287,6 +284,36 @@
             </div>
         </div>
     </div>
+
+    <!-- Delete Success Modal -->
+<div class="modal fade" id="deleteSuccessModal" tabindex="-1" aria-labelledby="deleteSuccessModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteSuccessModalLabel">
+          <i class="bi bi-trash-check me-2"></i> Deleted Successfully
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="handleDeleteModalClose()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center">
+          <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+          <h4 class="mt-3 mb-3">Success!</h4>
+          <p class="lead">The item has been deleted successfully.</p>
+          <div class="mt-3">
+            <small class="text-muted">This page will refresh once you close this dialog.</small>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="handleDeleteModalClose()">
+          <i class="bi bi-check me-1"></i>OK
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -464,6 +491,52 @@
                 window.location.reload = originalReload;
             }
         }, 3000);
+
+
+
+        let deleteModalInstance = null;
+let shouldReloadAfterDelete = false;
+
+function showDeleteSuccessModal() {
+    const modalElement = document.getElementById('deleteSuccessModal');
+    if (!deleteModalInstance) {
+        deleteModalInstance = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+    }
+    shouldReloadAfterDelete = true;
+    deleteModalInstance.show();
+}
+
+function handleDeleteModalClose() {
+    if (deleteModalInstance) {
+        deleteModalInstance.hide();
+    }
+    if (shouldReloadAfterDelete) {
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
+    }
+}
+
+// Event listener for cleanup
+document.addEventListener('DOMContentLoaded', function() {
+    const modalElement = document.getElementById('deleteSuccessModal');
+    if (modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            if (shouldReloadAfterDelete) {
+                shouldReloadAfterDelete = false;
+                setTimeout(() => {
+                    window.location.reload();
+                }, 200);
+            }
+        });
+    }
+});
+window.showDeleteSuccessModal = showDeleteSuccessModal;
+window.handleDeleteModalClose = handleDeleteModalClose;
+
     </script>
 </body>
 </html>

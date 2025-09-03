@@ -1227,12 +1227,17 @@ async function deleteProduct(productId, productName) {
       }
     }
     
-    if (success) {
-      alert(`"${productName}" has been deleted successfully.`);
-      location.reload();
-    } else {
-      alert(`Failed to delete "${productName}". Please try again or contact support.`);
-    }
+if (success) {
+  if (typeof window.showDeleteSuccessModal === 'function' && document.getElementById('deleteSuccessModal')) {
+    window.showDeleteSuccessModal();   // ✅ show the nice modal
+  } else {
+    // Fallback if the modal isn’t on this page
+    alert(`"${productName}" has been deleted successfully.`);
+    setTimeout(() => location.reload(), 500);
+  }
+} else {
+  alert(`Failed to delete "${productName}". Please try again or contact support.`);
+}
     
   } catch (error) {
     console.error('Delete error:', error);
