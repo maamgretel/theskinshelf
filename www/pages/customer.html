@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Insights - Beauty Store</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+           /* Core Branding */
+   --primary-color: #000000;   /* Black */
+   --secondary-color: #ffffff; /* White */
+
+   /* Neutrals */
+   --background-light: #f5f5f5; /* Product backdrop */
+   --background-gray: #f8f9fa;  /* Light gray sections */
+
+   /* Status & Semantic Colors */
+   --success-color: #10b981;  /* Emerald green (delivered / success) */
+   --warning-color: #fbbf24;  /* Warm yellow (pending) */
+   --danger-color: #ef4444;   /* Red (cancelled / errors) */
+
+   /* Seasonal Promo Accents */
+   --promo-pink: #ff6b9d;     /* Hot pink (sales) */
+   --promo-coral: #ff8fab;    /* Coral (fashion highlights) */
+   --promo-blue: #3b82f6;     /* Sky blue (fresh drops) */
+   --promo-yellow: #facc15;   /* Summer yellow */
+        }
+
+        body {
+            background-color: var(--background-light);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-color));
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            margin: 4px 0;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .main-content {
+            transition: margin-left 0.3s ease;
+        }
+
+        .seller-avatar {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar.show {
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar position-fixed" style="width: 250px; z-index: 1000;">
+        <div class="p-3">
+            <div class="d-flex align-items-center mb-4">
+                <i class="bi bi-shop text-white me-2" style="font-size: 1.5rem;"></i>
+                <h5 class="text-white mb-0">The TheSkinShelf</h5>
+            </div>
+            
+            <!-- Seller Profile -->
+            <div class="text-center mb-4 p-3" style="background: rgba(255,255,255,0.1); border-radius: 8px;">
+                <img id="seller-avatar" src="https://res.cloudinary.com/dwgvlwkyt/image/upload/v1756085519/profile_pics/user_4_avatar.jpg" 
+                     class="rounded-circle seller-avatar mb-2" alt="Seller">
+                <h6 id="seller-name" class="text-white mb-1">Loading...</h6>
+                <small id="seller-email" class="text-white-50">Loading...</small>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="nav nav-pills flex-column">
+                <a class="nav-link" href="seller_dashboard.html">
+                    <i class="bi bi-house-door me-2"></i> Dashboard
+                </a>
+                <a class="nav-link" href="orders.html">
+                    <i class="bi bi-box-seam me-2"></i> Orders
+                </a>
+                <a class="nav-link" href="product_seller.html">
+                    <i class="bi bi-bag me-2"></i> Products
+                </a>
+                <a class="nav-link active" href="customers.html">
+                    <i class="bi bi-people me-2"></i> Customers
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" style="margin-left: 250px;">
+        <!-- Header -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container-fluid">
+                <button class="btn d-md-none" id="sidebarToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <h4 class="mb-0 ms-2">Customer Insights</h4>
+                
+                <div class="navbar-nav ms-auto d-flex flex-row">
+                    <button class="btn btn-outline-primary ms-2" onclick="loadCustomersData()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid p-4">
+            <!-- Customer Insights Section -->
+            <div class="card">
+                <div class="card-body">
+                    <div id="customers-loading" class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                    <div id="customers-table" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>Email</th>
+                                        <th>Total Orders</th>
+                                        <th>Total Spent</th>
+                                        <th>Last Order</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customers-body">
+                                    <!-- Customers will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Include our Seller Dashboard API -->
+    <script src="../js/seller-dashboard.js"></script>
+
+    <script>
+        // Mobile sidebar toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                });
+            }
+
+            // Wait a bit for the seller-dashboard.js to initialize, then load customers
+            setTimeout(() => {
+                if (typeof loadCustomersData === 'function') {
+                    loadCustomersData();
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
