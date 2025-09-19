@@ -353,6 +353,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Helper function to update stock display
+    const updateStockDisplay = (newStock) => {
+        const stockSpan = document.querySelector('.quantity-selector .text-muted');
+        if (stockSpan) {
+            stockSpan.textContent = `Stock: ${newStock}${newStock <= 5 ? ' (Limited stock!)' : ''}`;
+            
+            // Update max quantity in the input
+            const quantityInput = document.getElementById('quantity-input');
+            if (quantityInput) {
+                quantityInput.max = newStock;
+                if (parseInt(quantityInput.value) > newStock) {
+                    quantityInput.value = newStock;
+                }
+            }
+            
+            // Update button state if stock is 0
+            const addToBagBtn = document.getElementById('add-to-bag-btn');
+            if (addToBagBtn && newStock <= 0) {
+                addToBagBtn.disabled = true;
+            }
+        }
+    };
+
     const fetchProductData = async () => {
         try {
             // ⭐ MODIFIED: Added headers to the fetch request for authorization
@@ -627,7 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         () => {
                             // This callback runs when user confirms they want to add more
                             if (totalQuantity <= productStock) {
-                                performAddToBag(productId, quantity, productName);
+                                performAddToBag(productId, quantity, productName, productStock);
                             } else {
                                 // Show stock error if total would exceed stock
                                 showStockError(totalQuantity, productStock, productName);
@@ -638,33 +661,72 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 // If product doesn't exist in cart, proceed normally
-                performAddToBag(productId, quantity, productName);
+                performAddToBag(productId, quantity, productName, productStock);
             });
         }
     };
 
     // ⭐ NEW: Separated the actual add to bag functionality
-    const performAddToBag = async (productId, quantity, productName) => {
+    const performAddToBag = async (productId, quantity, productName, productStock) => {
         const addToBagBtn = document.getElementById('add-to-bag-btn');
         
-        // Disable button to prevent multiple clicks
+        // Store the initial stock value
+        const initialStock = productStock;
+        
+        // Immediately update UI to show loading
         addToBagBtn.disabled = true;
         addToBagBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adding...';
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/cart`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-User-ID': user.id.toString()
-                },
-                body: JSON.stringify({
-                    product_id: productId,
-                    quantity: quantity
+            // Immediately update the UI with new stock (optimistic update)
+            const newStock = initialStock - quantity;
+            updateStockDisplay(newStock);
+
+            // Make both API calls in parallel for better performance
+            const [updateStockResponse, cartResponse] = await Promise.all([
+                // Update stock
+                fetch(`${BACKEND_URL}/api/products/${productId}/stock`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': user.id.toString()
+                    },
+                    body: JSON.stringify({
+                        quantity: quantity,
+                        operation: 'deduct'
+                    })
+                }),
+                // Add to cart
+                fetch(`${BACKEND_URL}/api/cart`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': user.id.toString()
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: quantity
+                    })
                 })
-            });
+            ]);
+
+            // Check for errors
+            if (!updateStockResponse.ok) {
+                const stockError = await updateStockResponse.json();
+                // Revert the optimistic update
+                updateStockDisplay(initialStock);
+                throw new Error(stockError.message || 'Failed to update stock');
+            }
+
+            // Store the response for later use
+            const response = cartResponse;
 
             if (response.ok) {
+                // Get the updated stock from the server
+                const stockResponse = await fetch(`${BACKEND_URL}/api/products/${productId}`);
+                const productData = await stockResponse.json();
+                const updatedStock = productData.stock;
+
                 // Success feedback
                 addToBagBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Added!';
                 addToBagBtn.classList.remove('btn-outline-primary');
@@ -674,12 +736,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (typeof updateCartBadge === 'function') {
                     updateCartBadge();
                 }
+
+                // Update the displayed stock quantity with the server's value
+                const stockSpan = document.querySelector('.quantity-selector .text-muted');
+                stockSpan.textContent = `Stock: ${updatedStock}${updatedStock <= 5 ? ' (Limited stock!)' : ''}`;
+                
+                // Update max quantity in the input
+                const quantityInput = document.getElementById('quantity-input');
+                quantityInput.max = updatedStock;
+                if (parseInt(quantityInput.value) > updatedStock) {
+                    quantityInput.value = updatedStock;
+                }
                 
                 // Reset button after 2 seconds
                 setTimeout(() => {
                     addToBagBtn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
                     addToBagBtn.classList.remove('btn-success');
                     addToBagBtn.classList.add('btn-outline-primary');
+                    
+                    // Disable add to bag button if stock is 0
+                    if (updatedStock <= 0) {
+                        addToBagBtn.disabled = true;
+                    }
                 }, 2000);
                 
             } else {
