@@ -405,6 +405,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderProduct = (data) => {
         const product = data.details;
         const related = data.related;
+        // Ensure stock is a number (fallback to 0 when missing)
+        const stockValue = (product && product.stock != null) ? Number(product.stock) : 0;
 
         document.title = product.name;
 
@@ -428,11 +430,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <label class="col-sm-3 col-form-label">Quantity</label>
                         <div class="col-sm-9 quantity-selector">
                             <button class="btn btn-light" type="button" id="minus-btn">-</button>
-                            <input type="number" class="form-control" id="quantity-input" value="1" min="1" max="${product.stock}">
+                            <input type="number" class="form-control" id="quantity-input" value="1" min="1" max="${stockValue}">
                             <button class="btn btn-light" type="button" id="plus-btn">+</button>
-                            <span class="ml-3 text-muted ${product.stock <= 5 ? 'text-warning' : ''}">
-                                Stock: ${product.stock}
-                                ${product.stock <= 5 ? ' (Limited stock!)' : ''}
+                            <span class="ml-3 text-muted ${stockValue <= 5 ? 'text-warning' : ''}">
+                                Stock: ${stockValue}
+                                ${stockValue <= 5 ? ' (Limited stock!)' : ''}
                             </span>
                         </div>
                     </div>
@@ -471,14 +473,16 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('');
         }
 
-        addQuantityControls(product.stock, product.name);
-        addEventListenerToBagButton(product.id, product.name, product.stock);
+        // Pass numeric stock to controls and handlers
+        addQuantityControls(stockValue, product.name);
+        addEventListenerToBagButton(product.id, product.name, stockValue);
     };
 
     const addQuantityControls = (maxStock, productName) => {
         const minusBtn = document.getElementById('minus-btn');
         const plusBtn = document.getElementById('plus-btn');
         const quantityInput = document.getElementById('quantity-input');
+        
 
         console.log('Setting up quantity controls for:', productName, 'Max stock:', maxStock);
 
@@ -670,22 +674,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const performAddToBag = async (productId, quantity, productName, productStock) => {
         const addToBagBtn = document.getElementById('add-to-bag-btn');
         
-        // Store the initial stock value
-        const initialStock = productStock;
-        
-        // Immediately update UI to show loading
+        // Show loading state immediately
         addToBagBtn.disabled = true;
         addToBagBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adding...';
 
         try {
-            // Immediately update the UI with new stock (optimistic update)
-            const newStock = initialStock - quantity;
-            updateStockDisplay(newStock);
+            // First update the stock
+            const updateStockResponse = await fetch(`${BACKEND_URL}/api/products/${productId}/stock`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-ID': user.id.toString()
+                },
+                body: JSON.stringify({
+                    quantity: quantity,
+                    operation: 'deduct'
+                })
+            });
 
-            // Make both API calls in parallel for better performance
-            const [updateStockResponse, cartResponse] = await Promise.all([
-                // Update stock
-                fetch(`${BACKEND_URL}/api/products/${productId}/stock`, {
+            // Check for stock update errors
+            if (!updateStockResponse.ok) {
+                const stockError = await updateStockResponse.json();
+                throw new Error(stockError.message || 'Failed to update stock');
+            }
+
+            // Add to cart after successful stock update
+            const cartResponse = await fetch(`${BACKEND_URL}/api/cart`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-ID': user.id.toString()
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: quantity
+                })
+            });
+
+            // Check for cart update errors
+            if (!cartResponse.ok) {
+                // If cart update fails, we should try to revert the stock update
+                const revertStockResponse = await fetch(`${BACKEND_URL}/api/products/${productId}/stock`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -693,85 +722,67 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify({
                         quantity: quantity,
-                        operation: 'deduct'
+                        operation: 'add'  // Add the quantity back
                     })
-                }),
-                // Add to cart
-                fetch(`${BACKEND_URL}/api/cart`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-User-ID': user.id.toString()
-                    },
-                    body: JSON.stringify({
-                        product_id: productId,
-                        quantity: quantity
-                    })
-                })
-            ]);
-
-            // Check for errors
-            if (!updateStockResponse.ok) {
-                const stockError = await updateStockResponse.json();
-                // Revert the optimistic update
-                updateStockDisplay(initialStock);
-                throw new Error(stockError.message || 'Failed to update stock');
+                });
+                throw new Error('Failed to add item to cart');
             }
 
-            // Store the response for later use
-            const response = cartResponse;
-
-            if (response.ok) {
-                // Get the updated stock from the server
-                const stockResponse = await fetch(`${BACKEND_URL}/api/products/${productId}`);
-                const productData = await stockResponse.json();
-                const updatedStock = productData.stock;
-
-                // Success feedback
-                addToBagBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Added!';
-                addToBagBtn.classList.remove('btn-outline-primary');
-                addToBagBtn.classList.add('btn-success');
-                
-                // Update cart badge if function exists
-                if (typeof updateCartBadge === 'function') {
-                    updateCartBadge();
+            // Get updated stock from server
+            const stockResponse = await fetch(`${BACKEND_URL}/api/products/${productId}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-ID': user.id.toString()
                 }
+            });
 
-                // Update the displayed stock quantity with the server's value
-                const stockSpan = document.querySelector('.quantity-selector .text-muted');
-                stockSpan.textContent = `Stock: ${updatedStock}${updatedStock <= 5 ? ' (Limited stock!)' : ''}`;
-                
-                // Update max quantity in the input
-                const quantityInput = document.getElementById('quantity-input');
-                quantityInput.max = updatedStock;
-                if (parseInt(quantityInput.value) > updatedStock) {
-                    quantityInput.value = updatedStock;
-                }
-                
-                // Reset button after 2 seconds
-                setTimeout(() => {
-                    addToBagBtn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
-                    addToBagBtn.classList.remove('btn-success');
-                    addToBagBtn.classList.add('btn-outline-primary');
-                    
-                    // Disable add to bag button if stock is 0
-                    if (updatedStock <= 0) {
-                        addToBagBtn.disabled = true;
-                    }
-                }, 2000);
-                
-            } else {
-                const errorData = await response.json();
-                
-                // Check if error is related to stock
-                if (errorData.message && errorData.message.toLowerCase().includes('stock')) {
-                    // If server provides current stock info, use it; otherwise use local stock
-                    const availableStock = errorData.available_stock || productStock;
-                    showStockError(quantity, availableStock, productName);
-                } else {
-                    alert(`Error: ${errorData.message}`);
+            const productData = await stockResponse.json();
+            // Server may return either { stock: X } or { details: { stock: X } }
+            let newStock = 0;
+            if (productData) {
+                if (productData.stock != null) {
+                    newStock = Number(productData.stock);
+                } else if (productData.details && productData.details.stock != null) {
+                    newStock = Number(productData.details.stock);
                 }
             }
+
+            // Success feedback
+            addToBagBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Added!';
+            addToBagBtn.classList.remove('btn-outline-primary');
+            addToBagBtn.classList.add('btn-success');
+            
+            // Update cart badge if function exists
+            if (typeof updateCartBadge === 'function') {
+                updateCartBadge();
+            }
+
+            // Update the displayed stock quantity
+            const stockSpan = document.querySelector('.quantity-selector .text-muted');
+            if (stockSpan) {
+                stockSpan.textContent = `Stock: ${newStock}${newStock <= 5 ? ' (Limited stock!)' : ''}`;
+            }
+            
+            // Update max quantity in the input
+            const quantityInput = document.getElementById('quantity-input');
+            if (quantityInput) {
+                quantityInput.max = newStock;
+                if (parseInt(quantityInput.value) > newStock) {
+                    quantityInput.value = newStock;
+                }
+            }
+            
+            // Reset button after 1 second
+            setTimeout(() => {
+                addToBagBtn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
+                addToBagBtn.classList.remove('btn-success');
+                addToBagBtn.classList.add('btn-outline-primary');
+                
+                // Disable add to bag button if stock is 0
+                if (newStock <= 0) {
+                    addToBagBtn.disabled = true;
+                }
+            }, 1000);
 
         } catch (error) {
             console.error('Failed to add item to bag:', error);
