@@ -140,11 +140,18 @@ class SellerDashboardAPI {
 let api;
 let salesChart, statusChart, categoryChart;
 let notifications = [];
-const SELLER_ID = 4; // Replace with dynamic seller ID
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
-    api = new SellerDashboardAPI('https://backend-rj0a.onrender.com', SELLER_ID);
+    // Get seller ID from sessionStorage where it's stored during login
+    const sellerId = sessionStorage.getItem('sellerId');
+    if (!sellerId) {
+        // If no seller ID is found, redirect to login page
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    api = new SellerDashboardAPI('https://backend-rj0a.onrender.com', sellerId);
     
     // You'll need to set the auth token here based on your authentication system
     // Example: api.setAuthToken(localStorage.getItem('authToken'));
@@ -177,6 +184,19 @@ function setupEventListeners() {
     if (sidebarToggle) {
         sidebarToggle.addEventListener('click', function() {
             document.querySelector('.sidebar').classList.toggle('show');
+        });
+    }
+
+    // Logout button handler
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Clear all stored data
+            localStorage.removeItem('user');
+            sessionStorage.removeItem('sellerId');
+            // Redirect to login page
+            window.location.href = 'login.html';
         });
     }
 

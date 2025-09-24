@@ -30,5 +30,75 @@ async function updateCartBadge() {
     }
 }
 
-// Update the badge when any page loads
-document.addEventListener('DOMContentLoaded', updateCartBadge);
+// Handle logout functionality
+function setupLogout() {
+    console.log('Setting up logout functionality...');
+    
+    // Wait a short moment to ensure Bootstrap is fully loaded
+    setTimeout(() => {
+        const logoutBtn = document.getElementById('logoutBtn');
+        const modalElement = document.getElementById('logoutModal');
+        const confirmLogoutBtn = document.getElementById('confirmLogout');
+
+        console.log('Found elements:', {
+            logoutBtn: !!logoutBtn,
+            modalElement: !!modalElement,
+            confirmLogoutBtn: !!confirmLogoutBtn
+        });
+
+        if (!logoutBtn || !modalElement || !confirmLogoutBtn) {
+            console.error('Required logout elements not found');
+            return;
+        }
+
+        // Make sure Bootstrap is available
+        if (!window.bootstrap) {
+            console.error('Bootstrap is not loaded!');
+            return;
+        }
+
+        // Initialize the Bootstrap modal
+        let logoutModal;
+        try {
+            logoutModal = new bootstrap.Modal(modalElement);
+            console.log('Modal initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize Bootstrap modal:', error);
+            return;
+        }
+
+        // Add click handler for the logout button
+        logoutBtn.addEventListener('click', function(e) {
+            console.log('Logout button clicked');
+            e.preventDefault();
+            try {
+                logoutModal.show();
+                console.log('Modal shown successfully');
+            } catch (error) {
+                console.error('Failed to show modal:', error);
+                // Fallback: if modal fails, just do direct logout
+                if (confirm('Are you sure you want to log out?')) {
+                    localStorage.removeItem('user');
+                    sessionStorage.removeItem('sellerId');
+                    window.location.href = 'login.html';
+                }
+            }
+        });
+
+        // Add click handler for the confirm logout button
+        confirmLogoutBtn.addEventListener('click', function() {
+            console.log('Confirm logout clicked');
+            // Clear all stored data
+            localStorage.removeItem('user');
+            sessionStorage.removeItem('sellerId');
+            // Redirect to login page
+            window.location.href = 'login.html';
+        });
+    }, 500); // Give a 500ms delay to ensure everything is loaded
+}
+
+// Update the badge and setup logout when any page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateCartBadge();
+    setupLogout();
+});

@@ -30,9 +30,13 @@ function initLogin() {
             const result = await response.json();
 
             if (response.ok) {
-                // --- MODIFIED ---
-                // We only need to save the user object now. No more token!
+                // Save user object in localStorage
                 localStorage.setItem('user', JSON.stringify(result.user));
+
+                // If the user is a seller, also store their ID in sessionStorage
+                if (result.user.role === 'seller') {
+                    sessionStorage.setItem('sellerId', result.user.id);
+                }
 
                 showAlert('Login successful! Redirecting...', 'success');
 
