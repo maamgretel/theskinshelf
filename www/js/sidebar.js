@@ -94,8 +94,10 @@ class SidebarNavigation {
                             <i class="fas fa-user-circle"></i>
                         </div>
                         <div class="user-details">
-                            <div class="user-name">${this.getUserName()}</div>
-                            <div class="user-role">${this.config.userRole}</div>
+                            <a href="profile_seller.html" style="color:inherit; text-decoration:none;">
+                                <div class="user-name">${this.getUserName()}</div>
+                                <div class="user-role">${this.config.userRole}</div>
+                            </a>
                         </div>
                     </div>
                     <hr class="sidebar-divider">

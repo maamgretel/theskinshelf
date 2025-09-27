@@ -18,7 +18,6 @@ class SellerDashboardAPI {
         const headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': window.location.origin
         };
         
         if (this.userId) {
@@ -42,11 +41,54 @@ class SellerDashboardAPI {
                 ...options
             };
 
+            // Normalize method
+            const method = (config.method || 'GET').toUpperCase();
+
+            // If GET with no body, remove Content-Type to avoid server attempting to parse empty JSON
+            if ((!config.body || config.body === null) && method === 'GET') {
+                if (config.headers && config.headers['Content-Type']) {
+                    delete config.headers['Content-Type'];
+                }
+            }
+
+            // If body is FormData, remove Content-Type so browser sets boundary
+            if (config.body instanceof FormData && config.headers && config.headers['Content-Type']) {
+                delete config.headers['Content-Type'];
+            }
+
             const response = await fetch(url, config);
-            const data = await response.json();
+
+            // Try to determine if response is JSON before parsing
+            const contentType = response.headers.get('content-type') || '';
+            let data = null;
+
+            if (contentType.includes('application/json')) {
+                try {
+                    data = await response.json();
+                } catch (jsonErr) {
+                    // If parsing fails, read raw text for debugging
+                    const text = await response.text();
+                    console.error(`Failed to parse JSON from ${endpoint}:`, jsonErr, 'Raw response text:', text);
+                    throw new Error(`Invalid JSON response from ${endpoint}: ${jsonErr.message}\nResponse body: ${text}`);
+                }
+            } else {
+                // Non-JSON response (likely an HTML error page). Capture text for debugging.
+                const text = await response.text();
+                console.warn(`Non-JSON response from ${endpoint}. Status: ${response.status}. Response body:`, text);
+                // Attach the raw text to the thrown error so callers can display or log it
+                const err = new Error(`HTTP ${response.status}: ${response.statusText}`);
+                err.raw = text;
+                err.status = response.status;
+                throw err;
+            }
 
             if (!response.ok) {
-                throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+                // If API follows { message } error shape, include it; otherwise include status
+                const message = (data && (data.message || data.error)) ? (data.message || data.error) : `HTTP ${response.status}: ${response.statusText}`;
+                const err = new Error(message);
+                err.status = response.status;
+                err.response = data;
+                throw err;
             }
 
             return data;
@@ -152,9 +194,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     api = new SellerDashboardAPI('https://backend-rj0a.onrender.com', sellerId);
-    
-    // You'll need to set the auth token here based on your authentication system
-    // Example: api.setAuthToken(localStorage.getItem('authToken'));
+    // Set auth token from localStorage or from stored user object if present
+    const storedToken = localStorage.getItem('authToken') || (localStorage.getItem('user') ? (JSON.parse(localStorage.getItem('user')).token || null) : null);
+    if (storedToken) {
+        api.setAuthToken(storedToken);
+        console.log('Auth token set from localStorage');
+    } else {
+        console.log('No auth token found in localStorage');
+    }
     
     initializeDashboard();
     setupEventListeners();
@@ -279,6 +326,11 @@ async function loadNotifications() {
         console.error('Failed to load notifications:', error);
         console.error('Error details:', error.message);
         
+        // If server returned raw HTML (err.raw), log it for debugging
+        if (error.raw) {
+            console.error('Server raw response:', error.raw);
+        }
+
         // Set empty array on error
         notifications = [];
         updateNotificationBadge();
@@ -603,7 +655,12 @@ async function initializeDashboard() {
         
     } catch (error) {
         console.error('Failed to initialize dashboard:', error);
-        showError('Failed to load dashboard data. Please refresh the page.');
+        if (error.raw) {
+            console.error('Server raw response during dashboard init:', error.raw);
+            showError('Failed to load dashboard data. Server response: ' + (error.message || error.status) );
+        } else {
+            showError('Failed to load dashboard data. Please refresh the page.');
+        }
     }
 }
 

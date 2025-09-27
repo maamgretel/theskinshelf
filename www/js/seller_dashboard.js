@@ -149,20 +149,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Enhanced fetch with error handling
   async function safeFetch(url, options = {}) {
-    const defaultOptions = {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-ID': user?.id
-      },
-      credentials: 'omit'
+    const defaultHeaders = {
+      'Accept': 'application/json'
     };
 
-    const fetchOptions = { ...defaultOptions, ...options };
-    if (options.body instanceof FormData) {
+    // If we have a user id, set X-User-ID
+    if (user && user.id) defaultHeaders['X-User-ID'] = user.id;
+
+    // If there's an auth token in storage, set Authorization
+    const token = localStorage.getItem('authToken') || (localStorage.getItem('user') ? (JSON.parse(localStorage.getItem('user')).token || null) : null);
+    if (token) defaultHeaders['Authorization'] = `Bearer ${token}`;
+
+    const fetchOptions = { headers: { ...defaultHeaders, ...(options.headers || {}) }, credentials: 'omit', ...options };
+
+    // Remove Content-Type for GET requests with no body - avoids server attempting to parse empty JSON
+    const method = (fetchOptions.method || 'GET').toUpperCase();
+    if ((!fetchOptions.body || fetchOptions.body === null) && method === 'GET') {
+      if (fetchOptions.headers && fetchOptions.headers['Content-Type']) {
+        delete fetchOptions.headers['Content-Type'];
+      }
+    }
+
+    // If body is FormData, let browser set Content-Type (with boundary)
+    if (fetchOptions.body instanceof FormData && fetchOptions.headers && fetchOptions.headers['Content-Type']) {
       delete fetchOptions.headers['Content-Type'];
     }
 
     try {
+      console.debug('safeFetch', { url, options: fetchOptions });
       return await fetch(url, fetchOptions);
     } catch (error) {
       if (error.message.includes('CORS') && (!options.method || options.method === 'GET')) {

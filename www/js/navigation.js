@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'product_seller.html': 'products',
             'add_product.html': 'products', // Also highlight products for add product page
             'customers.html': 'customers',
-            'profile.html': 'profile'
+            'profile_seller.html': 'profile'
         };
         
         // Get the section for current page

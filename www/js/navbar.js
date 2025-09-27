@@ -49,7 +49,7 @@ class MobileNavigation {
                 active: ['notifications', 'notif']
             },
             { 
-                href: 'profile.html', 
+                href: 'profile_seller.html', 
                 icon: 'fas fa-user-circle', 
                 label: 'Profile', 
                 key: 'profile',
@@ -96,7 +96,7 @@ class MobileNavigation {
                 <a href="orders.html" class="nav-link px-2 text-dark" title="My Orders">
                     <i class="fas fa-receipt"></i>
                 </a>
-                <a href="profile.html" class="nav-link px-2 text-dark">
+                <a href="profile_seller.html" class="nav-link px-2 text-dark">
                     <i class="fas fa-user-circle"></i>
                 </a>
             </div>
