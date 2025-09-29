@@ -1,5 +1,4 @@
-// Application State - Remove duplicate BACKEND_URL declaration
-// const BACKEND_URL = 'https://backend-rj0a.onrender.com'; // REMOVED - using from shared.js
+// Application State
 let user = JSON.parse(localStorage.getItem('user')) || null;
 console.debug('orders.js loaded', { user, authToken: localStorage.getItem('authToken') });
 let ordersData = [], filteredOrdersData = [], expandedOrders = new Set(), currentFilter = 'all';
@@ -10,19 +9,14 @@ function debugLog(message, data = null) {
     console.log(`[${timestamp}] DEBUG: ${message}`, data || '');
 }
 
-// We'll ensure user is available during initialization. If missing, try to fetch profile
-// using an existing auth token. If that fails, redirect to login.
-
 async function ensureUser() {
     debugLog('ensureUser called', { userExists: !!user, userRole: user?.role });
     
-    // If user exists and is seller, we're good
     if (user && user.role === 'seller') {
         debugLog('ensureUser: user present and role seller', user);
         return true;
     }
 
-    // Try to recover from authToken
     const token = localStorage.getItem('authToken');
     debugLog('ensureUser: checking authToken', { tokenExists: !!token, tokenLength: token?.length });
     
@@ -73,7 +67,7 @@ function getValidProfilePicUrl(url) {
 function getProductImage(productData) {
     if (!productData) return DEFAULT_PRODUCT_IMAGE;
     
-    let imageUrl = productData.image || productData.imageUrl || productData.product_image;
+    let imageUrl = productData.image || productData.imageUrl || productData.product_image || productData.imageUrl;
     
     if (!imageUrl?.trim()) {
         return DEFAULT_PRODUCT_IMAGE;
@@ -149,6 +143,11 @@ function initializeUI() {
     if (window.innerWidth <= 1200) createSidebarOverlay();
     window.addEventListener('resize', handleWindowResize);
     document.addEventListener('click', handleSmoothScroll);
+    
+    // Expand/Collapse All Button
+    if (expandAllBtn) {
+        expandAllBtn.addEventListener('click', toggleAllOrders);
+    }
 }
 
 function toggleSidebar() {
@@ -214,13 +213,12 @@ function showAlert(msg, type = 'info', duration = 4000) {
     };
 }
 
-// Data Fetching - Enhanced with better error handling
+// Data Fetching
 async function fetchOrders() {
     debugLog('fetchOrders called');
     try {
         showLoadingState();
         
-        // Build headers
         const headers = {};
         const token = localStorage.getItem('authToken');
         if (token) {
@@ -239,9 +237,8 @@ async function fetchOrders() {
             userInfo: { id: user?.id, role: user?.role }
         });
         
-        // Add a timeout to the fetch request
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
         
         const response = await fetch(fetchUrl, { 
             headers,
@@ -253,70 +250,25 @@ async function fetchOrders() {
         debugLog('fetchOrders: response received', { 
             status: response.status, 
             ok: response.ok,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries())
+            statusText: response.statusText
         });
         
         if (!response.ok) {
-            const contentType = response.headers.get('content-type');
-            let errorText = 'Unknown error';
-            
-            if (contentType?.includes('application/json')) {
-                try {
-                    const errorData = await response.json();
-                    errorText = errorData.message || errorData.error || JSON.stringify(errorData);
-                    debugLog('fetchOrders: JSON error response', errorData);
-                } catch (e) {
-                    debugLog('fetchOrders: failed to parse JSON error', e);
-                }
-            } else {
-                try {
-                    errorText = await response.text();
-                    debugLog('fetchOrders: text error response', errorText);
-                } catch (e) {
-                    debugLog('fetchOrders: failed to get error text', e);
-                }
-            }
-            
-            // Handle specific error cases
             if (response.status === 401) {
                 debugLog('fetchOrders: 401 Unauthorized - clearing storage and redirecting');
                 localStorage.clear();
                 window.location.href = 'login.html';
                 return;
-            } else if (response.status === 403) {
-                throw new Error('Access forbidden - you may not have seller permissions');
-            } else if (response.status === 404) {
-                throw new Error('Orders endpoint not found - check API configuration');
-            } else if (response.status >= 500) {
-                throw new Error(`Server error (${response.status}): ${errorText}`);
-            } else {
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
+            throw new Error(`HTTP ${response.status}`);
         }
         
-        // Try to parse the response
-        let orders;
-        try {
-            orders = await response.json();
-            debugLog('fetchOrders: successfully parsed JSON response', { 
-                ordersCount: Array.isArray(orders) ? orders.length : 'not array',
-                firstOrder: Array.isArray(orders) && orders.length > 0 ? orders[0] : null
-            });
-        } catch (parseError) {
-            debugLog('fetchOrders: JSON parsing failed', parseError);
-            throw new Error('Invalid JSON response from server');
-        }
-        
-        // Validate the response structure
-        if (!Array.isArray(orders)) {
-            debugLog('fetchOrders: response is not an array', orders);
-            throw new Error('Expected an array of orders from server');
-        }
+        const orders = await response.json();
+        debugLog('fetchOrders: successfully parsed JSON response', { ordersCount: orders.length });
         
         debugLog('Raw orders from backend:', orders);
         ordersData = processOrdersData(orders);
-        debugLog('Processed orders data:', { count: ordersData.length, firstProcessed: ordersData[0] });
+        debugLog('Processed orders data:', { count: ordersData.length });
         
         hideLoadingState();
         renderOrders();
@@ -328,12 +280,9 @@ async function fetchOrders() {
         debugLog('fetchOrders error:', error);
         hideLoadingState();
         
-        // Show more specific error messages
         let errorMessage = error.message;
         if (error.name === 'AbortError') {
             errorMessage = 'Request timed out - server may be slow to respond';
-        } else if (error instanceof TypeError && error.message.includes('fetch')) {
-            errorMessage = 'Network error - check your internet connection';
         }
         
         showErrorState(errorMessage);
@@ -341,20 +290,63 @@ async function fetchOrders() {
     }
 }
 
+// NEW: Fetch orders without auth redirect (for refreshing after updates)
+async function fetchOrdersWithoutAuthCheck() {
+    debugLog('fetchOrdersWithoutAuthCheck called');
+    try {
+        const headers = {};
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        if (user && user.id) {
+            headers['X-User-ID'] = user.id.toString();
+        }
+        
+        const fetchUrl = `${BACKEND_URL}/api/seller/orders`;
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        
+        const response = await fetch(fetchUrl, { 
+            headers,
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            // Don't redirect on error, just log it
+            debugLog('fetchOrdersWithoutAuthCheck: error response', { status: response.status });
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const orders = await response.json();
+        ordersData = processOrdersData(orders);
+        
+        // Re-render with current expanded state preserved
+        renderOrders();
+        updateStatistics();
+        
+        debugLog('fetchOrdersWithoutAuthCheck completed successfully');
+        
+    } catch (error) {
+        debugLog('fetchOrdersWithoutAuthCheck error:', error);
+        // Don't show error alert, just log it
+    }
+}
+
 function showLoadingState() {
-    debugLog('showLoadingState called');
     if (ordersContainer) {
         ordersContainer.innerHTML = '<div class="loading-state"><div class="loading-spinner"><div class="spinner"></div></div><p>Loading orders...</p></div>';
     }
 }
 
 function hideLoadingState() {
-    debugLog('hideLoadingState called');
     ordersContainer?.querySelector('.loading-state')?.remove();
 }
 
 function showErrorState(msg) {
-    debugLog('showErrorState called', msg);
     if (ordersContainer) {
         ordersContainer.innerHTML = `
             <div class="empty-state">
@@ -362,39 +354,15 @@ function showErrorState(msg) {
                 <h5>Error Loading Orders</h5>
                 <p>Failed to load: ${msg}</p>
                 <button class="btn btn-primary mt-3" onclick="retryFetchOrders()"><i class="fas fa-redo me-2"></i>Try Again</button>
-                <button class="btn btn-outline-secondary mt-2 ms-2" onclick="showDebugInfo()"><i class="fas fa-bug me-2"></i>Show Debug Info</button>
             </div>`;
     }
 }
 
-// Add retry function
 function retryFetchOrders() {
-    debugLog('retryFetchOrders called');
     fetchOrders();
 }
 
-// Add debug info function
-function showDebugInfo() {
-    const debugInfo = {
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-        currentURL: window.location.href,
-        backendURL: BACKEND_URL,
-        user: user,
-        hasAuthToken: !!localStorage.getItem('authToken'),
-        authTokenLength: localStorage.getItem('authToken')?.length || 0,
-        localStorage: Object.keys(localStorage),
-        sessionStorage: Object.keys(sessionStorage)
-    };
-    
-    console.log('=== DEBUG INFORMATION ===');
-    console.log(JSON.stringify(debugInfo, null, 2));
-    alert('Debug information has been logged to console. Please check the browser console (F12) and share this with the developer.');
-}
-
-// Make functions globally available
 window.retryFetchOrders = retryFetchOrders;
-window.showDebugInfo = showDebugInfo;
 
 // Data Processing
 function processOrdersData(orders) {
@@ -402,13 +370,6 @@ function processOrdersData(orders) {
     
     const grouped = {};
     orders.forEach((order, index) => {
-        debugLog(`Processing order ${index + 1}/${orders.length}:`, {
-            id: order.id,
-            product_name: order.product_name,
-            status: order.status,
-            image: order.product_image
-        });
-        
         const key = `${order.buyer_id}-${formatDate(order.order_date)}`;
         if (!grouped[key]) {
             grouped[key] = {
@@ -457,7 +418,6 @@ function processOrdersData(orders) {
         if (order.status === 'Pending') grouped[key].hasPending = true;
     });
     
-    // Convert Map to Array and log the results
     const result = Object.values(grouped);
     result.forEach(order => { 
         order.products = Array.from(order.products.values());
@@ -507,6 +467,7 @@ function animateNumber(el, target, prefix = '', decimals = 0) {
     }, 16);
 }
 
+// Render Functions
 function renderOrders() {
     debugLog('renderOrders called');
     filteredOrdersData = [...ordersData];
@@ -525,57 +486,355 @@ function renderFilteredOrders() {
     if (!ordersContainer) return;
     
     if (filteredOrdersData.length === 0) {
-        const filterText = currentFilter === 'all' ? 'orders' : `${currentFilter} orders`;
         ordersContainer.innerHTML = `
             <div class="empty-state">
-                <i class="fas fa-search"></i><h5>No ${filterText.charAt(0).toUpperCase() + filterText.slice(1)} Found</h5>
+                <i class="fas fa-search"></i><h5>No Orders Found</h5>
                 <p>No orders match the selected filter.</p>
             </div>`;
         return;
     }
     
-    // Simple rendering for now
-    const ordersHtml = filteredOrdersData.map(order => {
-        return `
-            <div class="order-card mb-3 p-3 border rounded">
-                <div class="order-header">
-                    <h5 class="text-primary">${order.orderId}</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Buyer:</strong> ${order.buyerName}</p>
-                            <p><strong>Date:</strong> ${order.formattedDate}</p>
+    const ordersHtml = filteredOrdersData.map(order => createOrderCardHTML(order)).join('');
+    ordersContainer.innerHTML = ordersHtml;
+    
+    // Attach event listeners
+    attachOrderEventListeners();
+}
+
+function createOrderCardHTML(order) {
+    const isExpanded = expandedOrders.has(order.orderId);
+    
+    return `
+        <div class="order-card ${isExpanded ? 'expanded' : ''}" data-order-id="${order.orderId}">
+            <div class="order-header" onclick="toggleOrder('${order.orderId}')">
+                <div class="order-header-left">
+                    <div class="order-id">${order.orderId}</div>
+                    <div class="order-meta">
+                        <div class="order-meta-item">
+                            <i class="fas fa-user"></i>
+                            <span>${order.buyerName}</span>
                         </div>
-                        <div class="col-md-6">
-                            <p><strong>Total:</strong> ₱${order.totalAmount.toFixed(2)}</p>
-                            <p><strong>Products:</strong> ${order.products.length} items</p>
+                        <div class="order-meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>${order.formattedDate}</span>
                         </div>
-                    </div>
-                    <div class="products-list mt-2">
-                        ${order.products.map(product => `
-                            <div class="product-item d-flex justify-content-between align-items-center p-2 bg-light rounded mb-2">
-                                <div>
-                                    <strong>${product.productName}</strong> 
-                                    ${product.quantity > 1 ? `(×${product.quantity})` : ''}
-                                </div>
-                                <div>
-                                    <span class="badge bg-${getStatusBadgeColor(product.status)} me-2">${product.status}</span>
-                                    <strong>₱${product.totalPrice.toFixed(2)}</strong>
-                                </div>
-                            </div>
-                        `).join('')}
+                        <div class="order-meta-item">
+                            <i class="fas fa-box"></i>
+                            <span>${order.products.length} item${order.products.length > 1 ? 's' : ''}</span>
+                        </div>
                     </div>
                 </div>
-            </div>`;
-    }).join('');
+                <div class="order-header-right">
+                    <div class="order-total">₱${order.totalAmount.toFixed(2)}</div>
+                    <div class="collapse-icon">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="order-body">
+                <div class="order-content">
+                    <div class="products-section">
+                        ${order.products.map(product => createProductItemHTML(product, order.orderId)).join('')}
+                    </div>
+                </div>
+                
+                <div class="order-actions">
+                    <button class="btn-bulk-update btn-ship-all" onclick="bulkUpdateOrder('${order.orderId}', 'Shipped')">
+                        <i class="fas fa-shipping-fast"></i>
+                        Ship All Items
+                    </button>
+                    <button class="btn-bulk-update btn-deliver-all" onclick="bulkUpdateOrder('${order.orderId}', 'Delivered')">
+                        <i class="fas fa-check-circle"></i>
+                        Mark All Delivered
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function createProductItemHTML(product, orderId) {
+    const orderIds = product.orders.map(o => o.id).join(',');
+    const statusSelectId = `status-${orderId}-${product.productId}`;
     
-    ordersContainer.innerHTML = ordersHtml;
+    return `
+        <div class="product-item">
+            <img src="${getProductImage(product)}" alt="${product.productName}" class="product-image" 
+                 onerror="this.src='${DEFAULT_PRODUCT_IMAGE}'">
+            <div class="product-info">
+                <div class="product-name">${product.productName}</div>
+                <div class="product-quantity">Quantity: ${product.quantity}</div>
+            </div>
+            <div class="product-actions">
+                <span class="status-badge status-${product.status.toLowerCase()}">${product.status}</span>
+                <div class="product-price">₱${product.totalPrice.toFixed(2)}</div>
+                <select class="status-select" id="${statusSelectId}" data-current-status="${product.status}">
+                    <option value="Pending" ${product.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                    <option value="Shipped" ${product.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                    <option value="Delivered" ${product.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                    <option value="Cancelled" ${product.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+                <button class="btn-update-status" onclick="updateProductStatus('${orderIds}', '${statusSelectId}', '${product.productId}')">
+                    <i class="fas fa-save"></i>
+                    Update
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function attachOrderEventListeners() {
+    // Event listeners are handled via onclick attributes for simplicity
+    debugLog('Order event listeners attached');
+}
+
+function toggleOrder(orderId) {
+    const card = document.querySelector(`[data-order-id="${orderId}"]`);
+    if (!card) return;
+    
+    if (expandedOrders.has(orderId)) {
+        expandedOrders.delete(orderId);
+        card.classList.remove('expanded');
+    } else {
+        expandedOrders.add(orderId);
+        card.classList.add('expanded');
+    }
+}
+
+function toggleAllOrders() {
+    const allCards = document.querySelectorAll('.order-card');
+    
+    if (expandedOrders.size === filteredOrdersData.length) {
+        // Collapse all
+        expandedOrders.clear();
+        allCards.forEach(card => card.classList.remove('expanded'));
+        if (expandAllBtn) {
+            expandAllBtn.innerHTML = '<i class="fas fa-expand-alt"></i><span class="btn-text">Expand All</span>';
+        }
+    } else {
+        // Expand all
+        filteredOrdersData.forEach(order => expandedOrders.add(order.orderId));
+        allCards.forEach(card => card.classList.add('expanded'));
+        if (expandAllBtn) {
+            expandAllBtn.innerHTML = '<i class="fas fa-compress-alt"></i><span class="btn-text">Collapse All</span>';
+        }
+    }
+}
+
+// Status Update Functions
+async function updateProductStatus(orderIds, selectId, productId) {
+    const selectElement = document.getElementById(selectId);
+    if (!selectElement) {
+        showAlert('Status selector not found', 'danger');
+        return;
+    }
+    
+    const newStatus = selectElement.value;
+    const currentStatus = selectElement.dataset.currentStatus;
+    
+    if (newStatus === currentStatus) {
+        showAlert('Please select a different status', 'warning');
+        return;
+    }
+    
+    // Convert orderIds string to array
+    const orderIdsArray = orderIds.split(',').map(id => parseInt(id.trim()));
+    
+    debugLog('Updating product status', { 
+        orderIds: orderIdsArray, 
+        newStatus, 
+        productId, 
+        user
+    });
+    
+    try {
+        // Check if user exists
+        if (!user || !user.id) {
+            showAlert('User session expired - please refresh the page', 'danger');
+            debugLog('User object missing:', { user });
+            return;
+        }
+        
+        // Build headers - match the pattern used in fetchOrders
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-User-ID': user.id.toString()
+        };
+        
+        // Add Authorization header if token exists (optional)
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        // Prepare request body - match backend expectations
+        const requestBody = {
+            order_ids: orderIdsArray,
+            status: newStatus
+            // Note: product_id is optional based on backend code
+        };
+        
+        debugLog('Making update request', { 
+            headers: Object.keys(headers), 
+            body: requestBody,
+            url: `${BACKEND_URL}/api/seller/orders/update-status`,
+            userId: user.id 
+        });
+        
+        const response = await fetch(`${BACKEND_URL}/api/seller/orders/update-status`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(requestBody)
+        });
+        
+        debugLog('Update status response', { status: response.status, ok: response.ok });
+        
+        if (!response.ok) {
+            let errorData;
+            const contentType = response.headers.get('content-type');
+            
+            try {
+                if (contentType && contentType.includes('application/json')) {
+                    errorData = await response.json();
+                } else {
+                    const textError = await response.text();
+                    errorData = { error: textError || 'Unknown error' };
+                }
+            } catch (parseError) {
+                debugLog('Failed to parse error response', parseError);
+                errorData = { error: 'Server error - could not parse response' };
+            }
+            
+            debugLog('Update failed with error', errorData);
+            
+            // Show more specific error message
+            let errorMsg = errorData.error || errorData.message || `Server error (${response.status})`;
+            throw new Error(errorMsg);
+        }
+        
+        const result = await response.json();
+        debugLog('Status update response', result);
+        
+        showAlert(`Successfully updated ${result.orders_updated || orderIdsArray.length} order(s) to ${newStatus}`, 'success');
+        
+        // Update the current status in the select element
+        selectElement.dataset.currentStatus = newStatus;
+        
+        // Update the badge next to the select
+        const badge = selectElement.parentElement.querySelector('.status-badge');
+        if (badge) {
+            badge.textContent = newStatus;
+            badge.className = `status-badge status-${newStatus.toLowerCase()}`;
+        }
+        
+        // Refresh orders WITHOUT re-checking auth (to prevent logout)
+        await fetchOrdersWithoutAuthCheck();
+        
+    } catch (error) {
+        debugLog('Error updating status:', error);
+        showAlert(`Failed to update status: ${error.message}`, 'danger');
+    }
+}
+
+async function bulkUpdateOrder(orderId, newStatus) {
+    const order = filteredOrdersData.find(o => o.orderId === orderId);
+    if (!order) {
+        showAlert('Order not found', 'danger');
+        return;
+    }
+    
+    // Collect all order IDs from all products in this order
+    const allOrderIds = [];
+    order.products.forEach(product => {
+        product.orders.forEach(o => allOrderIds.push(o.id));
+    });
+    
+    if (allOrderIds.length === 0) {
+        showAlert('No orders to update', 'warning');
+        return;
+    }
+    
+    debugLog('Bulk updating order', { orderId, newStatus, orderIds: allOrderIds, user });
+    
+    if (!confirm(`Are you sure you want to mark all ${allOrderIds.length} item(s) in this order as ${newStatus}?`)) {
+        return;
+    }
+    
+    try {
+        // Check if user exists
+        if (!user || !user.id) {
+            showAlert('User session expired - please refresh the page', 'danger');
+            debugLog('User object missing:', { user });
+            return;
+        }
+        
+        // Build headers - match the pattern used in fetchOrders
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-User-ID': user.id.toString()
+        };
+        
+        // Add Authorization header if token exists (optional)
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        debugLog('Making bulk update request', { 
+            headers: Object.keys(headers),
+            url: `${BACKEND_URL}/api/seller/orders/update-status`,
+            userId: user.id,
+            orderCount: allOrderIds.length
+        });
+        
+        const response = await fetch(`${BACKEND_URL}/api/seller/orders/update-status`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                order_ids: allOrderIds,
+                status: newStatus,
+                bulk_operation: true
+            })
+        });
+        
+        debugLog('Bulk update response status', { status: response.status, ok: response.ok });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            debugLog('Bulk update failed with error', errorData);
+            throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        debugLog('Bulk update response', result);
+        
+        showAlert(
+            `Successfully updated ${result.orders_updated} order(s) to ${newStatus}. ` +
+            `${result.emails_sent} email(s) sent to ${result.customers_notified} customer(s).`,
+            'success',
+            6000
+        );
+        
+        // Refresh orders WITHOUT re-checking auth (to prevent logout)
+        await fetchOrdersWithoutAuthCheck();
+        
+    } catch (error) {
+        debugLog('Error in bulk update:', error);
+        showAlert(`Failed to update orders: ${error.message}`, 'danger');
+    }
 }
 
 function updateOrderCount() {
     if (orderCount) {
-        orderCount.textContent = `${filteredOrdersData.length} order groups`;
+        orderCount.textContent = `${filteredOrdersData.length} order group${filteredOrdersData.length !== 1 ? 's' : ''}`;
     }
 }
+
+// Make functions globally available
+window.toggleOrder = toggleOrder;
+window.updateProductStatus = updateProductStatus;
+window.bulkUpdateOrder = bulkUpdateOrder;
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
