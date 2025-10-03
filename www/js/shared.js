@@ -102,3 +102,51 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCartBadge();
     setupLogout();
 });
+
+// Sync sidebar/profile elements across pages with localStorage user data
+function syncSidebarProfile() {
+    try {
+        const stored = localStorage.getItem('user');
+        if (!stored) return;
+        const user = JSON.parse(stored);
+
+        // possible avatar element ids used in various pages
+        const avatarIds = ['seller-avatar', 'profilePic', 'profilePicPreview'];
+        const nameIds = ['seller-name', 'userName'];
+        const emailIds = ['seller-email'];
+
+        const DEFAULT_AVATAR = 'https://res.cloudinary.com/dwgvlwkyt/image/upload/v1751856106/default-avatar.jpg';
+
+        avatarIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const src = (user && user.profile_pic && user.profile_pic.trim()) ? user.profile_pic : DEFAULT_AVATAR;
+            // set src and a safe onerror fallback
+            el.src = src;
+            el.onerror = () => { el.src = DEFAULT_AVATAR; };
+        });
+
+        nameIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = user.name || user.username || el.textContent;
+        });
+
+        emailIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = user.email || el.textContent;
+        });
+
+    } catch (err) {
+        console.error('syncSidebarProfile error:', err);
+    }
+}
+
+// Ensure profile sync runs on DOM ready and also expose for pages to call after login
+document.addEventListener('DOMContentLoaded', function() {
+    syncSidebarProfile();
+});
+
+// expose for manual calls (e.g., after login) from other scripts
+window.syncSidebarProfile = syncSidebarProfile;
