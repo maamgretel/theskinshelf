@@ -1,160 +1,135 @@
 // Application State
 let user = JSON.parse(localStorage.getItem('user')) || null;
-console.debug('orders.js loaded', { user, authToken: localStorage.getItem('authToken') });
-let ordersData = [], filteredOrdersData = [], expandedOrders = new Set(), currentFilter = 'all';
+let ordersData = [], filteredOrdersData = [], expandedOrders = new Set();
 
-// Enhanced debugging function
-function debugLog(message, data = null) {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] DEBUG: ${message}`, data || '');
-}
+// Debug logging
+const debugLog = (msg, data = null) => console.log(`[${new Date().toISOString()}] DEBUG: ${msg}`, data || '');
 
+// User Authentication
 async function ensureUser() {
     debugLog('ensureUser called', { userExists: !!user, userRole: user?.role });
     
-    if (user && user.role === 'seller') {
-        debugLog('ensureUser: user present and role seller', user);
-        return true;
-    }
+    if (user?.role === 'seller') return true;
 
     const token = localStorage.getItem('authToken');
-    debugLog('ensureUser: checking authToken', { tokenExists: !!token, tokenLength: token?.length });
-    
     if (!token) {
-        debugLog('ensureUser: no token found, redirecting to login');
         localStorage.clear();
         window.location.href = 'login.html';
         return false;
     }
 
     try {
-        debugLog('ensureUser: attempting to recover profile using authToken');
         const resp = await fetch(`${BACKEND_URL}/api/profile`, { 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
-        debugLog('ensureUser: profile response', { status: resp.status, ok: resp.ok, url: resp.url });
         
         if (!resp.ok) {
-            const text = await resp.text().catch(() => '');
-            debugLog('ensureUser: profile fetch failed', { status: resp.status, responseText: text });
             localStorage.clear();
             window.location.href = 'login.html';
             return false;
         }
         
-        const profile = await resp.json();
-        user = profile;
-        try { localStorage.setItem('user', JSON.stringify(user)); } catch(e) { debugLog('localStorage error:', e); }
-        debugLog('ensureUser: recovered user', user);
+        user = await resp.json();
+        localStorage.setItem('user', JSON.stringify(user));
         return true;
     } catch (err) {
-        debugLog('Failed to recover user from authToken:', err);
+        debugLog('Failed to recover user:', err);
         localStorage.clear();
         window.location.href = 'login.html';
         return false;
     }
 }
 
-// Profile Management
+// Image Handling
 const DEFAULT_AVATAR = 'https://res.cloudinary.com/dwgvlwkyt/image/upload/v1751856106/default-avatar.jpg';
 const DEFAULT_PRODUCT_IMAGE = 'https://res.cloudinary.com/dwgvlwkyt/image/upload/v1751856106/default-product.jpg';
 
-function getValidProfilePicUrl(url) {
+const getValidProfilePicUrl = url => {
     if (!url?.trim()) return DEFAULT_AVATAR;
     try { new URL(url); return url; } catch { return DEFAULT_AVATAR; }
-}
+};
 
-function getProductImage(productData) {
+const getProductImage = productData => {
     if (!productData) return DEFAULT_PRODUCT_IMAGE;
     
-    let imageUrl = productData.image || productData.imageUrl || productData.product_image || productData.imageUrl;
+    let img = productData.image || productData.imageUrl || productData.product_image;
+    if (!img?.trim()) return DEFAULT_PRODUCT_IMAGE;
+    if (img.startsWith('http')) return img;
     
-    if (!imageUrl?.trim()) {
-        return DEFAULT_PRODUCT_IMAGE;
-    }
-    
-    if (imageUrl.startsWith('http')) {
-        return imageUrl;
-    }
-    
-    imageUrl = imageUrl.replace(/^\/+/, '').replace(/^v\d+\//, '');
-    
-    return `https://res.cloudinary.com/dwgvlwkyt/image/upload/v1751856106/${imageUrl}`;
-}
+    img = img.replace(/^\/+/, '').replace(/^v\d+\//, '');
+    return `https://res.cloudinary.com/dwgvlwkyt/image/upload/v1751856106/${img}`;
+};
 
+// Load Seller Profile
 async function loadSellerProfile() {
-    debugLog('loadSellerProfile called');
     try {
-        const headers = {};
-        const token = localStorage.getItem('authToken');
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        if (user && user.id) headers['X-User-ID'] = user.id;
+        const headers = { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` };
+        if (user?.id) headers['X-User-ID'] = user.id;
 
-        debugLog('loadSellerProfile: making request', { headers, url: `${BACKEND_URL}/api/profile` });
         const response = await fetch(`${BACKEND_URL}/api/profile`, { headers });
-        debugLog('loadSellerProfile: response received', { status: response.status, ok: response.ok });
         
         if (!response.ok) {
             if (response.status === 401) {
-                debugLog('loadSellerProfile: 401 unauthorized, clearing storage');
                 localStorage.clear();
                 window.location.href = 'login.html';
-                return;
             }
-            throw new Error(`Status: ${response.status}`);
+            return;
         }
         
         const profile = await response.json();
-        debugLog('loadSellerProfile: profile data received', profile);
         
         const avatar = document.getElementById('seller-avatar');
-        const name = document.getElementById('seller-name');
-        const email = document.getElementById('seller-email');
-        
         if (avatar) {
             avatar.src = getValidProfilePicUrl(profile.profile_pic);
             avatar.onerror = () => avatar.src = DEFAULT_AVATAR;
         }
-        if (name) name.textContent = profile.name || 'Unknown User';
-        if (email) email.textContent = profile.email || 'No email';
         
-        debugLog('loadSellerProfile: DOM updated successfully');
-    } catch (error) {
-        debugLog('Profile error:', error);
         const name = document.getElementById('seller-name');
         const email = document.getElementById('seller-email');
-        if (name && user?.name) name.textContent = user.name;
-        if (email && user?.email) email.textContent = user.email;
+        if (name) name.textContent = profile.name || 'Unknown User';
+        if (email) email.textContent = profile.email || 'No email';
+    } catch (error) {
+        debugLog('Profile error:', error);
     }
 }
 
 // DOM Elements
-const ordersContainer = document.getElementById('ordersContainer');
-const [totalRevenueCell, totalOrdersCell, pendingOrdersCell, deliveredOrdersCell] = 
-    ['totalRevenueCell', 'totalOrdersCell', 'pendingOrdersCell', 'deliveredOrdersCell'].map(id => document.getElementById(id));
-const orderCount = document.getElementById('orderCount');
-const [expandAllBtn, exportCsvBtn, alertContainer, sidebarToggle] = 
-    ['expandAllBtn', 'exportCsvBtn', 'alert-container', 'sidebarToggle'].map(id => document.getElementById(id));
+const els = id => document.getElementById(id);
+const ordersContainer = els('ordersContainer');
+const expandAllBtn = els('expandAllBtn');
+const alertContainer = els('alert-container');
+const statusFilter = els('statusFilter');
+
+// Filter state
+let currentFilter = 'all';
 
 // UI Functions
 function initializeUI() {
-    debugLog('initializeUI called');
+    const sidebarToggle = els('sidebarToggle');
     sidebarToggle?.addEventListener('click', toggleSidebar);
-    if (window.innerWidth <= 1200) createSidebarOverlay();
-    window.addEventListener('resize', handleWindowResize);
-    document.addEventListener('click', handleSmoothScroll);
     
-    // Expand/Collapse All Button
-    if (expandAllBtn) {
-        expandAllBtn.addEventListener('click', toggleAllOrders);
+    if (window.innerWidth <= 1200) createSidebarOverlay();
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 1200) {
+            document.querySelector('.sidebar')?.classList.remove('show');
+            document.querySelector('.sidebar-overlay')?.classList.remove('show');
+        } else createSidebarOverlay();
+    });
+    
+    expandAllBtn?.addEventListener('click', toggleAllOrders);
+    
+    // Setup status filter
+    if (statusFilter) {
+        statusFilter.addEventListener('change', (e) => {
+            currentFilter = e.target.value;
+            renderOrders();
+        });
     }
 }
 
 function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.sidebar-overlay');
-    sidebar?.classList.toggle('show');
-    overlay?.classList.toggle('show');
+    document.querySelector('.sidebar')?.classList.toggle('show');
+    document.querySelector('.sidebar-overlay')?.classList.toggle('show');
 }
 
 function createSidebarOverlay() {
@@ -166,46 +141,26 @@ function createSidebarOverlay() {
     }
 }
 
-function handleWindowResize() {
-    if (window.innerWidth > 1200) {
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
-        sidebar?.classList.remove('show');
-        overlay?.classList.remove('show');
-    } else createSidebarOverlay();
-}
-
-function handleSmoothScroll(e) {
-    if (e.target.hash) {
-        e.preventDefault();
-        document.querySelector(e.target.hash)?.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
 // Alert System
 function showAlert(msg, type = 'info', duration = 4000) {
-    debugLog(`showAlert: ${type}`, msg);
-    if (!alertContainer) {
-        console.warn('Alert container not found, using console log instead:', msg);
-        return;
-    }
+    if (!alertContainer) return console.warn('Alert:', msg);
     
+    const icons = { success: 'check-circle', warning: 'exclamation-triangle', danger: 'times-circle', info: 'info-circle' };
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} alert-dismissible fade show`;
-    const icons = { success: 'check-circle', warning: 'exclamation-triangle', danger: 'times-circle', info: 'info-circle' };
     alert.innerHTML = `
         <div class="d-flex align-items-center">
             <i class="fas fa-${icons[type]} me-2"></i>
             <span>${msg}</span>
             <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
         </div>`;
+    
     alertContainer.appendChild(alert);
     const timeoutId = setTimeout(() => {
-        if (alert.parentNode) {
-            alert.classList.remove('show');
-            setTimeout(() => alert.remove(), 300);
-        }
+        alert.classList.remove('show');
+        setTimeout(() => alert.remove(), 300);
     }, duration);
+    
     alert.querySelector('.btn-close').onclick = () => {
         clearTimeout(timeoutId);
         alert.classList.remove('show');
@@ -215,47 +170,20 @@ function showAlert(msg, type = 'info', duration = 4000) {
 
 // Data Fetching
 async function fetchOrders() {
-    debugLog('fetchOrders called');
     try {
-        showLoadingState();
+        ordersContainer.innerHTML = '<div class="loading-state"><div class="loading-spinner"><div class="spinner"></div></div><p>Loading orders...</p></div>';
         
-        const headers = {};
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-            debugLog('fetchOrders: using Bearer token', { tokenLength: token.length });
-        }
-        if (user && user.id) {
-            headers['X-User-ID'] = user.id.toString();
-            debugLog('fetchOrders: using X-User-ID', user.id);
-        }
-        
-        const fetchUrl = `${BACKEND_URL}/api/seller/orders`;
-        debugLog('fetchOrders: making request', { 
-            url: fetchUrl, 
-            headers: Object.keys(headers),
-            userInfo: { id: user?.id, role: user?.role }
-        });
+        const headers = { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` };
+        if (user?.id) headers['X-User-ID'] = user.id.toString();
         
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
         
-        const response = await fetch(fetchUrl, { 
-            headers,
-            signal: controller.signal
-        });
-        
+        const response = await fetch(`${BACKEND_URL}/api/seller/orders`, { headers, signal: controller.signal });
         clearTimeout(timeoutId);
-        
-        debugLog('fetchOrders: response received', { 
-            status: response.status, 
-            ok: response.ok,
-            statusText: response.statusText
-        });
         
         if (!response.ok) {
             if (response.status === 401) {
-                debugLog('fetchOrders: 401 Unauthorized - clearing storage and redirecting');
                 localStorage.clear();
                 window.location.href = 'login.html';
                 return;
@@ -264,177 +192,87 @@ async function fetchOrders() {
         }
         
         const orders = await response.json();
-        debugLog('fetchOrders: successfully parsed JSON response', { ordersCount: orders.length });
-        
-        debugLog('Raw orders from backend:', orders);
         ordersData = processOrdersData(orders);
-        debugLog('Processed orders data:', { count: ordersData.length });
         
-        hideLoadingState();
         renderOrders();
         updateStatistics();
-        
-        debugLog('fetchOrders completed successfully');
-        
     } catch (error) {
         debugLog('fetchOrders error:', error);
-        hideLoadingState();
-        
-        let errorMessage = error.message;
-        if (error.name === 'AbortError') {
-            errorMessage = 'Request timed out - server may be slow to respond';
-        }
-        
-        showErrorState(errorMessage);
-        showAlert(`Failed to load orders: ${errorMessage}`, 'danger', 8000);
-    }
-}
-
-// NEW: Fetch orders without auth redirect (for refreshing after updates)
-async function fetchOrdersWithoutAuthCheck() {
-    debugLog('fetchOrdersWithoutAuthCheck called');
-    try {
-        const headers = {};
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-        if (user && user.id) {
-            headers['X-User-ID'] = user.id.toString();
-        }
-        
-        const fetchUrl = `${BACKEND_URL}/api/seller/orders`;
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
-        
-        const response = await fetch(fetchUrl, { 
-            headers,
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            // Don't redirect on error, just log it
-            debugLog('fetchOrdersWithoutAuthCheck: error response', { status: response.status });
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const orders = await response.json();
-        ordersData = processOrdersData(orders);
-        
-        // Re-render with current expanded state preserved
-        renderOrders();
-        updateStatistics();
-        
-        debugLog('fetchOrdersWithoutAuthCheck completed successfully');
-        
-    } catch (error) {
-        debugLog('fetchOrdersWithoutAuthCheck error:', error);
-        // Don't show error alert, just log it
-    }
-}
-
-function showLoadingState() {
-    if (ordersContainer) {
-        ordersContainer.innerHTML = '<div class="loading-state"><div class="loading-spinner"><div class="spinner"></div></div><p>Loading orders...</p></div>';
-    }
-}
-
-function hideLoadingState() {
-    ordersContainer?.querySelector('.loading-state')?.remove();
-}
-
-function showErrorState(msg) {
-    if (ordersContainer) {
+        const errorMsg = error.name === 'AbortError' ? 'Request timed out' : error.message;
         ordersContainer.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-exclamation-triangle"></i>
                 <h5>Error Loading Orders</h5>
-                <p>Failed to load: ${msg}</p>
-                <button class="btn btn-primary mt-3" onclick="retryFetchOrders()"><i class="fas fa-redo me-2"></i>Try Again</button>
+                <p>${errorMsg}</p>
+                <button class="btn btn-primary mt-3" onclick="fetchOrders()"><i class="fas fa-redo me-2"></i>Try Again</button>
             </div>`;
+        showAlert(`Failed to load orders: ${errorMsg}`, 'danger', 8000);
     }
 }
 
-function retryFetchOrders() {
-    fetchOrders();
+async function fetchOrdersWithoutAuthCheck() {
+    try {
+        const headers = { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` };
+        if (user?.id) headers['X-User-ID'] = user.id.toString();
+        
+        const response = await fetch(`${BACKEND_URL}/api/seller/orders`, { headers });
+        if (response.ok) {
+            ordersData = processOrdersData(await response.json());
+            renderOrders();
+            updateStatistics();
+        }
+    } catch (error) {
+        debugLog('fetchOrdersWithoutAuthCheck error:', error);
+    }
 }
 
-window.retryFetchOrders = retryFetchOrders;
-
-// Data Processing
+// Data Processing - Groups by grouped_order_id or individual order
 function processOrdersData(orders) {
-    debugLog('Processing orders data', { inputCount: orders.length });
-    
     const grouped = {};
-    orders.forEach((order, index) => {
-        const key = `${order.buyer_id}-${formatDate(order.order_date)}`;
-        if (!grouped[key]) {
-            grouped[key] = {
-                orderId: `ORD-${Date.now()}-${Object.keys(grouped).length + 1}`,
-                buyerId: order.buyer_id, 
-                buyerName: order.buyer_name, 
+    
+    orders.forEach(order => {
+        // Use grouped_order_id if it exists, otherwise use individual order id
+        const groupKey = order.grouped_order_id || `single_${order.id}`;
+        
+        if (!grouped[groupKey]) {
+            grouped[groupKey] = {
+                orderId: order.grouped_order_id ? `GRP-${order.grouped_order_id}` : `ORD-${order.id}`,
+                groupKey: groupKey,
+                buyerId: order.buyer_id,
+                buyerName: order.buyer_name,
                 orderDate: order.order_date,
-                formattedDate: formatDate(order.order_date), 
-                products: new Map(), 
+                formattedDate: formatDate(order.order_date),
+                products: [],
                 totalAmount: 0,
-                hasAllShipped: true, 
-                hasAllDelivered: true, 
-                hasPending: false
+                isGrouped: !!order.grouped_order_id
             };
         }
         
-        const productKey = `${order.product_name}-${order.status}`;
-        if (grouped[key].products.has(productKey)) {
-            const existing = grouped[key].products.get(productKey);
-            existing.quantity += 1;
-            existing.totalPrice += parseFloat(order.total_price);
-            existing.orders.push({ 
-                id: order.id, 
-                individualPrice: parseFloat(order.total_price), 
-                formattedTime: formatTime(order.order_date) 
-            });
-        } else {
-            grouped[key].products.set(productKey, {
-                productId: order.product_id, 
-                productName: order.product_name, 
-                totalPrice: parseFloat(order.total_price),
-                status: order.status, 
-                quantity: 1, 
-                orders: [{ 
-                    id: order.id, 
-                    individualPrice: parseFloat(order.total_price), 
-                    formattedTime: formatTime(order.order_date) 
-                }],
-                imageUrl: order.product_image || order.image || null
-            });
-        }
+        // Add product to this order group
+        grouped[groupKey].products.push({
+            productId: order.product_id,
+            productName: order.product_name,
+            totalPrice: parseFloat(order.total_price),
+            status: order.status,
+            quantity: order.quantity || 1,
+            orderId: order.id,
+            imageUrl: order.product_image || order.image || null
+        });
         
-        grouped[key].totalAmount += parseFloat(order.total_price);
-        if (order.status !== 'Shipped') grouped[key].hasAllShipped = false;
-        if (order.status !== 'Delivered') grouped[key].hasAllDelivered = false;
-        if (order.status === 'Pending') grouped[key].hasPending = true;
+        grouped[groupKey].totalAmount += parseFloat(order.total_price);
     });
     
-    const result = Object.values(grouped);
-    result.forEach(order => { 
-        order.products = Array.from(order.products.values());
-    });
-    
-    debugLog('processOrdersData completed', { outputCount: result.length });
-    return result;
+    // Convert to array and sort by date (newest first)
+    return Object.values(grouped).sort((a, b) => 
+        new Date(b.orderDate) - new Date(a.orderDate)
+    );
 }
 
 // Utility Functions
-const getStatusBadgeColor = status => ({ Pending: 'warning', Shipped: 'info', Delivered: 'success', Cancelled: 'danger' })[status] || 'secondary';
 const formatDate = d => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-const formatTime = d => new Date(d).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-// Statistics functions
+// Statistics
 function updateStatistics() {
-    debugLog('updateStatistics called');
     let totalRevenue = 0, totalOrders = 0, pendingOrders = 0, deliveredOrders = 0;
     ordersData.forEach(order => {
         order.products.forEach(product => {
@@ -444,11 +282,14 @@ function updateStatistics() {
             if (product.status === 'Delivered') deliveredOrders += product.quantity;
         });
     });
-    animateNumber(totalRevenueCell, totalRevenue, '₱', 2);
-    animateNumber(totalOrdersCell, totalOrders);
-    animateNumber(pendingOrdersCell, pendingOrders);
-    animateNumber(deliveredOrdersCell, deliveredOrders);
-    updateOrderCount();
+    
+    animateNumber(els('totalRevenueCell'), totalRevenue, '₱', 2);
+    animateNumber(els('totalOrdersCell'), totalOrders);
+    animateNumber(els('pendingOrdersCell'), pendingOrders);
+    animateNumber(els('deliveredOrdersCell'), deliveredOrders);
+    
+    const orderCount = els('orderCount');
+    if (orderCount) orderCount.textContent = `${filteredOrdersData.length} order${filteredOrdersData.length !== 1 ? 's' : ''}`;
 }
 
 function animateNumber(el, target, prefix = '', decimals = 0) {
@@ -462,131 +303,89 @@ function animateNumber(el, target, prefix = '', decimals = 0) {
             current = target;
             clearInterval(timer);
         }
-        const formatted = decimals > 0 ? current.toFixed(decimals) : Math.round(current);
-        el.textContent = prefix + formatted;
+        el.textContent = prefix + (decimals > 0 ? current.toFixed(decimals) : Math.round(current));
     }, 16);
 }
 
 // Render Functions
 function renderOrders() {
-    debugLog('renderOrders called');
-    filteredOrdersData = [...ordersData];
+    // Apply filter
+    if (currentFilter === 'all') {
+        filteredOrdersData = [...ordersData];
+    } else {
+        filteredOrdersData = ordersData.filter(order => 
+            order.products.some(product => product.status === currentFilter)
+        );
+    }
+    
     if (ordersData.length === 0) {
-        if (ordersContainer) {
-            ordersContainer.innerHTML = '<div class="empty-state"><i class="fas fa-shopping-cart"></i><h5>No Orders Found</h5><p>Orders will appear here when customers make purchases.</p></div>';
-        }
+        ordersContainer.innerHTML = '<div class="empty-state"><i class="fas fa-shopping-cart"></i><h5>No Orders Found</h5><p>Orders will appear here when customers make purchases.</p></div>';
         return;
     }
-    renderFilteredOrders();
-    updateOrderCount();
-}
-
-function renderFilteredOrders() {
-    debugLog('renderFilteredOrders called', { count: filteredOrdersData.length });
-    if (!ordersContainer) return;
     
     if (filteredOrdersData.length === 0) {
-        ordersContainer.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-search"></i><h5>No Orders Found</h5>
-                <p>No orders match the selected filter.</p>
-            </div>`;
+        ordersContainer.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><h5>No Orders Found</h5><p>No orders match the selected filter.</p></div>';
         return;
     }
     
-    const ordersHtml = filteredOrdersData.map(order => createOrderCardHTML(order)).join('');
-    ordersContainer.innerHTML = ordersHtml;
-    
-    // Attach event listeners
-    attachOrderEventListeners();
-}
-
-function createOrderCardHTML(order) {
-    const isExpanded = expandedOrders.has(order.orderId);
-    
-    return `
-        <div class="order-card ${isExpanded ? 'expanded' : ''}" data-order-id="${order.orderId}">
-            <div class="order-header" onclick="toggleOrder('${order.orderId}')">
-                <div class="order-header-left">
-                    <div class="order-id">${order.orderId}</div>
-                    <div class="order-meta">
-                        <div class="order-meta-item">
-                            <i class="fas fa-user"></i>
-                            <span>${order.buyerName}</span>
-                        </div>
-                        <div class="order-meta-item">
-                            <i class="fas fa-calendar"></i>
-                            <span>${order.formattedDate}</span>
-                        </div>
-                        <div class="order-meta-item">
-                            <i class="fas fa-box"></i>
-                            <span>${order.products.length} item${order.products.length > 1 ? 's' : ''}</span>
+    ordersContainer.innerHTML = filteredOrdersData.map(order => {
+        const isExpanded = expandedOrders.has(order.orderId);
+        return `
+            <div class="order-card ${isExpanded ? 'expanded' : ''}" data-order-id="${order.orderId}">
+                <div class="order-header" onclick="toggleOrder('${order.orderId}')">
+                    <div class="order-header-left">
+                        <div class="order-id">${order.orderId}</div>
+                        <div class="order-meta">
+                            <div class="order-meta-item"><i class="fas fa-user"></i><span>${order.buyerName}</span></div>
+                            <div class="order-meta-item"><i class="fas fa-calendar"></i><span>${order.formattedDate}</span></div>
+                            <div class="order-meta-item"><i class="fas fa-box"></i><span>${order.products.length} item${order.products.length > 1 ? 's' : ''}</span></div>
                         </div>
                     </div>
-                </div>
-                <div class="order-header-right">
-                    <div class="order-total">₱${order.totalAmount.toFixed(2)}</div>
-                    <div class="collapse-icon">
-                        <i class="fas fa-chevron-down"></i>
+                    <div class="order-header-right">
+                        <div class="order-total">₱${order.totalAmount.toFixed(2)}</div>
+                        <div class="collapse-icon"><i class="fas fa-chevron-down"></i></div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="order-body">
-                <div class="order-content">
-                    <div class="products-section">
-                        ${order.products.map(product => createProductItemHTML(product, order.orderId)).join('')}
+                <div class="order-body">
+                    <div class="order-content">
+                        <div class="products-section">
+                            ${order.products.map(product => {
+                                const statusSelectId = `status-${product.orderId}`;
+                                return `
+                                    <div class="product-item">
+                                        <img src="${getProductImage(product)}" alt="${product.productName}" class="product-image" onerror="this.src='${DEFAULT_PRODUCT_IMAGE}'">
+                                        <div class="product-info">
+                                            <div class="product-name">${product.productName}</div>
+                                            <div class="product-quantity">Quantity: ${product.quantity}</div>
+                                        </div>
+                                        <div class="product-actions">
+                                            <span class="status-badge status-${product.status.toLowerCase()}">${product.status}</span>
+                                            <div class="product-price">₱${product.totalPrice.toFixed(2)}</div>
+                                            <select class="status-select" id="${statusSelectId}" data-current-status="${product.status}">
+                                                <option value="Pending" ${product.status === 'Pending' ? 'selected' : ''} ${['Shipped', 'Delivered'].includes(product.status) ? 'disabled' : ''}>Pending</option>
+                                                <option value="Shipped" ${product.status === 'Shipped' ? 'selected' : ''} ${product.status === 'Delivered' ? 'disabled' : ''}>Shipped</option>
+                                                <option value="Delivered" ${product.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                                                <option value="Cancelled" ${product.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                            </select>
+                                            <button class="btn-update-status" onclick="updateProductStatus('${product.orderId}', '${statusSelectId}', '${product.productId}')">
+                                                <i class="fas fa-save"></i> Update
+                                            </button>
+                                        </div>
+                                    </div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    <div class="order-actions">
+                        <button class="btn-bulk-update btn-ship-all" onclick="bulkUpdateOrder('${order.orderId}', 'Shipped')">
+                            <i class="fas fa-shipping-fast"></i> Ship All Items
+                        </button>
+                        <button class="btn-bulk-update btn-deliver-all" onclick="bulkUpdateOrder('${order.orderId}', 'Delivered')">
+                            <i class="fas fa-check-circle"></i> Mark All Delivered
+                        </button>
                     </div>
                 </div>
-                
-                <div class="order-actions">
-                    <button class="btn-bulk-update btn-ship-all" onclick="bulkUpdateOrder('${order.orderId}', 'Shipped')">
-                        <i class="fas fa-shipping-fast"></i>
-                        Ship All Items
-                    </button>
-                    <button class="btn-bulk-update btn-deliver-all" onclick="bulkUpdateOrder('${order.orderId}', 'Delivered')">
-                        <i class="fas fa-check-circle"></i>
-                        Mark All Delivered
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function createProductItemHTML(product, orderId) {
-    const orderIds = product.orders.map(o => o.id).join(',');
-    const statusSelectId = `status-${orderId}-${product.productId}`;
-    
-    return `
-        <div class="product-item">
-            <img src="${getProductImage(product)}" alt="${product.productName}" class="product-image" 
-                 onerror="this.src='${DEFAULT_PRODUCT_IMAGE}'">
-            <div class="product-info">
-                <div class="product-name">${product.productName}</div>
-                <div class="product-quantity">Quantity: ${product.quantity}</div>
-            </div>
-            <div class="product-actions">
-                <span class="status-badge status-${product.status.toLowerCase()}">${product.status}</span>
-                <div class="product-price">₱${product.totalPrice.toFixed(2)}</div>
-                <select class="status-select" id="${statusSelectId}" data-current-status="${product.status}">
-                    <option value="Pending" ${product.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                    <option value="Shipped" ${product.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                    <option value="Delivered" ${product.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                    <option value="Cancelled" ${product.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                </select>
-                <button class="btn-update-status" onclick="updateProductStatus('${orderIds}', '${statusSelectId}', '${product.productId}')">
-                    <i class="fas fa-save"></i>
-                    Update
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-function attachOrderEventListeners() {
-    // Event listeners are handled via onclick attributes for simplicity
-    debugLog('Order event listeners attached');
+            </div>`;
+    }).join('');
 }
 
 function toggleOrder(orderId) {
@@ -606,131 +405,58 @@ function toggleAllOrders() {
     const allCards = document.querySelectorAll('.order-card');
     
     if (expandedOrders.size === filteredOrdersData.length) {
-        // Collapse all
         expandedOrders.clear();
         allCards.forEach(card => card.classList.remove('expanded'));
-        if (expandAllBtn) {
-            expandAllBtn.innerHTML = '<i class="fas fa-expand-alt"></i><span class="btn-text">Expand All</span>';
-        }
+        if (expandAllBtn) expandAllBtn.innerHTML = '<i class="fas fa-expand-alt"></i><span class="btn-text">Expand All</span>';
     } else {
-        // Expand all
         filteredOrdersData.forEach(order => expandedOrders.add(order.orderId));
         allCards.forEach(card => card.classList.add('expanded'));
-        if (expandAllBtn) {
-            expandAllBtn.innerHTML = '<i class="fas fa-compress-alt"></i><span class="btn-text">Collapse All</span>';
-        }
+        if (expandAllBtn) expandAllBtn.innerHTML = '<i class="fas fa-compress-alt"></i><span class="btn-text">Collapse All</span>';
     }
 }
 
 // Status Update Functions
-async function updateProductStatus(orderIds, selectId, productId) {
+async function updateProductStatus(orderId, selectId, productId) {
     const selectElement = document.getElementById(selectId);
-    if (!selectElement) {
-        showAlert('Status selector not found', 'danger');
-        return;
-    }
+    if (!selectElement) return showAlert('Status selector not found', 'danger');
     
     const newStatus = selectElement.value;
     const currentStatus = selectElement.dataset.currentStatus;
     
-    if (newStatus === currentStatus) {
-        showAlert('Please select a different status', 'warning');
-        return;
-    }
+    if (newStatus === currentStatus) return showAlert('Please select a different status', 'warning');
+    if (!user?.id) return showAlert('User session expired - please refresh', 'danger');
     
-    // Convert orderIds string to array
-    const orderIdsArray = orderIds.split(',').map(id => parseInt(id.trim()));
-    
-    debugLog('Updating product status', { 
-        orderIds: orderIdsArray, 
-        newStatus, 
-        productId, 
-        user
-    });
+    const orderIdsArray = [parseInt(orderId)];
     
     try {
-        // Check if user exists
-        if (!user || !user.id) {
-            showAlert('User session expired - please refresh the page', 'danger');
-            debugLog('User object missing:', { user });
-            return;
-        }
-        
-        // Build headers - match the pattern used in fetchOrders
         const headers = {
             'Content-Type': 'application/json',
-            'X-User-ID': user.id.toString()
+            'X-User-ID': user.id.toString(),
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         };
-        
-        // Add Authorization header if token exists (optional)
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-        
-        // Prepare request body - match backend expectations
-        const requestBody = {
-            order_ids: orderIdsArray,
-            status: newStatus
-            // Note: product_id is optional based on backend code
-        };
-        
-        debugLog('Making update request', { 
-            headers: Object.keys(headers), 
-            body: requestBody,
-            url: `${BACKEND_URL}/api/seller/orders/update-status`,
-            userId: user.id 
-        });
         
         const response = await fetch(`${BACKEND_URL}/api/seller/orders/update-status`, {
             method: 'POST',
-            headers: headers,
-            body: JSON.stringify(requestBody)
+            headers,
+            body: JSON.stringify({ order_ids: orderIdsArray, status: newStatus })
         });
         
-        debugLog('Update status response', { status: response.status, ok: response.ok });
-        
         if (!response.ok) {
-            let errorData;
-            const contentType = response.headers.get('content-type');
-            
-            try {
-                if (contentType && contentType.includes('application/json')) {
-                    errorData = await response.json();
-                } else {
-                    const textError = await response.text();
-                    errorData = { error: textError || 'Unknown error' };
-                }
-            } catch (parseError) {
-                debugLog('Failed to parse error response', parseError);
-                errorData = { error: 'Server error - could not parse response' };
-            }
-            
-            debugLog('Update failed with error', errorData);
-            
-            // Show more specific error message
-            let errorMsg = errorData.error || errorData.message || `Server error (${response.status})`;
-            throw new Error(errorMsg);
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            throw new Error(errorData.error || `Server error (${response.status})`);
         }
         
         const result = await response.json();
-        debugLog('Status update response', result);
+        showAlert(`Successfully updated order to ${newStatus}`, 'success');
         
-        showAlert(`Successfully updated ${result.orders_updated || orderIdsArray.length} order(s) to ${newStatus}`, 'success');
-        
-        // Update the current status in the select element
         selectElement.dataset.currentStatus = newStatus;
-        
-        // Update the badge next to the select
         const badge = selectElement.parentElement.querySelector('.status-badge');
         if (badge) {
             badge.textContent = newStatus;
             badge.className = `status-badge status-${newStatus.toLowerCase()}`;
         }
         
-        // Refresh orders WITHOUT re-checking auth (to prevent logout)
         await fetchOrdersWithoutAuthCheck();
-        
     } catch (error) {
         debugLog('Error updating status:', error);
         showAlert(`Failed to update status: ${error.message}`, 'danger');
@@ -739,95 +465,38 @@ async function updateProductStatus(orderIds, selectId, productId) {
 
 async function bulkUpdateOrder(orderId, newStatus) {
     const order = filteredOrdersData.find(o => o.orderId === orderId);
-    if (!order) {
-        showAlert('Order not found', 'danger');
-        return;
-    }
+    if (!order) return showAlert('Order not found', 'danger');
     
-    // Collect all order IDs from all products in this order
-    const allOrderIds = [];
-    order.products.forEach(product => {
-        product.orders.forEach(o => allOrderIds.push(o.id));
-    });
-    
-    if (allOrderIds.length === 0) {
-        showAlert('No orders to update', 'warning');
-        return;
-    }
-    
-    debugLog('Bulk updating order', { orderId, newStatus, orderIds: allOrderIds, user });
-    
-    if (!confirm(`Are you sure you want to mark all ${allOrderIds.length} item(s) in this order as ${newStatus}?`)) {
-        return;
-    }
+    const allOrderIds = order.products.map(p => p.orderId);
+    if (allOrderIds.length === 0) return showAlert('No orders to update', 'warning');
+    if (!confirm(`Mark all ${allOrderIds.length} item(s) as ${newStatus}?`)) return;
+    if (!user?.id) return showAlert('User session expired - please refresh', 'danger');
     
     try {
-        // Check if user exists
-        if (!user || !user.id) {
-            showAlert('User session expired - please refresh the page', 'danger');
-            debugLog('User object missing:', { user });
-            return;
-        }
-        
-        // Build headers - match the pattern used in fetchOrders
         const headers = {
             'Content-Type': 'application/json',
-            'X-User-ID': user.id.toString()
+            'X-User-ID': user.id.toString(),
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         };
-        
-        // Add Authorization header if token exists (optional)
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-        
-        debugLog('Making bulk update request', { 
-            headers: Object.keys(headers),
-            url: `${BACKEND_URL}/api/seller/orders/update-status`,
-            userId: user.id,
-            orderCount: allOrderIds.length
-        });
         
         const response = await fetch(`${BACKEND_URL}/api/seller/orders/update-status`, {
             method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                order_ids: allOrderIds,
-                status: newStatus,
-                bulk_operation: true
-            })
+            headers,
+            body: JSON.stringify({ order_ids: allOrderIds, status: newStatus, bulk_operation: true })
         });
-        
-        debugLog('Bulk update response status', { status: response.status, ok: response.ok });
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-            debugLog('Bulk update failed with error', errorData);
             throw new Error(errorData.error || `HTTP ${response.status}`);
         }
         
         const result = await response.json();
-        debugLog('Bulk update response', result);
+        showAlert(`Updated ${result.orders_updated} order(s) to ${newStatus}. ${result.emails_sent} email(s) sent.`, 'success', 6000);
         
-        showAlert(
-            `Successfully updated ${result.orders_updated} order(s) to ${newStatus}. ` +
-            `${result.emails_sent} email(s) sent to ${result.customers_notified} customer(s).`,
-            'success',
-            6000
-        );
-        
-        // Refresh orders WITHOUT re-checking auth (to prevent logout)
         await fetchOrdersWithoutAuthCheck();
-        
     } catch (error) {
         debugLog('Error in bulk update:', error);
         showAlert(`Failed to update orders: ${error.message}`, 'danger');
-    }
-}
-
-function updateOrderCount() {
-    if (orderCount) {
-        orderCount.textContent = `${filteredOrdersData.length} order group${filteredOrdersData.length !== 1 ? 's' : ''}`;
     }
 }
 
@@ -837,31 +506,16 @@ window.updateProductStatus = updateProductStatus;
 window.bulkUpdateOrder = bulkUpdateOrder;
 
 // Initialization
-document.addEventListener('DOMContentLoaded', () => {
-    debugLog('DOMContentLoaded event fired');
-    (async () => {
-        debugLog('Starting initialization sequence');
-        
-        try {
-            const ok = await ensureUser();
-            if (!ok) {
-                debugLog('ensureUser failed, stopping initialization');
-                return;
-            }
-            
-            debugLog('User ensured, loading profile');
-            await loadSellerProfile();
-            
-            debugLog('Initializing UI');
-            initializeUI();
-            
-            debugLog('Fetching orders');
-            await fetchOrders();
-            
-            debugLog('Initialization completed successfully');
-        } catch (error) {
-            debugLog('Initialization error:', error);
-            showAlert('Failed to initialize the application: ' + error.message, 'danger', 10000);
-        }
-    })();
+document.addEventListener('DOMContentLoaded', async () => {
+    debugLog('Initializing application');
+    try {
+        if (!await ensureUser()) return;
+        await loadSellerProfile();
+        initializeUI();
+        await fetchOrders();
+        debugLog('Initialization completed');
+    } catch (error) {
+        debugLog('Initialization error:', error);
+        showAlert('Failed to initialize: ' + error.message, 'danger', 10000);
+    }
 });
