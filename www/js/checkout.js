@@ -1,71 +1,48 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Configuration
-    const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+    const API = 'https://backend-rj0a.onrender.com';
     const user = JSON.parse(localStorage.getItem('user'));
     
-    // State
-    let cardDetailsSaved = false;
-    let globalCheckoutData = null;
+    let cardSaved = false;
+    let checkoutData = null;
 
-    // Security check
-    if (!user || user.role !== 'customer') {
-        window.location.href = 'login.html';
-        return;
-    }
+    if (!user || user.role !== 'customer') return window.location.href = 'login.html';
 
-    // DOM elements
-    const addressContainer = document.getElementById('delivery-address-container');
-    const itemsContainer = document.getElementById('checkout-items-container');
-    const merchandiseSubtotalEl = document.getElementById('merchandise-subtotal');
-    const shippingSubtotalEl = document.getElementById('shipping-subtotal');
-    const totalPaymentEl = document.getElementById('total-payment');
-    const placeOrderBtn = document.getElementById('place-order-btn');
-    const codRadio = document.getElementById('cod');
-    const bankCardRadio = document.getElementById('bankCard');
-    const taxSubtotalEl = document.getElementById('tax-subtotal');
-
-    // Payment modal elements
-    const paymentForm = document.getElementById('payment-form');
-    const savePaymentBtn = document.getElementById('save-payment-btn');
-    const cardNumberInput = document.getElementById('modalCardNumber');
-    const cardHolderInput = document.getElementById('modalCardHolder');
-    const expiryMonthSelect = document.getElementById('modalExpiryMonth');
-    const expiryYearSelect = document.getElementById('modalExpiryYear');
-    const cvvInput = document.getElementById('modalCvv');
-    const cardNumberDisplay = document.getElementById('cardNumberDisplay');
-    const cardHolderDisplay = document.getElementById('cardHolderDisplay');
-    const cardExpiresDisplay = document.getElementById('cardExpiresDisplay');
-    const cardFlipper = document.getElementById('cardFlipper');
-    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-    const otpInput = document.getElementById('otpInput');
-
-    // Utility functions
-    const debug = (msg, data) => console.log(`[DEBUG] ${msg}`, data || '');
-    const showAlert = (msg) => alert(msg);
-    const apiHeaders = () => ({
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${user.token}`,
-        'X-User-ID': user.id.toString()
-    });
-
-    // Add basic loading CSS for modals
-    const addModalCSS = () => {
-        const style = document.createElement('style');
-        style.textContent = `
-            .quantity-controls { display: flex; align-items: center; gap: 8px; }
-            .quantity-btn { width: 32px; height: 32px; border: 1px solid #ddd; }
-            .quantity-display { min-width: 40px; text-align: center; padding: 4px 8px; }
-            .loading-spinner { opacity: 0.6; pointer-events: none; }
-        `;
-        document.head.appendChild(style);
+    // DOM cache
+    const els = {
+        addr: document.getElementById('delivery-address-container'),
+        items: document.getElementById('checkout-items-container'),
+        merch: document.getElementById('merchandise-subtotal'),
+        ship: document.getElementById('shipping-subtotal'),
+        tax: document.getElementById('tax-subtotal'),
+        total: document.getElementById('total-payment'),
+        placeBtn: document.getElementById('place-order-btn'),
+        cod: document.getElementById('cod'),
+        bank: document.getElementById('bankCard'),
+        cardNum: document.getElementById('modalCardNumber'),
+        cardHolder: document.getElementById('modalCardHolder'),
+        expMonth: document.getElementById('modalExpiryMonth'),
+        expYear: document.getElementById('modalExpiryYear'),
+        cvv: document.getElementById('modalCvv'),
+        cardNumDisp: document.getElementById('cardNumberDisplay'),
+        cardHolderDisp: document.getElementById('cardHolderDisplay'),
+        cardExpDisp: document.getElementById('cardExpiresDisplay'),
+        cardFlip: document.getElementById('cardFlipper'),
+        saveBtn: document.getElementById('save-payment-btn'),
+        otpBtn: document.getElementById('verifyOtpBtn'),
+        otpInput: document.getElementById('otpInput')
     };
-    addModalCSS();
 
-    // Create stock error modal
-    const createStockErrorModal = () => {
+    const hdr = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}`, 'X-User-ID': user.id.toString() });
+
+    // Add CSS
+    const s = document.createElement('style');
+    s.textContent = '.quantity-controls{display:flex;align-items:center;gap:8px}.quantity-btn{width:32px;height:32px;border:1px solid #ddd}.quantity-display{min-width:40px;text-align:center;padding:4px 8px}.loading-spinner{opacity:0.6;pointer-events:none}';
+    document.head.appendChild(s);
+
+    // Stock error modal
+    const createStockModal = () => {
         if (document.getElementById('stockErrorModal')) return;
-        
-        const modalHTML = `
+        document.body.insertAdjacentHTML('beforeend', `
         <div class="modal fade" id="stockErrorModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -77,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fas fa-box-open fa-3x text-danger mb-3"></i>
                         <p class="font-weight-bold text-danger">Insufficient Stock Available</p>
                         <div class="alert alert-info">
-                            <strong id="stockErrorProductName">Product Name</strong><br>
+                            <strong id="stockErrorProductName"></strong><br>
                             Requested: <strong id="stockErrorRequested">0</strong><br>
                             Available: <strong id="stockErrorAvailable">0</strong>
                         </div>
@@ -87,503 +64,413 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             </div>
-        </div>`;
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        </div>`);
     };
 
-    const showStockError = (productName, requestedQty, availableStock) => {
-        createStockErrorModal();
-        document.getElementById('stockErrorProductName').textContent = productName;
-        document.getElementById('stockErrorRequested').textContent = requestedQty;
-        document.getElementById('stockErrorAvailable').textContent = availableStock;
+    const showStockError = (name, req, avail) => {
+        createStockModal();
+        document.getElementById('stockErrorProductName').textContent = name;
+        document.getElementById('stockErrorRequested').textContent = req;
+        document.getElementById('stockErrorAvailable').textContent = avail;
         $('#stockErrorModal').modal('show');
     };
 
-    // Simple quantity update function
-    const updateQuantity = async (productId, newQuantity, productName) => {
+    // Quantity update
+    const updateQty = async (pid, qty, name) => {
         try {
-            const updateBtn = document.querySelector(`[data-product-id="${productId}"] .update-btn`);
-            const quantityInput = document.querySelector(`[data-product-id="${productId}"] .quantity-input`);
-            
-            if (updateBtn) {
-                updateBtn.disabled = true;
-                updateBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            const btn = document.querySelector(`[data-product-id="${pid}"] .update-btn`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
             }
 
-            const response = await fetch(`${BACKEND_URL}/api/cart/update`, {
-                method: 'PUT',
-                headers: apiHeaders(),
-                body: JSON.stringify({ productId, quantity: newQuantity })
+            const r = await fetch(`${API}/api/cart/update`, {
+                method: 'PUT', headers: hdr(), body: JSON.stringify({ productId: pid, quantity: qty })
             });
 
-            if (!response.ok) throw new Error('Failed to update quantity');
+            if (!r.ok) throw new Error('Update failed');
 
-            const result = await response.json();
-            if (result.adjustedQuantity && result.adjustedQuantity < newQuantity) {
-                showStockError(productName, newQuantity, result.maxStock || result.adjustedQuantity);
+            const res = await r.json();
+            if (res.adjustedQuantity && res.adjustedQuantity < qty) {
+                showStockError(name, qty, res.maxStock || res.adjustedQuantity);
             }
 
-            await fetchCheckoutData();
-        } catch (error) {
-            showAlert(`Failed to update quantity: ${error.message}`);
-            await fetchCheckoutData();
+            await fetchData();
+        } catch (e) {
+            alert(`Failed: ${e.message}`);
+            await fetchData();
         }
-    };
-    
-    const updateQuantityLocal = (productId, newQuantity, productName, maxStock) => {
-        if (newQuantity < 1) return;
-        if (maxStock && newQuantity > maxStock) {
-            showStockError(productName, newQuantity, maxStock);
-            return;
-        }
-        
-        // Update local display
-        const quantityInput = document.querySelector(`[data-product-id="${productId}"] .quantity-input`);
-        if (quantityInput) quantityInput.value = newQuantity;
-        
-        // Show update button
-        const updateBtn = document.querySelector(`[data-product-id="${productId}"] .update-btn`);
-        if (updateBtn) {
-            updateBtn.style.display = 'inline-block';
-            updateBtn.disabled = false;
-            updateBtn.innerHTML = 'Update';
-        }
-    };
-    
-    window.updateItemQuantity = updateQuantityLocal;
-    
-    window.manualUpdateQuantity = (productId) => {
-        const quantityInput = document.querySelector(`[data-product-id="${productId}"] .quantity-input`);
-        if (!quantityInput) return;
-        
-        const newQuantity = parseInt(quantityInput.value);
-        const productName = quantityInput.dataset.productName;
-        const maxStock = parseInt(quantityInput.dataset.maxStock);
-        
-        if (isNaN(newQuantity) || newQuantity < 1) {
-            quantityInput.value = 1;
-            return;
-        }
-        
-        updateQuantityLocal(productId, newQuantity, productName, maxStock);
-    };
-    
-    window.forceUpdateQuantity = async (productId) => {
-        const quantityInput = document.querySelector(`[data-product-id="${productId}"] .quantity-input`);
-        if (!quantityInput) return;
-        
-        const newQuantity = parseInt(quantityInput.value);
-        const productName = quantityInput.dataset.productName;
-        
-        await updateQuantity(productId, newQuantity, productName);
     };
 
-    // Address modal functions
-    const showAddressLoading = () => {
-        const fullNameInput = document.getElementById('fullName');
-        const addressInput = document.getElementById('streetAddress');
-        const contactInput = document.getElementById('contactNumber');
+    const updateQtyLocal = (pid, qty, name, max) => {
+        if (qty < 1) return;
+        if (max && qty > max) return showStockError(name, qty, max);
         
-        [fullNameInput, addressInput, contactInput].forEach(input => {
-            if (input) {
-                input.disabled = true;
-                input.style.backgroundColor = '#f8f9fa';
-                input.placeholder = 'Loading...';
+        const inp = document.querySelector(`[data-product-id="${pid}"] .quantity-input`);
+        if (inp) inp.value = qty;
+        
+        const btn = document.querySelector(`[data-product-id="${pid}"] .update-btn`);
+        if (btn) {
+            btn.style.display = 'inline-block';
+            btn.disabled = false;
+            btn.innerHTML = 'Update';
+        }
+    };
+
+    window.updateItemQuantity = updateQtyLocal;
+    
+    window.manualUpdateQuantity = (pid) => {
+        const inp = document.querySelector(`[data-product-id="${pid}"] .quantity-input`);
+        if (!inp) return;
+        
+        const qty = parseInt(inp.value);
+        if (isNaN(qty) || qty < 1) return inp.value = 1;
+        
+        updateQtyLocal(pid, qty, inp.dataset.productName, parseInt(inp.dataset.maxStock));
+    };
+    
+    window.forceUpdateQuantity = async (pid) => {
+        const inp = document.querySelector(`[data-product-id="${pid}"] .quantity-input`);
+        if (!inp) return;
+        await updateQty(pid, parseInt(inp.value), inp.dataset.productName);
+    };
+
+    // Address modal
+    const toggleAddrLoading = (loading, data = null) => {
+        ['fullName', 'streetAddress', 'contactNumber'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.disabled = loading;
+            el.style.backgroundColor = loading ? '#f8f9fa' : '';
+            if (loading) el.placeholder = 'Loading...';
+            else if (data) {
+                if (id === 'fullName') el.value = data.name || '';
+                if (id === 'streetAddress') el.value = data.address || '';
+                if (id === 'contactNumber') el.value = data.contact_number || '';
             }
         });
-    };
-
-    const hideAddressLoading = (deliveryData = null) => {
-        const fullNameInput = document.getElementById('fullName');
-        const addressInput = document.getElementById('streetAddress');
-        const contactInput = document.getElementById('contactNumber');
-        
-        if (fullNameInput) {
-            fullNameInput.disabled = false;
-            fullNameInput.value = deliveryData?.name || '';
-            fullNameInput.style.backgroundColor = '';
-        }
-        if (addressInput) {
-            addressInput.disabled = false;
-            addressInput.value = deliveryData?.address || '';
-            addressInput.style.backgroundColor = '';
-        }
-        if (contactInput) {
-            contactInput.disabled = false;
-            contactInput.value = deliveryData?.contact_number || '';
-            contactInput.style.backgroundColor = '';
-        }
     };
 
     window.debugAddressModal = () => {
-        const modal = document.getElementById('addressModal');
-        if (!modal) {
-            showAlert('Address modal not found');
-            return;
-        }
         $('#addressModal').modal('show');
         $('#addressModal').one('shown.bs.modal', () => {
-            showAddressLoading();
-            setTimeout(() => {
-                hideAddressLoading(globalCheckoutData?.deliveryInfo);
-            }, 500);
+            toggleAddrLoading(true);
+            setTimeout(() => toggleAddrLoading(false, checkoutData?.deliveryInfo), 500);
         });
     };
 
-    // Data fetching
-    const fetchCheckoutData = async () => {
+    // Fetch data
+    const fetchData = async () => {
         try {
-            const response = await fetch(`${BACKEND_URL}/api/checkout`, { headers: apiHeaders() });
-            if (!response.ok) throw new Error('Failed to fetch checkout data');
+            const r = await fetch(`${API}/api/checkout`, { headers: hdr() });
+            if (!r.ok) throw new Error('Fetch failed');
             
-            const checkoutData = await response.json();
-            globalCheckoutData = checkoutData;
-            
-            renderAddress(checkoutData.deliveryInfo);
+            checkoutData = await r.json();
+            renderAddr(checkoutData.deliveryInfo);
             renderItems(checkoutData.items);
-            calculateSummary(checkoutData.items, checkoutData.shippingOptions);
-        } catch (error) {
-            console.error('Error:', error);
-            if (itemsContainer) {
-                itemsContainer.innerHTML = `<div class="alert alert-danger">Error loading checkout details: ${error.message}</div>`;
-            }
+            calcSummary(checkoutData.items, checkoutData.shippingOptions);
+        } catch (e) {
+            console.error(e);
+            if (els.items) els.items.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
         }
     };
 
-    const renderAddress = (deliveryInfo) => {
-        if (!addressContainer) return;
+    const renderAddr = (info) => {
+        if (!els.addr) return;
         
-        const hasValidAddress = deliveryInfo?.address?.trim();
+        const valid = info?.address?.trim();
         
-        if (hasValidAddress) {
-            const contactDisplay = deliveryInfo.contact_number ? `(${deliveryInfo.contact_number})` : '<span class="text-muted">(No contact)</span>';
-            const nameDisplay = deliveryInfo.name ? `${deliveryInfo.name} ` : '';
+        if (valid) {
+            const contact = info.contact_number ? `(${info.contact_number})` : '<span class="text-muted">(No contact)</span>';
+            const name = info.name ? `${info.name} ` : '';
             
-            addressContainer.innerHTML = `
-                <div class="border rounded p-3 mb-3">
-                    <h6>Delivery Address</h6>
-                    <p class="font-weight-bold">${nameDisplay}${contactDisplay}</p>
-                    <p>${deliveryInfo.address}</p>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="debugAddressModal()">Change Address</button>
-                </div>`;
+            els.addr.innerHTML = `<div class="border rounded p-3 mb-3">
+                <h6>Delivery Address</h6>
+                <p class="font-weight-bold">${name}${contact}</p>
+                <p>${info.address}</p>
+                <button class="btn btn-sm btn-outline-secondary" onclick="debugAddressModal()">Change Address</button>
+            </div>`;
         } else {
-            addressContainer.innerHTML = `
-                <div class="border rounded p-3 mb-3 border-danger">
-                    <h6 class="text-danger">Incomplete Delivery Information</h6>
-                    <p class="text-danger">Please add a delivery address to continue.</p>
-                    <button class="btn btn-primary" onclick="debugAddressModal()">Add Delivery Address</button>
-                </div>`;
+            els.addr.innerHTML = `<div class="border rounded p-3 mb-3 border-danger">
+                <h6 class="text-danger">Incomplete Delivery Information</h6>
+                <p class="text-danger">Please add a delivery address to continue.</p>
+                <button class="btn btn-primary" onclick="debugAddressModal()">Add Delivery Address</button>
+            </div>`;
         }
     };
 
     const renderItems = (items) => {
-        if (!itemsContainer) return;
+        if (!els.items) return;
         if (!items?.length) {
-            itemsContainer.innerHTML = '<p class="p-3 text-center">Your cart is empty.</p>';
-            if (placeOrderBtn) placeOrderBtn.disabled = true;
+            els.items.innerHTML = '<p class="p-3 text-center">Your cart is empty.</p>';
+            if (els.placeBtn) els.placeBtn.disabled = true;
             return;
         }
 
-        const tableRows = items.map(item => {
-            const stockInfo = item.stock || item.available_stock || 0;
-            const isLowStock = stockInfo <= 5 && stockInfo > 0;
-            const isOutOfStock = stockInfo <= 0;
+        const rows = items.map(i => {
+            const stock = i.stock || i.available_stock || 0;
+            const low = stock <= 5 && stock > 0;
+            const out = stock <= 0;
             
-            let stockWarning = '';
-            if (isOutOfStock) stockWarning = '<div class="text-danger small">Out of stock</div>';
-            else if (isLowStock) stockWarning = `<div class="text-warning small">Only ${stockInfo} left</div>`;
+            let warn = '';
+            if (out) warn = '<div class="text-danger small">Out of stock</div>';
+            else if (low) warn = `<div class="text-warning small">Only ${stock} left</div>`;
 
-            return `
-                <tr data-product-id="${item.product_id || item.id}">
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <img src="${item.image}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover;" class="rounded">
-                            <div class="ml-3">
-                                <span>${item.name}</span>
-                                ${stockWarning}
-                            </div>
-                        </div>
-                    </td>
-                    <td class="text-right">₱${parseFloat(item.price).toFixed(2)}</td>
-                    <td class="text-center">
-                        <div class="d-flex align-items-center justify-content-center gap-2">
-                            <button class="btn btn-sm btn-outline-secondary" onclick="updateItemQuantity('${item.product_id || item.id}', ${Math.max(1, item.quantity - 1)}, '${item.name}', ${stockInfo})" ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
-                            <input type="number" 
-                                   class="form-control quantity-input text-center" 
-                                   style="width: 70px;" 
-                                   value="${item.quantity}" 
-                                   min="1" 
-                                   max="${stockInfo}"
-                                   data-product-name="${item.name}"
-                                   data-max-stock="${stockInfo}"
-                                   onchange="manualUpdateQuantity('${item.product_id || item.id}')"
-                                   onkeypress="if(event.key==='Enter') manualUpdateQuantity('${item.product_id || item.id}')">
-                            <button class="btn btn-sm btn-outline-secondary" onclick="updateItemQuantity('${item.product_id || item.id}', ${item.quantity + 1}, '${item.name}', ${stockInfo})" ${isOutOfStock || item.quantity >= stockInfo ? 'disabled' : ''}>+</button>
-                        </div>
-                        <button class="btn btn-sm btn-primary update-btn mt-1" 
-                                style="display: none;" 
-                                onclick="forceUpdateQuantity('${item.product_id || item.id}')">
-                            Update
-                        </button>
-                    </td>
-                    <td class="text-right">₱${(item.price * item.quantity).toFixed(2)}</td>
-                </tr>`;
+            return `<tr data-product-id="${i.product_id || i.id}">
+                <td><div class="d-flex align-items-center">
+                    <img src="${i.image}" alt="${i.name}" style="width:50px;height:50px;object-fit:cover" class="rounded">
+                    <div class="ml-3"><span>${i.name}</span>${warn}</div>
+                </div></td>
+                <td class="text-right">₱${parseFloat(i.price).toFixed(2)}</td>
+                <td class="text-center">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="updateItemQuantity('${i.product_id || i.id}',${Math.max(1,i.quantity-1)},'${i.name}',${stock})" ${i.quantity<=1?'disabled':''}>-</button>
+                        <input type="number" class="form-control quantity-input text-center" style="width:70px" value="${i.quantity}" min="1" max="${stock}" data-product-name="${i.name}" data-max-stock="${stock}" onchange="manualUpdateQuantity('${i.product_id || i.id}')" onkeypress="if(event.key==='Enter') manualUpdateQuantity('${i.product_id || i.id}')">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="updateItemQuantity('${i.product_id || i.id}',${i.quantity+1},'${i.name}',${stock})" ${out||i.quantity>=stock?'disabled':''}>+</button>
+                    </div>
+                    <button class="btn btn-sm btn-primary update-btn mt-1" style="display:none" onclick="forceUpdateQuantity('${i.product_id || i.id}')">Update</button>
+                </td>
+                <td class="text-right">₱${(i.price*i.quantity).toFixed(2)}</td>
+            </tr>`;
         }).join('');
 
-        itemsContainer.innerHTML = `
-            <table class="table">
-                <thead>
-                    <tr><th>Product</th><th class="text-right">Unit Price</th><th class="text-center">Quantity</th><th class="text-right">Subtotal</th></tr>
-                </thead>
-                <tbody>${tableRows}</tbody>
-            </table>`;
+        els.items.innerHTML = `<table class="table">
+            <thead><tr><th>Product</th><th class="text-right">Unit Price</th><th class="text-center">Quantity</th><th class="text-right">Subtotal</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
     };
 
-    const calculateSummary = (items, shippingOptions) => {
-        const merchandiseSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const tax = merchandiseSubtotal * 0.12;
-        const shippingFee = shippingOptions?.standard || 0;
-        const totalPayment = merchandiseSubtotal + tax + shippingFee;
+    const calcSummary = (items, ship) => {
+        const merch = items.reduce((s, i) => s + (i.price * i.quantity), 0);
+        const tax = merch * 0.12;
+        const shipFee = ship?.standard || 0;
+        const total = merch + tax + shipFee;
 
-        if (merchandiseSubtotalEl) merchandiseSubtotalEl.textContent = `₱${merchandiseSubtotal.toFixed(2)}`;
-        if (taxSubtotalEl) taxSubtotalEl.textContent = `₱${tax.toFixed(2)}`;
-        if (shippingSubtotalEl) shippingSubtotalEl.textContent = `₱${shippingFee.toFixed(2)}`;
-        if (totalPaymentEl) totalPaymentEl.textContent = `₱${totalPayment.toFixed(2)}`;
+        if (els.merch) els.merch.textContent = `₱${merch.toFixed(2)}`;
+        if (els.tax) els.tax.textContent = `₱${tax.toFixed(2)}`;
+        if (els.ship) els.ship.textContent = `₱${shipFee.toFixed(2)}`;
+        if (els.total) els.total.textContent = `₱${total.toFixed(2)}`;
     };
 
-    // Payment functions
-    const populateDateDropdowns = () => {
-        if (!expiryMonthSelect || !expiryYearSelect) return;
+    // Payment
+    const populateDates = () => {
+        if (!els.expMonth || !els.expYear) return;
         
         for (let i = 1; i <= 12; i++) {
-            expiryMonthSelect.add(new Option(i.toString().padStart(2, '0'), i));
+            els.expMonth.add(new Option(i.toString().padStart(2, '0'), i));
         }
         
-        const currentYear = new Date().getFullYear();
+        const y = new Date().getFullYear();
         for (let i = 0; i <= 10; i++) {
-            const year = currentYear + i;
-            expiryYearSelect.add(new Option(year.toString().slice(-2), year));
+            const yr = y + i;
+            els.expYear.add(new Option(yr.toString().slice(-2), yr));
         }
     };
 
-    const updateCardDisplay = () => {
-        if (cardNumberDisplay && cardNumberInput) {
-            cardNumberDisplay.textContent = cardNumberInput.value || '#### #### #### ####';
-        }
-        if (cardHolderDisplay && cardHolderInput) {
-            cardHolderDisplay.textContent = cardHolderInput.value.toUpperCase() || 'FULL NAME';
-        }
-        if (cardExpiresDisplay && expiryMonthSelect && expiryYearSelect) {
-            const month = expiryMonthSelect.value || 'MM';
-            const year = expiryYearSelect.value || 'YY';
-            cardExpiresDisplay.textContent = `${month}/${year}`;
+    const updateCardDisp = () => {
+        if (els.cardNumDisp && els.cardNum) els.cardNumDisp.textContent = els.cardNum.value || '#### #### #### ####';
+        if (els.cardHolderDisp && els.cardHolder) els.cardHolderDisp.textContent = els.cardHolder.value.toUpperCase() || 'FULL NAME';
+        if (els.cardExpDisp && els.expMonth && els.expYear) {
+            els.cardExpDisp.textContent = `${els.expMonth.value || 'MM'}/${els.expYear.value || 'YY'}`;
         }
     };
 
-    const validateCardData = (cardData) => {
-        const required = ['number', 'holder', 'expiryMonth', 'expiryYear', 'cvv'];
-        const missing = required.filter(field => !cardData[field]?.trim());
+    const validateCard = (data) => {
+        const req = ['number', 'holder', 'expiryMonth', 'expiryYear', 'cvv'];
+        const miss = req.filter(f => !data[f]?.trim());
         
-        if (missing.length > 0) {
-            showAlert(`Please fill in: ${missing.join(', ')}`);
+        if (miss.length) {
+            alert(`Fill in: ${miss.join(', ')}`);
             return false;
         }
         
-        if (cardData.number.replace(/\s/g, '').length < 13) {
-            showAlert('Please enter a valid card number');
+        if (data.number.replace(/\s/g, '').length < 13) {
+            alert('Invalid card number');
             return false;
         }
         
         return true;
     };
 
-    // Order placement
-    const handlePlaceOrder = async () => {
-        if (bankCardRadio?.checked && !cardDetailsSaved) {
-            showAlert('Please add your bank card details first.');
-            $('#paymentModal').modal('show');
-            return;
+    // Place order
+    let isPlacingOrder = false; // Prevent multiple clicks
+
+    const placeOrder = async () => {
+        if (isPlacingOrder) return; // Block if already processing
+
+        if (els.bank?.checked && !cardSaved) {
+            alert('Please add bank card details first.');
+            return $('#paymentModal').modal('show');
         }
 
-        if (placeOrderBtn) {
-            placeOrderBtn.disabled = true;
-            placeOrderBtn.textContent = 'Placing Order...';
+        // Set loading state immediately
+        isPlacingOrder = true;
+        if (els.placeBtn) {
+            els.placeBtn.disabled = true;
+            els.placeBtn.textContent = 'Placing Order...';
         }
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/orders/place`, {
-                method: 'POST',
-                headers: apiHeaders()
-            });
+            const r = await fetch(`${API}/api/orders/place`, { method: 'POST', headers: hdr() });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to place order');
+            if (!r.ok) {
+                const err = await r.json();
+                throw new Error(err.error || 'Failed to place order');
             }
 
-            const orderData = await response.json();
+            const ord = await r.json();
             
-            localStorage.setItem('orderTotal', totalPaymentEl?.textContent.replace('₱', '') || '0');
-            localStorage.setItem('orderNumber', orderData.orderNumber || 'TSS-2025-' + Date.now().toString().slice(-6));
+            localStorage.setItem('orderTotal', els.total?.textContent.replace('₱', '') || '0');
+            localStorage.setItem('orderNumber', ord.orderNumber || 'TSS-2025-' + Date.now().toString().slice(-6));
             localStorage.setItem('orderDate', new Date().toLocaleDateString());
             
             window.location.href = 'sucess.html';
-        } catch (error) {
-            showAlert(`Error: ${error.message}`);
-            if (placeOrderBtn) {
-                placeOrderBtn.disabled = false;
-                placeOrderBtn.textContent = 'Place Order';
+        } catch (e) {
+            console.error('Order error:', e);
+            alert(`Error: ${e.message}`);
+            
+            // Reset button state on error
+            isPlacingOrder = false;
+            if (els.placeBtn) {
+                els.placeBtn.disabled = false;
+                els.placeBtn.textContent = 'Place Order';
             }
         }
     };
 
     // Event listeners
-    if (cardNumberInput) {
-        cardNumberInput.addEventListener('input', (e) => {
+    if (els.cardNum) {
+        els.cardNum.addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/[^\d]/g, '').replace(/(.{4})/g, '$1 ').trim();
-            updateCardDisplay();
+            updateCardDisp();
         });
     }
 
-    [cardHolderInput, expiryMonthSelect, expiryYearSelect].forEach(el => {
-        if (el) el.addEventListener('change', updateCardDisplay);
+    [els.cardHolder, els.expMonth, els.expYear].forEach(el => {
+        if (el) el.addEventListener('change', updateCardDisp);
     });
 
-    if (cvvInput && cardFlipper) {
-        cvvInput.addEventListener('focus', () => cardFlipper.classList.add('is-flipped'));
-        cvvInput.addEventListener('blur', () => cardFlipper.classList.remove('is-flipped'));
+    if (els.cvv && els.cardFlip) {
+        els.cvv.addEventListener('focus', () => els.cardFlip.classList.add('is-flipped'));
+        els.cvv.addEventListener('blur', () => els.cardFlip.classList.remove('is-flipped'));
     }
 
-    if (bankCardRadio) {
-        bankCardRadio.addEventListener('change', () => {
-            if (bankCardRadio.checked && !cardDetailsSaved) {
-                $('#paymentModal').modal('show');
-            }
+    if (els.bank) {
+        els.bank.addEventListener('change', () => {
+            if (els.bank.checked && !cardSaved) $('#paymentModal').modal('show');
         });
     }
 
-    // Payment OTP functionality
-    if (savePaymentBtn) {
-        savePaymentBtn.addEventListener('click', async (e) => {
+    // Save payment
+    if (els.saveBtn) {
+        els.saveBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             
-            if (paymentForm?.checkValidity() === false) {
-                showAlert('Please fill in all card details correctly.');
-                return;
-            }
+            const form = document.getElementById('payment-form');
+            if (form?.checkValidity() === false) return alert('Fill in all card details.');
 
-            const cardData = {
-                number: cardNumberInput?.value?.trim() || '',
-                holder: cardHolderInput?.value?.trim() || '',
-                expiryMonth: expiryMonthSelect?.value?.trim() || '',
-                expiryYear: expiryYearSelect?.value?.trim() || '',
-                cvv: cvvInput?.value?.trim() || ''
+            const card = {
+                number: els.cardNum?.value?.trim() || '',
+                holder: els.cardHolder?.value?.trim() || '',
+                expiryMonth: els.expMonth?.value?.trim() || '',
+                expiryYear: els.expYear?.value?.trim() || '',
+                cvv: els.cvv?.value?.trim() || ''
             };
 
-            if (!validateCardData(cardData)) return;
+            if (!validateCard(card)) return;
 
             try {
-                savePaymentBtn.disabled = true;
-                savePaymentBtn.textContent = 'Requesting OTP...';
+                els.saveBtn.disabled = true;
+                els.saveBtn.textContent = 'Requesting OTP...';
 
-                const response = await fetch(`${BACKEND_URL}/api/orders/request-otp-save-card`, {
-                    method: 'POST',
-                    headers: apiHeaders(),
-                    body: JSON.stringify({ email: user.email, userId: user.id })
+                const r = await fetch(`${API}/api/orders/request-otp-save-card`, {
+                    method: 'POST', headers: hdr(), body: JSON.stringify({ email: user.email, userId: user.id })
                 });
 
-                if (!response.ok) throw new Error('Failed to send OTP');
+                if (!r.ok) throw new Error('Failed to send OTP');
 
-                const data = await response.json();
-                if (data.message?.includes('OTP sent') || data.success) {
+                const d = await r.json();
+                if (d.message?.includes('OTP sent') || d.success) {
                     $('#paymentModal').modal('hide');
                     setTimeout(() => $('#otpModal').modal('show'), 300);
                     
-                    sessionStorage.setItem('tempCardData', JSON.stringify(cardData));
+                    sessionStorage.setItem('tempCardData', JSON.stringify(card));
                     sessionStorage.setItem('tempUserEmail', user.email);
                     
-                    setTimeout(() => otpInput?.focus(), 800);
+                    setTimeout(() => els.otpInput?.focus(), 800);
                 } else {
-                    throw new Error(data.error || 'Failed to send OTP');
+                    throw new Error(d.error || 'Failed to send OTP');
                 }
-            } catch (error) {
-                showAlert(`Error: ${error.message}`);
+            } catch (e) {
+                alert(`Error: ${e.message}`);
             } finally {
-                savePaymentBtn.disabled = false;
-                savePaymentBtn.textContent = 'Save Payment';
+                els.saveBtn.disabled = false;
+                els.saveBtn.textContent = 'Save Payment';
             }
         });
     }
 
-    if (verifyOtpBtn) {
-        verifyOtpBtn.addEventListener('click', async () => {
-            const otp = otpInput?.value?.trim();
-            if (!otp || otp.length !== 6) {
-                showAlert('Please enter a valid 6-digit OTP.');
-                return;
-            }
+    // Verify OTP
+    if (els.otpBtn) {
+        els.otpBtn.addEventListener('click', async () => {
+            const otp = els.otpInput?.value?.trim();
+            if (!otp || otp.length !== 6) return alert('Enter valid 6-digit OTP.');
 
             try {
-                verifyOtpBtn.disabled = true;
-                verifyOtpBtn.textContent = 'Verifying...';
+                els.otpBtn.disabled = true;
+                els.otpBtn.textContent = 'Verifying...';
 
-                const cardData = JSON.parse(sessionStorage.getItem('tempCardData') || '{}');
+                const card = JSON.parse(sessionStorage.getItem('tempCardData') || '{}');
                 const email = sessionStorage.getItem('tempUserEmail');
 
-                const response = await fetch(`${BACKEND_URL}/api/orders/verify-otp-save-card`, {
-                    method: 'POST',
-                    headers: apiHeaders(),
-                    body: JSON.stringify({ email, otp, cardData, userId: user.id })
+                const r = await fetch(`${API}/api/orders/verify-otp-save-card`, {
+                    method: 'POST', headers: hdr(), body: JSON.stringify({ email, otp, cardData: card, userId: user.id })
                 });
 
-                if (!response.ok) throw new Error('Verification failed');
+                if (!r.ok) throw new Error('Verification failed');
 
-                const data = await response.json();
-                if (data.message?.includes('Card saved') || data.success) {
-                    cardDetailsSaved = true;
-                    const bankCardLabel = document.querySelector('label[for="bankCard"]');
-                    if (bankCardLabel) {
-                        bankCardLabel.innerHTML = 'Bank Card <span class="text-success">✔ Saved</span>';
-                    }
+                const d = await r.json();
+                if (d.message?.includes('Card saved') || d.success) {
+                    cardSaved = true;
+                    const lbl = document.querySelector('label[for="bankCard"]');
+                    if (lbl) lbl.innerHTML = 'Bank Card <span class="text-success">✔ Saved</span>';
                     
                     $('#otpModal').modal('hide');
-                    showAlert('Card saved successfully!');
+                    alert('Card saved successfully!');
                     
                     sessionStorage.removeItem('tempCardData');
                     sessionStorage.removeItem('tempUserEmail');
                 } else {
-                    throw new Error(data.error || 'Verification failed');
+                    throw new Error(d.error || 'Verification failed');
                 }
-            } catch (error) {
-                showAlert(`Error: ${error.message}`);
+            } catch (e) {
+                alert(`Error: ${e.message}`);
             } finally {
-                verifyOtpBtn.disabled = false;
-                verifyOtpBtn.textContent = 'Verify OTP';
+                els.otpBtn.disabled = false;
+                els.otpBtn.textContent = 'Verify OTP';
             }
         });
     }
 
-    if (otpInput) {
-        otpInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !verifyOtpBtn?.disabled) {
-                verifyOtpBtn?.click();
-            }
+    if (els.otpInput) {
+        els.otpInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !els.otpBtn?.disabled) els.otpBtn?.click();
         });
         
-        otpInput.addEventListener('input', (e) => {
+        els.otpInput.addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/\D/g, '').substring(0, 6);
         });
     }
 
-    // Modal event handlers
+    // Modal handlers
     if (typeof $ !== 'undefined') {
         $('#paymentModal').on('hidden.bs.modal', () => {
-            if (!cardDetailsSaved && codRadio) codRadio.checked = true;
+            if (!cardSaved && els.cod) els.cod.checked = true;
         });
     }
 
-    // Initialize
-    if (placeOrderBtn) placeOrderBtn.addEventListener('click', handlePlaceOrder);
-    populateDateDropdowns();
-    setTimeout(() => fetchCheckoutData(), 100);
+    // Init
+    if (els.placeBtn) els.placeBtn.addEventListener('click', placeOrder);
+    populateDates();
+    setTimeout(fetchData, 100);
 });
