@@ -196,17 +196,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('add-to-bag-btn');
         if (!btn) return;
 
-        let isProcessing = false; // Prevent multiple clicks
+        let isProcessing = false;
 
         btn.addEventListener('click', async () => {
-            if (isProcessing) return; // Block if already processing
+            if (isProcessing) return;
             
             const qty = parseInt(document.getElementById('quantity-input').value) || 0;
 
             if (qty > stock) return showStockError(qty, stock, name);
             if (qty <= 0) return alert('Please select a valid quantity.');
 
-            // Set loading state immediately
             isProcessing = true;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adding...';
@@ -215,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const eq = await checkCart(pid);
                 if (eq > 0) {
                     const total = eq + qty;
-                    // Reset loading state for modal
                     isProcessing = false;
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
@@ -226,7 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (e) {
                 console.error('Error:', e);
                 alert('An error occurred. Please try again.');
-                // Reset on error
                 isProcessing = false;
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
@@ -234,52 +231,47 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    // ✅ NEW: Stock is NOT deducted when adding to cart
+    // Stock will only be deducted when seller ships the order
     const addToBag = async (pid, qty, name, stock) => {
         const btn = document.getElementById('add-to-bag-btn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adding...';
 
         try {
-            const sr = await fetch(`${API}/api/products/${pid}/stock`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-User-ID': user.id.toString() },
-                body: JSON.stringify({ quantity: qty, operation: 'deduct' })
-            });
-            if (!sr.ok) throw new Error((await sr.json()).message || 'Failed to update stock');
-
+            // ✅ REMOVED: No stock deduction API call here
+            // Just add to cart directly
             const cr = await fetch(`${API}/api/cart`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-User-ID': user.id.toString() },
-                body: JSON.stringify({ product_id: pid, quantity: qty })
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-User-ID': user.id.toString() 
+                },
+                body: JSON.stringify({ 
+                    product_id: pid, 
+                    quantity: qty 
+                })
             });
+
             if (!cr.ok) {
-                await fetch(`${API}/api/products/${pid}/stock`, {
-                    method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-User-ID': user.id.toString() },
-                    body: JSON.stringify({ quantity: qty, operation: 'add' })
-                });
-                throw new Error('Failed to add item to cart');
+                const errorData = await cr.json();
+                throw new Error(errorData.message || 'Failed to add item to cart');
             }
 
-            const pr = await fetch(`${API}/api/products/${pid}`, { headers: { 'Content-Type': 'application/json', 'X-User-ID': user.id.toString() } });
-            const pd = await pr.json();
-            const ns = Number(pd?.stock || pd?.details?.stock || 0);
-
+            // Show success feedback
             btn.innerHTML = '<i class="fas fa-check mr-2"></i>Added!';
             btn.classList.replace('btn-outline-primary', 'btn-success');
             if (typeof updateCartBadge === 'function') updateCartBadge();
 
-            const ss = document.querySelector('.quantity-selector .text-muted');
-            if (ss) ss.textContent = `Stock: ${ns}${ns <= 5 ? ' (Limited stock!)' : ''}`;
-
-            const qi = document.getElementById('quantity-input');
-            if (qi) { qi.max = ns; if (parseInt(qi.value) > ns) qi.value = ns; }
-
             setTimeout(() => {
                 btn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
                 btn.classList.replace('btn-success', 'btn-outline-primary');
-                btn.disabled = ns <= 0; // Only disable if out of stock
+                btn.disabled = stock <= 0;
             }, 1000);
+
         } catch (e) {
             console.error('Add to bag error:', e);
-            alert('An error occurred. Please try again.');
+            alert(e.message || 'An error occurred. Please try again.');
             btn.innerHTML = '<i class="fas fa-shopping-bag mr-2"></i>Add to Bag';
             btn.disabled = false;
         }

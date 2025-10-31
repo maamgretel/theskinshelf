@@ -4,8 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let cardSaved = false;
     let checkoutData = null;
+    let isPlacingOrder = false;
 
-    if (!user || user.role !== 'customer') return window.location.href = 'login.html';
+    // Auth check
+    if (!user || user.role !== 'customer') {
+        window.location.href = 'login.html';
+        return;
+    }
 
     // DOM cache
     const els = {
@@ -32,17 +37,31 @@ document.addEventListener('DOMContentLoaded', () => {
         otpInput: document.getElementById('otpInput')
     };
 
-    const hdr = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}`, 'X-User-ID': user.id.toString() });
+    const hdr = () => ({
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.token}`,
+        'X-User-ID': user.id.toString()
+    });
 
-    // Add CSS
-    const s = document.createElement('style');
-    s.textContent = '.quantity-controls{display:flex;align-items:center;gap:8px}.quantity-btn{width:32px;height:32px;border:1px solid #ddd}.quantity-display{min-width:40px;text-align:center;padding:4px 8px}.loading-spinner{opacity:0.6;pointer-events:none}';
-    document.head.appendChild(s);
+    // Add dynamic CSS
+    const addStyles = () => {
+        const style = document.createElement('style');
+        style.textContent = `
+            .quantity-controls { display: flex; align-items: center; gap: 8px; }
+            .quantity-btn { width: 32px; height: 32px; border: 1px solid #ddd; }
+            .quantity-display { min-width: 40px; text-align: center; padding: 4px 8px; }
+            .loading-spinner { opacity: 0.6; pointer-events: none; }
+            .update-btn { display: none; }
+        `;
+        document.head.appendChild(style);
+    };
 
-    // Stock error modal
+    // ============= MODALS =============
+    
     const createStockModal = () => {
         if (document.getElementById('stockErrorModal')) return;
-        document.body.insertAdjacentHTML('beforeend', `
+        
+        const modalHTML = `
         <div class="modal fade" id="stockErrorModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -64,52 +83,71 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             </div>
-        </div>`);
+        </div>`;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
     };
 
-    const showStockError = (name, req, avail) => {
+    const showStockError = (name, requested, available) => {
         createStockModal();
         document.getElementById('stockErrorProductName').textContent = name;
-        document.getElementById('stockErrorRequested').textContent = req;
-        document.getElementById('stockErrorAvailable').textContent = avail;
+        document.getElementById('stockErrorRequested').textContent = requested;
+        document.getElementById('stockErrorAvailable').textContent = available;
         $('#stockErrorModal').modal('show');
     };
 
-    // Quantity update
-    const updateQty = async (pid, qty, name) => {
+    // ============= QUANTITY MANAGEMENT =============
+    
+    const updateQuantityOnServer = async (productId, quantity, productName) => {
+        const btnSelector = `[data-product-id="${productId}"] .update-btn`;
+        const btn = document.querySelector(btnSelector);
+        
         try {
-            const btn = document.querySelector(`[data-product-id="${pid}"] .update-btn`);
             if (btn) {
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
             }
 
-            const r = await fetch(`${API}/api/cart/update`, {
-                method: 'PUT', headers: hdr(), body: JSON.stringify({ productId: pid, quantity: qty })
+            const response = await fetch(`${API}/api/cart/update`, {
+                method: 'PUT',
+                headers: hdr(),
+                body: JSON.stringify({ productId, quantity })
             });
 
-            if (!r.ok) throw new Error('Update failed');
+            if (!response.ok) throw new Error('Update failed');
 
-            const res = await r.json();
-            if (res.adjustedQuantity && res.adjustedQuantity < qty) {
-                showStockError(name, qty, res.maxStock || res.adjustedQuantity);
+            const result = await response.json();
+            
+            // Check if quantity was adjusted due to stock limits
+            if (result.adjustedQuantity && result.adjustedQuantity < quantity) {
+                showStockError(
+                    productName,
+                    quantity,
+                    result.maxStock || result.adjustedQuantity
+                );
             }
 
-            await fetchData();
-        } catch (e) {
-            alert(`Failed: ${e.message}`);
-            await fetchData();
+            await fetchCheckoutData();
+            
+        } catch (error) {
+            console.error('Quantity update error:', error);
+            alert(`Failed to update quantity: ${error.message}`);
+            await fetchCheckoutData();
         }
     };
 
-    const updateQtyLocal = (pid, qty, name, max) => {
-        if (qty < 1) return;
-        if (max && qty > max) return showStockError(name, qty, max);
+    const updateQuantityLocal = (productId, quantity, productName, maxStock) => {
+        if (quantity < 1) return;
         
-        const inp = document.querySelector(`[data-product-id="${pid}"] .quantity-input`);
-        if (inp) inp.value = qty;
+        if (maxStock && quantity > maxStock) {
+            showStockError(productName, quantity, maxStock);
+            return;
+        }
         
-        const btn = document.querySelector(`[data-product-id="${pid}"] .update-btn`);
+        const input = document.querySelector(`[data-product-id="${productId}"] .quantity-input`);
+        if (input) input.value = quantity;
+        
+        const btn = document.querySelector(`[data-product-id="${productId}"] .update-btn`);
         if (btn) {
             btn.style.display = 'inline-block';
             btn.disabled = false;
@@ -117,36 +155,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.updateItemQuantity = updateQtyLocal;
+    // Global functions for inline handlers
+    window.updateItemQuantity = updateQuantityLocal;
     
-    window.manualUpdateQuantity = (pid) => {
-        const inp = document.querySelector(`[data-product-id="${pid}"] .quantity-input`);
-        if (!inp) return;
+    window.manualUpdateQuantity = (productId) => {
+        const input = document.querySelector(`[data-product-id="${productId}"] .quantity-input`);
+        if (!input) return;
         
-        const qty = parseInt(inp.value);
-        if (isNaN(qty) || qty < 1) return inp.value = 1;
+        const quantity = parseInt(input.value);
+        if (isNaN(quantity) || quantity < 1) {
+            input.value = 1;
+            return;
+        }
         
-        updateQtyLocal(pid, qty, inp.dataset.productName, parseInt(inp.dataset.maxStock));
+        updateQuantityLocal(
+            productId,
+            quantity,
+            input.dataset.productName,
+            parseInt(input.dataset.maxStock)
+        );
     };
     
-    window.forceUpdateQuantity = async (pid) => {
-        const inp = document.querySelector(`[data-product-id="${pid}"] .quantity-input`);
-        if (!inp) return;
-        await updateQty(pid, parseInt(inp.value), inp.dataset.productName);
+    window.forceUpdateQuantity = async (productId) => {
+        const input = document.querySelector(`[data-product-id="${productId}"] .quantity-input`);
+        if (!input) return;
+        
+        await updateQuantityOnServer(
+            productId,
+            parseInt(input.value),
+            input.dataset.productName
+        );
     };
 
-    // Address modal
-    const toggleAddrLoading = (loading, data = null) => {
-        ['fullName', 'streetAddress', 'contactNumber'].forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.disabled = loading;
-            el.style.backgroundColor = loading ? '#f8f9fa' : '';
-            if (loading) el.placeholder = 'Loading...';
-            else if (data) {
-                if (id === 'fullName') el.value = data.name || '';
-                if (id === 'streetAddress') el.value = data.address || '';
-                if (id === 'contactNumber') el.value = data.contact_number || '';
+    // ============= ADDRESS MANAGEMENT =============
+    
+    const toggleAddressLoading = (isLoading, data = null) => {
+        const fields = ['fullName', 'streetAddress', 'contactNumber'];
+        
+        fields.forEach(fieldId => {
+            const element = document.getElementById(fieldId);
+            if (!element) return;
+            
+            element.disabled = isLoading;
+            element.style.backgroundColor = isLoading ? '#f8f9fa' : '';
+            
+            if (isLoading) {
+                element.placeholder = 'Loading...';
+            } else if (data) {
+                if (fieldId === 'fullName') element.value = data.name || '';
+                if (fieldId === 'streetAddress') element.value = data.address || '';
+                if (fieldId === 'contactNumber') element.value = data.contact_number || '';
             }
         });
     };
@@ -154,182 +212,295 @@ document.addEventListener('DOMContentLoaded', () => {
     window.debugAddressModal = () => {
         $('#addressModal').modal('show');
         $('#addressModal').one('shown.bs.modal', () => {
-            toggleAddrLoading(true);
-            setTimeout(() => toggleAddrLoading(false, checkoutData?.deliveryInfo), 500);
+            toggleAddressLoading(true);
+            setTimeout(() => {
+                toggleAddressLoading(false, checkoutData?.deliveryInfo);
+            }, 500);
         });
     };
 
-    // Fetch data
-    const fetchData = async () => {
+    // ============= DATA FETCHING & RENDERING =============
+    
+    const fetchCheckoutData = async () => {
         try {
-            const r = await fetch(`${API}/api/checkout`, { headers: hdr() });
-            if (!r.ok) throw new Error('Fetch failed');
+            const response = await fetch(`${API}/api/checkout`, { headers: hdr() });
             
-            checkoutData = await r.json();
-            renderAddr(checkoutData.deliveryInfo);
+            if (!response.ok) throw new Error('Failed to fetch checkout data');
+            
+            checkoutData = await response.json();
+            
+            renderAddress(checkoutData.deliveryInfo);
             renderItems(checkoutData.items);
-            calcSummary(checkoutData.items, checkoutData.shippingOptions);
-        } catch (e) {
-            console.error(e);
-            if (els.items) els.items.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+            calculateSummary(checkoutData.items, checkoutData.shippingOptions);
+            
+        } catch (error) {
+            console.error('Fetch error:', error);
+            if (els.items) {
+                els.items.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Error:</strong> ${error.message}
+                    </div>`;
+            }
         }
     };
 
-    const renderAddr = (info) => {
+    const renderAddress = (deliveryInfo) => {
         if (!els.addr) return;
         
-        const valid = info?.address?.trim();
+        const hasValidAddress = deliveryInfo?.address?.trim();
         
-        if (valid) {
-            const contact = info.contact_number ? `(${info.contact_number})` : '<span class="text-muted">(No contact)</span>';
-            const name = info.name ? `${info.name} ` : '';
+        if (hasValidAddress) {
+            const contactDisplay = deliveryInfo.contact_number 
+                ? `(${deliveryInfo.contact_number})` 
+                : '<span class="text-muted">(No contact)</span>';
             
-            els.addr.innerHTML = `<div class="border rounded p-3 mb-3">
-                <h6>Delivery Address</h6>
-                <p class="font-weight-bold">${name}${contact}</p>
-                <p>${info.address}</p>
-                <button class="btn btn-sm btn-outline-secondary" onclick="debugAddressModal()">Change Address</button>
-            </div>`;
+            const nameDisplay = deliveryInfo.name ? `${deliveryInfo.name} ` : '';
+            
+            els.addr.innerHTML = `
+                <div class="border rounded p-3 mb-3">
+                    <h6>Delivery Address</h6>
+                    <p class="font-weight-bold">${nameDisplay}${contactDisplay}</p>
+                    <p>${deliveryInfo.address}</p>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="debugAddressModal()">
+                        Change Address
+                    </button>
+                </div>`;
         } else {
-            els.addr.innerHTML = `<div class="border rounded p-3 mb-3 border-danger">
-                <h6 class="text-danger">Incomplete Delivery Information</h6>
-                <p class="text-danger">Please add a delivery address to continue.</p>
-                <button class="btn btn-primary" onclick="debugAddressModal()">Add Delivery Address</button>
-            </div>`;
+            els.addr.innerHTML = `
+                <div class="border rounded p-3 mb-3 border-danger">
+                    <h6 class="text-danger">Incomplete Delivery Information</h6>
+                    <p class="text-danger">Please add a delivery address to continue.</p>
+                    <button class="btn btn-primary" onclick="debugAddressModal()">
+                        Add Delivery Address
+                    </button>
+                </div>`;
         }
     };
 
     const renderItems = (items) => {
         if (!els.items) return;
-        if (!items?.length) {
+        
+        if (!items || !items.length) {
             els.items.innerHTML = '<p class="p-3 text-center">Your cart is empty.</p>';
             if (els.placeBtn) els.placeBtn.disabled = true;
             return;
         }
 
-        const rows = items.map(i => {
-            const stock = i.stock || i.available_stock || 0;
-            const low = stock <= 5 && stock > 0;
-            const out = stock <= 0;
+        const itemRows = items.map(item => {
+            const productId = item.product_id || item.id;
+            const stock = item.stock || item.available_stock || 0;
+            const isLowStock = stock <= 5 && stock > 0;
+            const isOutOfStock = stock <= 0;
             
-            let warn = '';
-            if (out) warn = '<div class="text-danger small">Out of stock</div>';
-            else if (low) warn = `<div class="text-warning small">Only ${stock} left</div>`;
+            let stockWarning = '';
+            if (isOutOfStock) {
+                stockWarning = '<div class="text-danger small">Out of stock</div>';
+            } else if (isLowStock) {
+                stockWarning = `<div class="text-warning small">Only ${stock} left</div>`;
+            }
 
-            return `<tr data-product-id="${i.product_id || i.id}">
-                <td><div class="d-flex align-items-center">
-                    <img src="${i.image}" alt="${i.name}" style="width:50px;height:50px;object-fit:cover" class="rounded">
-                    <div class="ml-3"><span>${i.name}</span>${warn}</div>
-                </div></td>
-                <td class="text-right">₱${parseFloat(i.price).toFixed(2)}</td>
-                <td class="text-center">
-                    <div class="d-flex align-items-center justify-content-center gap-2">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="updateItemQuantity('${i.product_id || i.id}',${Math.max(1,i.quantity-1)},'${i.name}',${stock})" ${i.quantity<=1?'disabled':''}>-</button>
-                        <input type="number" class="form-control quantity-input text-center" style="width:70px" value="${i.quantity}" min="1" max="${stock}" data-product-name="${i.name}" data-max-stock="${stock}" onchange="manualUpdateQuantity('${i.product_id || i.id}')" onkeypress="if(event.key==='Enter') manualUpdateQuantity('${i.product_id || i.id}')">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="updateItemQuantity('${i.product_id || i.id}',${i.quantity+1},'${i.name}',${stock})" ${out||i.quantity>=stock?'disabled':''}>+</button>
-                    </div>
-                    <button class="btn btn-sm btn-primary update-btn mt-1" style="display:none" onclick="forceUpdateQuantity('${i.product_id || i.id}')">Update</button>
-                </td>
-                <td class="text-right">₱${(i.price*i.quantity).toFixed(2)}</td>
-            </tr>`;
+            const subtotal = (item.price * item.quantity).toFixed(2);
+            const canDecrease = item.quantity > 1;
+            const canIncrease = !isOutOfStock && item.quantity < stock;
+
+            return `
+                <tr data-product-id="${productId}">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img src="${item.image}" 
+                                 alt="${item.name}" 
+                                 style="width:50px;height:50px;object-fit:cover" 
+                                 class="rounded">
+                            <div class="ml-3">
+                                <span>${item.name}</span>
+                                ${stockWarning}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-right">₱${parseFloat(item.price).toFixed(2)}</td>
+                    <td class="text-center">
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <button class="btn btn-sm btn-outline-secondary" 
+                                    onclick="updateItemQuantity('${productId}',${Math.max(1, item.quantity - 1)},'${item.name}',${stock})"
+                                    ${!canDecrease ? 'disabled' : ''}>
+                                -
+                            </button>
+                            <input type="number" 
+                                   class="form-control quantity-input text-center" 
+                                   style="width:70px" 
+                                   value="${item.quantity}" 
+                                   min="1" 
+                                   max="${stock}"
+                                   data-product-name="${item.name}"
+                                   data-max-stock="${stock}"
+                                   onchange="manualUpdateQuantity('${productId}')"
+                                   onkeypress="if(event.key==='Enter') manualUpdateQuantity('${productId}')">
+                            <button class="btn btn-sm btn-outline-secondary" 
+                                    onclick="updateItemQuantity('${productId}',${item.quantity + 1},'${item.name}',${stock})"
+                                    ${!canIncrease ? 'disabled' : ''}>
+                                +
+                            </button>
+                        </div>
+                        <button class="btn btn-sm btn-primary update-btn mt-1" 
+                                onclick="forceUpdateQuantity('${productId}')">
+                            Update
+                        </button>
+                    </td>
+                    <td class="text-right">₱${subtotal}</td>
+                </tr>`;
         }).join('');
 
-        els.items.innerHTML = `<table class="table">
-            <thead><tr><th>Product</th><th class="text-right">Unit Price</th><th class="text-center">Quantity</th><th class="text-right">Subtotal</th></tr></thead>
-            <tbody>${rows}</tbody>
-        </table>`;
+        els.items.innerHTML = `
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th class="text-right">Unit Price</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-right">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>${itemRows}</tbody>
+            </table>`;
     };
 
-    const calcSummary = (items, ship) => {
-        const merch = items.reduce((s, i) => s + (i.price * i.quantity), 0);
-        const tax = merch * 0.12;
-        const shipFee = ship?.standard || 0;
-        const total = merch + tax + shipFee;
+    const calculateSummary = (items, shippingOptions) => {
+        const merchandiseTotal = items.reduce((sum, item) => {
+            return sum + (item.price * item.quantity);
+        }, 0);
+        
+        const taxAmount = merchandiseTotal * 0.12;
+        const shippingFee = shippingOptions?.standard || 0;
+        const totalAmount = merchandiseTotal + taxAmount + shippingFee;
 
-        if (els.merch) els.merch.textContent = `₱${merch.toFixed(2)}`;
-        if (els.tax) els.tax.textContent = `₱${tax.toFixed(2)}`;
-        if (els.ship) els.ship.textContent = `₱${shipFee.toFixed(2)}`;
-        if (els.total) els.total.textContent = `₱${total.toFixed(2)}`;
+        if (els.merch) els.merch.textContent = `₱${merchandiseTotal.toFixed(2)}`;
+        if (els.tax) els.tax.textContent = `₱${taxAmount.toFixed(2)}`;
+        if (els.ship) els.ship.textContent = `₱${shippingFee.toFixed(2)}`;
+        if (els.total) els.total.textContent = `₱${totalAmount.toFixed(2)}`;
     };
 
-    // Payment
-    const populateDates = () => {
+    // ============= PAYMENT CARD MANAGEMENT =============
+    
+    const populateExpiryDates = () => {
         if (!els.expMonth || !els.expYear) return;
         
-        for (let i = 1; i <= 12; i++) {
-            els.expMonth.add(new Option(i.toString().padStart(2, '0'), i));
+        // Populate months
+        for (let month = 1; month <= 12; month++) {
+            const monthStr = month.toString().padStart(2, '0');
+            els.expMonth.add(new Option(monthStr, month));
         }
         
-        const y = new Date().getFullYear();
+        // Populate years (current + 10 years)
+        const currentYear = new Date().getFullYear();
         for (let i = 0; i <= 10; i++) {
-            const yr = y + i;
-            els.expYear.add(new Option(yr.toString().slice(-2), yr));
+            const year = currentYear + i;
+            const yearShort = year.toString().slice(-2);
+            els.expYear.add(new Option(yearShort, year));
         }
     };
 
-    const updateCardDisp = () => {
-        if (els.cardNumDisp && els.cardNum) els.cardNumDisp.textContent = els.cardNum.value || '#### #### #### ####';
-        if (els.cardHolderDisp && els.cardHolder) els.cardHolderDisp.textContent = els.cardHolder.value.toUpperCase() || 'FULL NAME';
-        if (els.cardExpDisp && els.expMonth && els.expYear) {
-            els.cardExpDisp.textContent = `${els.expMonth.value || 'MM'}/${els.expYear.value || 'YY'}`;
+    const updateCardDisplay = () => {
+        if (els.cardNumDisp && els.cardNum) {
+            els.cardNumDisp.textContent = els.cardNum.value || '#### #### #### ####';
         }
-    };
-
-    const validateCard = (data) => {
-        const req = ['number', 'holder', 'expiryMonth', 'expiryYear', 'cvv'];
-        const miss = req.filter(f => !data[f]?.trim());
         
-        if (miss.length) {
-            alert(`Fill in: ${miss.join(', ')}`);
+        if (els.cardHolderDisp && els.cardHolder) {
+            els.cardHolderDisp.textContent = els.cardHolder.value.toUpperCase() || 'FULL NAME';
+        }
+        
+        if (els.cardExpDisp && els.expMonth && els.expYear) {
+            const month = els.expMonth.value || 'MM';
+            const year = els.expYear.value || 'YY';
+            els.cardExpDisp.textContent = `${month}/${year}`;
+        }
+    };
+
+    const validateCardData = (cardData) => {
+        const requiredFields = ['number', 'holder', 'expiryMonth', 'expiryYear', 'cvv'];
+        const missingFields = requiredFields.filter(field => !cardData[field]?.trim());
+        
+        if (missingFields.length > 0) {
+            alert(`Please fill in: ${missingFields.join(', ')}`);
             return false;
         }
         
-        if (data.number.replace(/\s/g, '').length < 13) {
-            alert('Invalid card number');
+        const cardNumberClean = cardData.number.replace(/\s/g, '');
+        if (cardNumberClean.length < 13) {
+            alert('Invalid card number. Must be at least 13 digits.');
             return false;
         }
         
         return true;
     };
 
-    // Place order
-    let isPlacingOrder = false; // Prevent multiple clicks
-
+    // ============= ORDER PLACEMENT =============
+    
     const placeOrder = async () => {
-        if (isPlacingOrder) return; // Block if already processing
+        if (isPlacingOrder) return;
 
+        // Check payment method
         if (els.bank?.checked && !cardSaved) {
             alert('Please add bank card details first.');
-            return $('#paymentModal').modal('show');
+            $('#paymentModal').modal('show');
+            return;
         }
 
-        // Set loading state immediately
+        // Set processing state
         isPlacingOrder = true;
         if (els.placeBtn) {
             els.placeBtn.disabled = true;
-            els.placeBtn.textContent = 'Placing Order...';
+            els.placeBtn.innerHTML = '<span class="spinner-border spinner-border-sm mr-2"></span>Processing Order...';
         }
 
-        try {
-            const r = await fetch(`${API}/api/orders/place`, { method: 'POST', headers: hdr() });
+        // Create timeout controller (30 seconds should be enough now)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-            if (!r.ok) {
-                const err = await r.json();
-                throw new Error(err.error || 'Failed to place order');
+        try {
+            const response = await fetch(`${API}/api/orders/place`, {
+                method: 'POST',
+                headers: hdr(),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to place order');
             }
 
-            const ord = await r.json();
+            const orderData = await response.json();
             
+            // Store order details for success page
             localStorage.setItem('orderTotal', els.total?.textContent.replace('₱', '') || '0');
-            localStorage.setItem('orderNumber', ord.orderNumber || 'TSS-2025-' + Date.now().toString().slice(-6));
+            localStorage.setItem('orderNumber', orderData.orderNumber || `TSS-2025-${Date.now().toString().slice(-6)}`);
             localStorage.setItem('orderDate', new Date().toLocaleDateString());
             
+            // Redirect to success page
             window.location.href = 'sucess.html';
-        } catch (e) {
-            console.error('Order error:', e);
-            alert(`Error: ${e.message}`);
             
-            // Reset button state on error
+        } catch (error) {
+            clearTimeout(timeoutId);
+            console.error('Order placement error:', error);
+            
+            // Handle timeout specifically
+            if (error.name === 'AbortError') {
+                const shouldCheckOrders = confirm(
+                    'The order is taking longer than expected.\n\n' +
+                    'Your order may still be processing on our servers.\n\n' +
+                    'Would you like to check your orders page to verify?'
+                );
+                
+                if (shouldCheckOrders) {
+                    window.location.href = 'orders.html';
+                    return;
+                }
+            } else {
+                alert(`Error placing order: ${error.message}`);
+            }
+            
+            // Reset button state
             isPlacingOrder = false;
             if (els.placeBtn) {
                 els.placeBtn.disabled = false;
@@ -338,38 +509,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Event listeners
+    // ============= EVENT LISTENERS =============
+    
+    // Card number formatting
     if (els.cardNum) {
         els.cardNum.addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/[^\d]/g, '').replace(/(.{4})/g, '$1 ').trim();
-            updateCardDisp();
+            // Remove non-digits and format with spaces every 4 digits
+            const cleaned = e.target.value.replace(/[^\d]/g, '');
+            e.target.value = cleaned.replace(/(.{4})/g, '$1 ').trim();
+            updateCardDisplay();
         });
     }
 
-    [els.cardHolder, els.expMonth, els.expYear].forEach(el => {
-        if (el) el.addEventListener('change', updateCardDisp);
+    // Card display updates
+    [els.cardHolder, els.expMonth, els.expYear].forEach(element => {
+        if (element) {
+            element.addEventListener('change', updateCardDisplay);
+        }
     });
 
+    // CVV focus - flip card
     if (els.cvv && els.cardFlip) {
-        els.cvv.addEventListener('focus', () => els.cardFlip.classList.add('is-flipped'));
-        els.cvv.addEventListener('blur', () => els.cardFlip.classList.remove('is-flipped'));
-    }
-
-    if (els.bank) {
-        els.bank.addEventListener('change', () => {
-            if (els.bank.checked && !cardSaved) $('#paymentModal').modal('show');
+        els.cvv.addEventListener('focus', () => {
+            els.cardFlip.classList.add('is-flipped');
+        });
+        els.cvv.addEventListener('blur', () => {
+            els.cardFlip.classList.remove('is-flipped');
         });
     }
 
-    // Save payment
+    // Bank card selection
+    if (els.bank) {
+        els.bank.addEventListener('change', () => {
+            if (els.bank.checked && !cardSaved) {
+                $('#paymentModal').modal('show');
+            }
+        });
+    }
+
+    // Save payment button
     if (els.saveBtn) {
         els.saveBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             
-            const form = document.getElementById('payment-form');
-            if (form?.checkValidity() === false) return alert('Fill in all card details.');
+            const paymentForm = document.getElementById('payment-form');
+            if (paymentForm && paymentForm.checkValidity() === false) {
+                alert('Please fill in all card details correctly.');
+                return;
+            }
 
-            const card = {
+            const cardData = {
                 number: els.cardNum?.value?.trim() || '',
                 holder: els.cardHolder?.value?.trim() || '',
                 expiryMonth: els.expMonth?.value?.trim() || '',
@@ -377,32 +566,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 cvv: els.cvv?.value?.trim() || ''
             };
 
-            if (!validateCard(card)) return;
+            if (!validateCardData(cardData)) return;
 
             try {
                 els.saveBtn.disabled = true;
                 els.saveBtn.textContent = 'Requesting OTP...';
 
-                const r = await fetch(`${API}/api/orders/request-otp-save-card`, {
-                    method: 'POST', headers: hdr(), body: JSON.stringify({ email: user.email, userId: user.id })
+                const response = await fetch(`${API}/api/orders/request-otp-save-card`, {
+                    method: 'POST',
+                    headers: hdr(),
+                    body: JSON.stringify({
+                        email: user.email,
+                        userId: user.id
+                    })
                 });
 
-                if (!r.ok) throw new Error('Failed to send OTP');
+                if (!response.ok) throw new Error('Failed to send OTP');
 
-                const d = await r.json();
-                if (d.message?.includes('OTP sent') || d.success) {
+                const data = await response.json();
+                
+                if (data.message?.includes('OTP sent') || data.success) {
+                    // Close payment modal and open OTP modal
                     $('#paymentModal').modal('hide');
                     setTimeout(() => $('#otpModal').modal('show'), 300);
                     
-                    sessionStorage.setItem('tempCardData', JSON.stringify(card));
+                    // Store card data temporarily for verification
+                    sessionStorage.setItem('tempCardData', JSON.stringify(cardData));
                     sessionStorage.setItem('tempUserEmail', user.email);
                     
+                    // Focus OTP input
                     setTimeout(() => els.otpInput?.focus(), 800);
                 } else {
-                    throw new Error(d.error || 'Failed to send OTP');
+                    throw new Error(data.error || 'Failed to send OTP');
                 }
-            } catch (e) {
-                alert(`Error: ${e.message}`);
+                
+            } catch (error) {
+                alert(`Error: ${error.message}`);
             } finally {
                 els.saveBtn.disabled = false;
                 els.saveBtn.textContent = 'Save Payment';
@@ -410,41 +609,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Verify OTP
+    // Verify OTP button
     if (els.otpBtn) {
         els.otpBtn.addEventListener('click', async () => {
             const otp = els.otpInput?.value?.trim();
-            if (!otp || otp.length !== 6) return alert('Enter valid 6-digit OTP.');
+            
+            if (!otp || otp.length !== 6) {
+                alert('Please enter a valid 6-digit OTP.');
+                return;
+            }
 
             try {
                 els.otpBtn.disabled = true;
                 els.otpBtn.textContent = 'Verifying...';
 
-                const card = JSON.parse(sessionStorage.getItem('tempCardData') || '{}');
+                const cardData = JSON.parse(sessionStorage.getItem('tempCardData') || '{}');
                 const email = sessionStorage.getItem('tempUserEmail');
 
-                const r = await fetch(`${API}/api/orders/verify-otp-save-card`, {
-                    method: 'POST', headers: hdr(), body: JSON.stringify({ email, otp, cardData: card, userId: user.id })
+                const response = await fetch(`${API}/api/orders/verify-otp-save-card`, {
+                    method: 'POST',
+                    headers: hdr(),
+                    body: JSON.stringify({
+                        email,
+                        otp,
+                        cardData,
+                        userId: user.id
+                    })
                 });
 
-                if (!r.ok) throw new Error('Verification failed');
+                if (!response.ok) throw new Error('OTP verification failed');
 
-                const d = await r.json();
-                if (d.message?.includes('Card saved') || d.success) {
+                const data = await response.json();
+                
+                if (data.message?.includes('Card saved') || data.success) {
                     cardSaved = true;
-                    const lbl = document.querySelector('label[for="bankCard"]');
-                    if (lbl) lbl.innerHTML = 'Bank Card <span class="text-success">✔ Saved</span>';
+                    
+                    // Update bank card label
+                    const bankLabel = document.querySelector('label[for="bankCard"]');
+                    if (bankLabel) {
+                        bankLabel.innerHTML = 'Bank Card <span class="text-success">✔ Saved</span>';
+                    }
                     
                     $('#otpModal').modal('hide');
                     alert('Card saved successfully!');
                     
+                    // Clear temporary data
                     sessionStorage.removeItem('tempCardData');
                     sessionStorage.removeItem('tempUserEmail');
                 } else {
-                    throw new Error(d.error || 'Verification failed');
+                    throw new Error(data.error || 'Verification failed');
                 }
-            } catch (e) {
-                alert(`Error: ${e.message}`);
+                
+            } catch (error) {
+                alert(`Error: ${error.message}`);
             } finally {
                 els.otpBtn.disabled = false;
                 els.otpBtn.textContent = 'Verify OTP';
@@ -452,25 +669,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // OTP input validation and Enter key
     if (els.otpInput) {
-        els.otpInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !els.otpBtn?.disabled) els.otpBtn?.click();
-        });
-        
         els.otpInput.addEventListener('input', (e) => {
+            // Only allow digits, max 6 characters
             e.target.value = e.target.value.replace(/\D/g, '').substring(0, 6);
         });
-    }
-
-    // Modal handlers
-    if (typeof $ !== 'undefined') {
-        $('#paymentModal').on('hidden.bs.modal', () => {
-            if (!cardSaved && els.cod) els.cod.checked = true;
+        
+        els.otpInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !els.otpBtn?.disabled) {
+                els.otpBtn?.click();
+            }
         });
     }
 
-    // Init
-    if (els.placeBtn) els.placeBtn.addEventListener('click', placeOrder);
-    populateDates();
-    setTimeout(fetchData, 100);
+    // Payment modal close handler
+    if (typeof $ !== 'undefined') {
+        $('#paymentModal').on('hidden.bs.modal', () => {
+            // If card not saved, revert to COD
+            if (!cardSaved && els.cod) {
+                els.cod.checked = true;
+            }
+        });
+    }
+
+    // Place order button
+    if (els.placeBtn) {
+        els.placeBtn.addEventListener('click', placeOrder);
+    }
+
+    // ============= INITIALIZATION =============
+    
+    addStyles();
+    populateExpiryDates();
+    
+    // Delay initial fetch to ensure DOM is ready
+    setTimeout(fetchCheckoutData, 100);
 });
