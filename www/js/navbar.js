@@ -174,11 +174,12 @@ class MobileNavigation {
                 .mobile-bottom-nav .nav-link .badge {
                     position: absolute;
                     top: 8px;
-                    right: 50%;
-                    transform: translateX(50%);
+                    right: 30%;
                     font-size: 0.6rem;
                     padding: 2px 5px;
                     border-radius: 10px;
+                    min-width: 16px;
+                    text-align: center;
                 }
 
                 /* Dot badge specific styling */
@@ -190,8 +191,7 @@ class MobileNavigation {
                     padding: 0;
                     min-width: 8px;
                     top: 6px;
-                    right: 45%;
-                    transform: translateX(50%);
+                    right: 30%;
                     border: 2px solid #ffffff;
                     box-shadow: 0 0 3px rgba(220, 53, 69, 0.5);
                 }

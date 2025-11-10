@@ -742,25 +742,9 @@
             }, false);
         }
 
-        // Demo: Add some cart items to test badges
-        setTimeout(function() {
-            const cartBadge = document.getElementById('cart-badge');
-            const notifBadge = document.getElementById('notifBadge');
-            
-            if (cartBadge) {
-                cartBadge.textContent = '3';
-                cartBadge.style.display = 'block';
-            }
-            
-            if (notifBadge) {
-             //   notifBadge.textContent = '2';
-                notifBadge.style.display = 'block';
-            }
-            
-            // Sync with mobile badges
-            syncCartBadges();
-            syncNotificationBadges();
-        }, 2000);
+        // REMOVED: Demo code that was setting cart badge to "3"
+        // The badges will now only show when actual data is added by your external JavaScript files
+        // (shared.js and customer_dashboard.js)
     </script>
     
     <!-- Your existing JavaScript files -->

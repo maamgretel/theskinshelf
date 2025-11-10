@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // --- Modal System ---
+    // --- Modal System (Enhanced for cross-browser compatibility) ---
     function createModal() {
         const modalHTML = `
             <div class="modal fade" id="customModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -37,14 +37,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function cleanupModals() {
-        // Force cleanup of any existing modal state
-        const modal = $('#customModal');
-        modal.modal('hide');
-        $('.modal-backdrop').remove();
-        $('body').removeClass('modal-open').css('padding-right', '');
+        try {
+            // Force cleanup of any existing modal state
+            const modalElement = document.getElementById('customModal');
+            
+            if (modalElement && typeof $ !== 'undefined' && $.fn.modal) {
+                const $modal = $(modalElement);
+                
+                // Dispose of any existing modal instance
+                if ($modal.data('bs.modal')) {
+                    $modal.data('bs.modal', null);
+                }
+                
+                // Hide modal
+                $modal.modal('hide');
+            }
+            
+            // Remove all backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            
+            // Clean body
+            document.body.classList.remove('modal-open');
+            document.body.style.paddingRight = '';
+            document.body.style.overflow = '';
+            
+        } catch (error) {
+            console.warn('Modal cleanup warning:', error);
+        }
     }
 
     function showModal(title, message, type = 'info', onConfirm = null, onCancel = null) {
+        // Wait for jQuery and Bootstrap to be ready
+        if (typeof $ === 'undefined' || !$.fn.modal) {
+            console.error('jQuery or Bootstrap Modal not loaded');
+            alert(message); // Fallback to basic alert
+            if (onConfirm) onConfirm();
+            return;
+        }
+
         // Clean up first
         cleanupModals();
         
@@ -72,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modalHeader.style.color = 'white';
             
             modalTitle.innerHTML = `<i class="fas ${color.icon} mr-2"></i>${title}`;
-            modalBody.innerHTML = `<p class="mb-0">${message}</p>`;
+            modalBody.innerHTML = `<div>${message}</div>`;
 
             // Clear footer
             modalFooter.innerHTML = '';
@@ -80,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (type === 'confirm' && onConfirm) {
                 // Confirmation modal with Yes/No buttons
                 modalFooter.innerHTML = `
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="modalCancelBtn">
+                    <button type="button" class="btn btn-secondary" id="modalCancelBtn">
                         <i class="fas fa-times mr-1"></i>Cancel
                     </button>
                     <button type="button" class="btn btn-danger" id="modalConfirmBtn">
@@ -88,46 +119,74 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 `;
 
+                // Remove old event listeners
+                $('#modalConfirmBtn').off('click');
+                $('#modalCancelBtn').off('click');
+
                 document.getElementById('modalConfirmBtn').addEventListener('click', () => {
                     modal.modal('hide');
-                    if (onConfirm) {
-                        // Wait for modal to fully hide before executing callback
+                    
+                    // Wait for modal to hide completely
+                    modal.one('hidden.bs.modal', function() {
                         setTimeout(() => {
-                            onConfirm();
-                        }, 400);
-                    }
+                            if (onConfirm) onConfirm();
+                        }, 100);
+                    });
                 });
 
                 document.getElementById('modalCancelBtn').addEventListener('click', () => {
-                    if (onCancel) onCancel();
+                    modal.modal('hide');
+                    if (onCancel) {
+                        setTimeout(() => {
+                            onCancel();
+                        }, 300);
+                    }
                 });
             } else {
                 // Simple OK button
                 modalFooter.innerHTML = `
-                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                    <button type="button" class="btn btn-primary" id="modalOkBtn">
                         <i class="fas fa-check mr-1"></i>OK
                     </button>
                 `;
 
-                if (onConfirm) {
-                    modal.on('hidden.bs.modal', function() {
-                        setTimeout(() => {
-                            onConfirm();
-                        }, 100);
-                        modal.off('hidden.bs.modal');
-                    });
-                }
+                $('#modalOkBtn').off('click');
+                
+                document.getElementById('modalOkBtn').addEventListener('click', () => {
+                    modal.modal('hide');
+                    
+                    if (onConfirm) {
+                        modal.one('hidden.bs.modal', function() {
+                            setTimeout(() => {
+                                onConfirm();
+                            }, 100);
+                        });
+                    }
+                });
             }
 
-            modal.modal({
-                backdrop: 'static',
-                keyboard: true,
-                show: true
-            });
-        }, 100);
+            // Initialize and show modal
+            try {
+                modal.modal({
+                    backdrop: type === 'confirm' ? true : 'static',
+                    keyboard: type === 'confirm' ? true : false,
+                    show: false
+                });
+                
+                modal.modal('show');
+            } catch (error) {
+                console.error('Error showing modal:', error);
+            }
+        }, 150);
     }
 
     function showLoadingModal(message = 'Processing...') {
+        // Wait for jQuery and Bootstrap to be ready
+        if (typeof $ === 'undefined' || !$.fn.modal) {
+            console.error('jQuery or Bootstrap Modal not loaded');
+            return;
+        }
+
         // Force cleanup
         cleanupModals();
         
@@ -145,8 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             modalTitle.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Please Wait`;
             modalBody.innerHTML = `
-                <div class="text-center py-3">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem; border-width: 0.3rem;">
                         <span class="sr-only">Loading...</span>
                     </div>
                     <p class="mb-0 font-weight-bold">${message}</p>
@@ -154,26 +213,42 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             modalFooter.innerHTML = '';
 
-            // Remove close button for loading modal
+            // Hide close button for loading modal
             const closeBtn = modalHeader.querySelector('.close');
             if (closeBtn) closeBtn.style.display = 'none';
 
-            // Prevent closing
-            modal.modal({
-                backdrop: 'static',
-                keyboard: false,
-                show: true
-            });
-        }, 100);
+            // Initialize and show modal (cannot be dismissed)
+            try {
+                modal.modal({
+                    backdrop: 'static',
+                    keyboard: false,
+                    show: false
+                });
+                
+                modal.modal('show');
+            } catch (error) {
+                console.error('Error showing loading modal:', error);
+            }
+        }, 150);
     }
 
     function hideModal() {
-        const modal = $('#customModal');
-        modal.modal('hide');
-        setTimeout(() => {
-            $('.modal-backdrop').remove();
-            $('body').removeClass('modal-open').css('padding-right', '');
-        }, 300);
+        if (typeof $ === 'undefined' || !$.fn.modal) {
+            return;
+        }
+
+        try {
+            const modal = $('#customModal');
+            modal.modal('hide');
+            
+            // Force cleanup after hide
+            setTimeout(() => {
+                cleanupModals();
+            }, 400);
+        } catch (error) {
+            console.error('Error hiding modal:', error);
+            cleanupModals();
+        }
     }
 
     // --- Helper Functions ---
@@ -544,10 +619,10 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`,
             'confirm',
             async () => {
-                // Show loading modal
+                // Show loading modal after confirm modal is hidden
                 showLoadingModal('Cancelling your order...');
 
-                // Small delay to ensure loading modal is fully rendered
+                // Wait for loading modal to render
                 setTimeout(async () => {
                     try {
                         const response = await fetch(`${BACKEND_URL}/api/orders/cancel`, {
@@ -567,13 +642,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         const result = await response.json();
 
+                        // Hide loading modal
                         hideModal();
 
                         if (!response.ok) {
                             throw new Error(result.error || 'Failed to cancel order');
                         }
 
-                        // Wait for modal to hide before showing success
+                        // Show success modal after loading modal is hidden
                         setTimeout(() => {
                             showModal(
                                 'Success!',
@@ -584,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     fetchAndDisplayOrders();
                                 }
                             );
-                        }, 100);
+                        }, 200);
 
                     } catch (error) {
                         hideModal();
@@ -599,9 +675,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <p class="mb-0">Please try again or contact support if the problem persists.</p>`,
                                 'error'
                             );
-                        }, 100);
+                        }, 200);
                     }
-                }, 200);
+                }, 300);
             },
             () => {
                 // User cancelled
@@ -636,7 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>`,
                             'success'
                         );
-                    }, 100);
+                    }, 200);
                 }, 1500);
             }
         );
@@ -750,6 +826,10 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
     }
+
+    // Debug function - check if libraries are loaded
+    console.log('jQuery loaded:', typeof $ !== 'undefined');
+    console.log('Bootstrap Modal loaded:', typeof $ !== 'undefined' && $.fn.modal !== undefined);
 
     fetchAndDisplayOrders();
 });
