@@ -4,11 +4,176 @@ document.addEventListener('DOMContentLoaded', () => {
     const ordersContainer = document.getElementById('orders-list-container');
     const user = JSON.parse(localStorage.getItem('user'));
 
-    // --- 1. Security Check ---
+    // --- Security Check ---
     if (!user) {
-        alert('Access Denied. Please log in.');
-        window.location.href = 'login.html';
+        showModal('Access Denied', 'Please log in to view your orders.', 'error', () => {
+            window.location.href = 'login.html';
+        });
         return;
+    }
+
+    // --- Modal System ---
+    function createModal() {
+        const modalHTML = `
+            <div class="modal fade" id="customModal" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header" id="modalHeader">
+                            <h5 class="modal-title" id="modalTitle"></h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" id="modalBody"></div>
+                        <div class="modal-footer" id="modalFooter"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        if (!document.getElementById('customModal')) {
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+    }
+
+    function cleanupModals() {
+        // Force cleanup of any existing modal state
+        const modal = $('#customModal');
+        modal.modal('hide');
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('padding-right', '');
+    }
+
+    function showModal(title, message, type = 'info', onConfirm = null, onCancel = null) {
+        // Clean up first
+        cleanupModals();
+        
+        setTimeout(() => {
+            createModal();
+            
+            const modal = $('#customModal');
+            const modalHeader = document.getElementById('modalHeader');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            const modalFooter = document.getElementById('modalFooter');
+
+            // Set colors based on type
+            const colors = {
+                success: { bg: '#27ae60', icon: 'fa-check-circle' },
+                error: { bg: '#e74c3c', icon: 'fa-exclamation-circle' },
+                warning: { bg: '#f39c12', icon: 'fa-exclamation-triangle' },
+                info: { bg: '#3498db', icon: 'fa-info-circle' },
+                confirm: { bg: '#2c3e50', icon: 'fa-question-circle' }
+            };
+
+            const color = colors[type] || colors.info;
+            
+            modalHeader.style.backgroundColor = color.bg;
+            modalHeader.style.color = 'white';
+            
+            modalTitle.innerHTML = `<i class="fas ${color.icon} mr-2"></i>${title}`;
+            modalBody.innerHTML = `<p class="mb-0">${message}</p>`;
+
+            // Clear footer
+            modalFooter.innerHTML = '';
+
+            if (type === 'confirm' && onConfirm) {
+                // Confirmation modal with Yes/No buttons
+                modalFooter.innerHTML = `
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="modalCancelBtn">
+                        <i class="fas fa-times mr-1"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" id="modalConfirmBtn">
+                        <i class="fas fa-check mr-1"></i>Confirm
+                    </button>
+                `;
+
+                document.getElementById('modalConfirmBtn').addEventListener('click', () => {
+                    modal.modal('hide');
+                    if (onConfirm) {
+                        // Wait for modal to fully hide before executing callback
+                        setTimeout(() => {
+                            onConfirm();
+                        }, 400);
+                    }
+                });
+
+                document.getElementById('modalCancelBtn').addEventListener('click', () => {
+                    if (onCancel) onCancel();
+                });
+            } else {
+                // Simple OK button
+                modalFooter.innerHTML = `
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        <i class="fas fa-check mr-1"></i>OK
+                    </button>
+                `;
+
+                if (onConfirm) {
+                    modal.on('hidden.bs.modal', function() {
+                        setTimeout(() => {
+                            onConfirm();
+                        }, 100);
+                        modal.off('hidden.bs.modal');
+                    });
+                }
+            }
+
+            modal.modal({
+                backdrop: 'static',
+                keyboard: true,
+                show: true
+            });
+        }, 100);
+    }
+
+    function showLoadingModal(message = 'Processing...') {
+        // Force cleanup
+        cleanupModals();
+        
+        setTimeout(() => {
+            createModal();
+            
+            const modal = $('#customModal');
+            const modalHeader = document.getElementById('modalHeader');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            const modalFooter = document.getElementById('modalFooter');
+
+            modalHeader.style.backgroundColor = '#3498db';
+            modalHeader.style.color = 'white';
+            
+            modalTitle.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Please Wait`;
+            modalBody.innerHTML = `
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mb-0 font-weight-bold">${message}</p>
+                </div>
+            `;
+            modalFooter.innerHTML = '';
+
+            // Remove close button for loading modal
+            const closeBtn = modalHeader.querySelector('.close');
+            if (closeBtn) closeBtn.style.display = 'none';
+
+            // Prevent closing
+            modal.modal({
+                backdrop: 'static',
+                keyboard: false,
+                show: true
+            });
+        }, 100);
+    }
+
+    function hideModal() {
+        const modal = $('#customModal');
+        modal.modal('hide');
+        setTimeout(() => {
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css('padding-right', '');
+        }, 300);
     }
 
     // --- Helper Functions ---
@@ -36,15 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function generateOrderNumber(orderId, date) {
-        const dateObj = new Date(date);
-        const year = dateObj.getFullYear();
-        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const day = String(dateObj.getDate()).padStart(2, '0');
-        return `ORD-${year}${month}${day}-${String(orderId).padStart(4, '0')}`;
-    }
-
-    // --- Group orders by grouped_order_id OR by time if grouped_order_id is null ---
+    // --- Group orders by grouped_order_id OR by time ---
     function groupOrdersByOrderNumber(orders) {
         const orderGroups = {};
         
@@ -52,14 +209,11 @@ document.addEventListener('DOMContentLoaded', () => {
             let groupKey;
             
             if (order.grouped_order_id && order.grouped_order_id !== null) {
-                // Use the grouped_order_id from backend if it exists
                 groupKey = order.grouped_order_id;
             } else {
-                // Group by customer_id and time (within 2 minutes) if grouped_order_id is null
                 const orderTime = new Date(order.order_date).getTime();
                 const customerId = order.customer_id;
                 
-                // Find existing time-based group within 2 minutes (120000ms)
                 let foundGroup = null;
                 for (const key in orderGroups) {
                     const group = orderGroups[key];
@@ -73,7 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (foundGroup) {
                     groupKey = foundGroup;
                 } else {
-                    // Create new time-based group
                     groupKey = `TIME_GROUP_${customerId}_${orderTime}`;
                 }
             }
@@ -89,15 +242,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     total_amount: 0,
                     total_items: 0,
                     order_ids: [],
-                    temp_customer_id: order.customer_id, // For time-based grouping
-                    temp_timestamp: new Date(order.order_date).getTime() // For time-based grouping
+                    temp_customer_id: order.customer_id,
+                    temp_timestamp: new Date(order.order_date).getTime()
                 };
             }
             
-            // Add this order ID to the group
             orderGroups[groupKey].order_ids.push(order.id);
             
-            // Group by seller within the order
             const sellerId = order.seller_id || 'unknown';
             const sellerName = order.seller_name || 'Unknown Seller';
             
@@ -111,7 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }
             
-            // Add product to the seller group
             const productData = {
                 id: order.id,
                 name: order.product_name || 'Unknown Product',
@@ -126,16 +276,13 @@ document.addEventListener('DOMContentLoaded', () => {
             orderGroups[groupKey].total_amount += productData.subtotal;
             orderGroups[groupKey].total_items += productData.quantity;
             
-            // Use the earliest order date for the group
             if (new Date(order.order_date) < new Date(orderGroups[groupKey].order_date)) {
                 orderGroups[groupKey].order_date = order.order_date;
             }
             
-            // Update overall status - prioritize pending/processing over delivered
             const currentStatus = orderGroups[groupKey].overall_status;
             const newStatus = order.status || 'pending';
             
-            // Status priority: cancelled > pending > shipped > delivered
             const statusPriority = {
                 'cancelled': 4,
                 'pending': 3,
@@ -170,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // --- Create seller section HTML (non-collapsible, always visible when order is expanded) ---
+    // --- Create seller section HTML ---
     function createSellerSectionHTML(seller) {
         const productsHTML = seller.products.map(product => 
             createProductItemHTML(product)
@@ -205,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // --- Create order card HTML (order header is collapsible) ---
+    // --- Create order card HTML ---
     function createOrderCardHTML(orderGroup) {
         const sellers = Object.values(orderGroup.sellers);
         const sellerSectionsHTML = sellers.map(seller => 
@@ -265,9 +412,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <div class="order-actions">
                         <div class="d-flex justify-content-between align-items-center">
-                        
-                            ${orderGroup.overall_status === 'delivered' ? 
-                                `<button class="btn btn-primary btn-sm" data-order-id="${orderGroup.order_ids.join(',')}">
+                            ${orderGroup.overall_status.toLowerCase() === 'pending' ? 
+                                `<button class="btn btn-danger btn-sm cancel-order-btn" data-order-ids="${orderGroup.order_ids.join(',')}" data-order-number="${orderGroup.order_number}">
+                                    <i class="fas fa-times mr-1"></i>Cancel Order
+                                </button>` : 
+                                ''
+                            }
+                            ${orderGroup.overall_status.toLowerCase() === 'delivered' ? 
+                                `<button class="btn btn-primary btn-sm reorder-btn" data-order-ids="${orderGroup.order_ids.join(',')}">
                                     <i class="fas fa-redo mr-1"></i>Reorder
                                 </button>` : 
                                 ''
@@ -286,62 +438,62 @@ document.addEventListener('DOMContentLoaded', () => {
         
         tabItems.forEach(tab => {
             tab.addEventListener('click', function() {
-                // Remove active class from all tabs
                 tabItems.forEach(t => t.classList.remove('active'));
-                // Add active class to clicked tab
                 this.classList.add('active');
                 
-                // Filter orders
                 const selectedStatus = this.getAttribute('data-status').toLowerCase();
                 filterOrdersByStatus(selectedStatus);
             });
         });
 
         // Sort functionality
-        document.getElementById('sortOptions').addEventListener('change', function() {
-            const sortValue = this.value;
-            const container = document.getElementById('orders-list-container');
-            const orderCards = Array.from(container.querySelectorAll('.order-card'));
-            const summaryAlert = container.querySelector('.alert-info');
-            
-            orderCards.sort((a, b) => {
-                const aDate = new Date(getOrderDate(a));
-                const bDate = new Date(getOrderDate(b));
-                const aAmount = getOrderAmount(a);
-                const bAmount = getOrderAmount(b);
+        const sortSelect = document.getElementById('sortOptions');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                const sortValue = this.value;
+                const container = document.getElementById('orders-list-container');
+                const orderCards = Array.from(container.querySelectorAll('.order-card'));
+                const summaryAlert = container.querySelector('.alert-info');
                 
-                switch (sortValue) {
-                    case 'oldest':
-                        return aDate - bDate;
-                    case 'amount_high':
-                        return bAmount - aAmount;
-                    case 'amount_low':
-                        return aAmount - bAmount;
-                    case 'newest':
-                    default:
-                        return bDate - aDate;
+                orderCards.sort((a, b) => {
+                    const aDate = new Date(getOrderDate(a));
+                    const bDate = new Date(getOrderDate(b));
+                    const aAmount = getOrderAmount(a);
+                    const bAmount = getOrderAmount(b);
+                    
+                    switch (sortValue) {
+                        case 'oldest':
+                            return aDate - bDate;
+                        case 'amount_high':
+                            return bAmount - aAmount;
+                        case 'amount_low':
+                            return aAmount - bAmount;
+                        case 'newest':
+                        default:
+                            return bDate - aDate;
+                    }
+                });
+                
+                container.innerHTML = '';
+                if (summaryAlert) {
+                    container.appendChild(summaryAlert);
                 }
+                orderCards.forEach(card => container.appendChild(card));
             });
-            
-            // Clear container and re-append in sorted order
-            container.innerHTML = '';
-            if (summaryAlert) {
-                container.appendChild(summaryAlert);
-            }
-            orderCards.forEach(card => container.appendChild(card));
-        });
+        }
 
         // Order action buttons
         ordersContainer.addEventListener('click', function(e) {
-            const target = e.target.closest('button[data-order-id]');
-            if (!target) return;
+            const cancelBtn = e.target.closest('.cancel-order-btn');
+            const reorderBtn = e.target.closest('.reorder-btn');
             
-            const orderId = target.getAttribute('data-order-id');
-            
-            if (target.textContent.includes('View Details')) {
-                viewOrderDetails(orderId);
-            } else if (target.textContent.includes('Reorder')) {
-                reorderItems(orderId);
+            if (cancelBtn) {
+                const orderIds = cancelBtn.getAttribute('data-order-ids');
+                const orderNumber = cancelBtn.getAttribute('data-order-number');
+                cancelOrder(orderIds, orderNumber, cancelBtn);
+            } else if (reorderBtn) {
+                const orderIds = reorderBtn.getAttribute('data-order-ids');
+                reorderItems(orderIds);
             }
         });
     }
@@ -362,21 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.style.display = 'none';
             }
         });
-        
-        // Update summary stats for filtered view
-        updateFilteredSummary(selectedStatus, visibleCount);
-    }
-    
-    // --- Update summary for filtered view ---
-    function updateFilteredSummary(status, visibleCount) {
-        const summaryAlert = document.querySelector('.alert-info');
-        if (!summaryAlert) return;
-        
-        const statusText = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'All';
-        const orderText = visibleCount === 1 ? 'Order' : 'Orders';
-        
-        // You can update the summary to show filtered stats if needed
-        // For now, we'll keep the original totals
     }
 
     // --- Helper functions for sorting ---
@@ -393,19 +530,116 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Action Functions ---
-    function viewOrderDetails(orderId) {
-        console.log('View order details for:', orderId);
-        // If orderId contains multiple IDs, use the first one
-        const firstId = String(orderId).split(',')[0];
-        window.location.href = `order_details.html?id=${firstId}`;
+    async function cancelOrder(orderIds, orderNumber, buttonElement) {
+        const orderIdArray = orderIds.split(',').map(id => parseInt(id));
+        const orderCount = orderIdArray.length;
+        const itemText = orderCount === 1 ? 'item' : 'items';
+        
+        showModal(
+            'Cancel Order',
+            `Are you sure you want to cancel order <strong>${orderNumber}</strong>?<br><br>
+            <div class="alert alert-warning mb-0">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                This will cancel <strong>${orderCount} ${itemText}</strong> and this action cannot be undone.
+            </div>`,
+            'confirm',
+            async () => {
+                // Show loading modal
+                showLoadingModal('Cancelling your order...');
+
+                // Small delay to ensure loading modal is fully rendered
+                setTimeout(async () => {
+                    try {
+                        const response = await fetch(`${BACKEND_URL}/api/orders/cancel`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                                'Content-Type': 'application/json',
+                                'X-User-ID': user.id
+                            },
+                            body: JSON.stringify({ order_ids: orderIdArray })
+                        });
+
+                        const contentType = response.headers.get('content-type');
+                        if (!contentType || !contentType.includes('application/json')) {
+                            throw new Error('Server returned an invalid response. Please contact support.');
+                        }
+
+                        const result = await response.json();
+
+                        hideModal();
+
+                        if (!response.ok) {
+                            throw new Error(result.error || 'Failed to cancel order');
+                        }
+
+                        // Wait for modal to hide before showing success
+                        setTimeout(() => {
+                            showModal(
+                                'Success!',
+                                `Order ${orderNumber} has been cancelled successfully.<br><br>
+                                <i class="fas fa-check-circle text-success mr-1"></i> ${result.orders_cancelled || orderCount} ${itemText} cancelled`,
+                                'success',
+                                () => {
+                                    fetchAndDisplayOrders();
+                                }
+                            );
+                        }, 100);
+
+                    } catch (error) {
+                        hideModal();
+                        console.error('Error cancelling order:', error);
+                        
+                        setTimeout(() => {
+                            showModal(
+                                'Cancellation Failed',
+                                `<div class="alert alert-danger mb-2">
+                                    <i class="fas fa-exclamation-circle mr-2"></i><strong>Error:</strong> ${error.message}
+                                </div>
+                                <p class="mb-0">Please try again or contact support if the problem persists.</p>`,
+                                'error'
+                            );
+                        }, 100);
+                    }
+                }, 200);
+            },
+            () => {
+                // User cancelled
+                console.log('Order cancellation aborted by user');
+            }
+        );
     }
 
-    function reorderItems(orderId) {
-        console.log('Reorder items for:', orderId);
-        if (confirm('Add these items to your cart again?')) {
-            // Here you would typically send the order_ids array to your reorder API
-            alert('Items added to cart!');
-        }
+    function reorderItems(orderIds) {
+        const orderIdArray = orderIds.split(',');
+        const itemCount = orderIdArray.length;
+        const itemText = itemCount === 1 ? 'item' : 'items';
+        
+        showModal(
+            'Reorder Items',
+            `Add ${itemCount} ${itemText} to your cart again?<br><br>
+            <i class="fas fa-shopping-cart text-primary mr-1"></i> These items will be added to your current cart.`,
+            'confirm',
+            () => {
+                showLoadingModal('Adding items to cart...');
+                
+                // Simulate API call
+                setTimeout(() => {
+                    hideModal();
+                    
+                    setTimeout(() => {
+                        showModal(
+                            'Success!',
+                            `<i class="fas fa-check-circle text-success mr-2"></i>${itemCount} ${itemText} added to your cart!<br><br>
+                            <a href="cart.html" class="btn btn-primary btn-sm mt-2">
+                                <i class="fas fa-shopping-cart mr-1"></i>View Cart
+                            </a>`,
+                            'success'
+                        );
+                    }, 100);
+                }, 1500);
+            }
+        );
     }
 
     // --- Main function to fetch and display orders ---
@@ -429,9 +663,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    alert('Session expired or invalid. Please log in again.');
-                    localStorage.clear();
-                    window.location.href = 'login.html';
+                    showModal(
+                        'Session Expired',
+                        'Your session has expired. Please log in again to continue.',
+                        'warning',
+                        () => {
+                            localStorage.clear();
+                            window.location.href = 'login.html';
+                        }
+                    );
                     return;
                 }
                 throw new Error(`Failed to fetch orders. Status: ${response.status}`);
@@ -446,29 +686,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
                         <h4>No Orders Yet</h4>
                         <p class="text-muted">You haven't placed any orders yet. Start shopping to see your orders here!</p>
-                        <a href="products.html" class="btn btn-primary">Start Shopping</a>
+                        <a href="products.html" class="btn btn-primary">
+                            <i class="fas fa-shopping-cart mr-2"></i>Start Shopping
+                        </a>
                     </div>
                 `;
                 return;
             }
 
-            // Sort orders by date (newest first)
             orders.sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
-
-            // Group by order number
             const groupedOrders = groupOrdersByOrderNumber(orders);
-            
-            // Convert to array and sort by date (newest first)
             const sortedOrderGroups = Object.values(groupedOrders)
                 .sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
             
-            // Create cards for each order group
             sortedOrderGroups.forEach(orderGroup => {
                 const orderCardHTML = createOrderCardHTML(orderGroup);
                 ordersContainer.insertAdjacentHTML('beforeend', orderCardHTML);
             });
 
-            // Add summary stats
             const totalOrders = sortedOrderGroups.length;
             const totalSellers = new Set(orders.map(order => order.seller_id)).size;
             const totalAmount = orders.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0);
@@ -498,8 +733,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             
             ordersContainer.insertAdjacentHTML('afterbegin', summaryHTML);
-
-            // Setup event handlers after content is loaded
             setupEventHandlers();
 
         } catch (error) {
@@ -510,12 +743,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h5>Could not load your orders</h5>
                     <p>Please check your connection and try again.</p>
                     <p><small>Error: ${error.message}</small></p>
-                    <button class="btn btn-danger" onclick="location.reload()">Retry</button>
+                    <button class="btn btn-danger" onclick="location.reload()">
+                        <i class="fas fa-redo mr-2"></i>Retry
+                    </button>
                 </div>
             `;
         }
     }
 
-    // Initialize
     fetchAndDisplayOrders();
 });
