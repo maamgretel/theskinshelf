@@ -9,7 +9,7 @@ function initLogin() {
 
     const loginForm = document.getElementById('loginForm');
     const loginAlert = document.getElementById('login-alert');
-    const backendUrl = 'https://backend-rj0a.onrender.com/api/auth/login';
+    const backendUrl = window.API_BASE + '/api/auth/login';
 
     if (!loginForm) return;
 

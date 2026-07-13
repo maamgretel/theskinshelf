@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const API = 'https://backend-rj0a.onrender.com';
+    const API = window.API_BASE + '';
     const pc = document.getElementById('product-container');
     const ls = document.getElementById('loading-spinner');
     const rpc = document.getElementById('related-products-container');

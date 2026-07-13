@@ -1,438 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; 
-        style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://fonts.googleapis.com; 
-        font-src 'self' https://fonts.gstatic.com;
-        media-src *; 
-        connect-src 'self' https://backend-rj0a.onrender.com;
-    ">
-    <meta name="format-detection" content="telephone=no">
-    <meta name="msapplication-tap-highlight" content="no">
-    <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link 
-        rel="stylesheet" 
-        href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-    >
-    <title>The Skin Shelf - Premium Makeup Collection</title>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #ffffff;
-            color: #000000;
-            line-height: 1.6;
-        }
-
-        /* Navigation */
-        .navbar {
-            background: #ffffff;
-            padding: 1rem 0;
-            border-bottom: 1px solid #e0e0e0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .navbar-brand {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #000000 !important;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .navbar-brand:hover {
-            color: #333333 !important;
-        }
-
-        .nav-link {
-            color: #000000 !important;
-            font-weight: 500;
-            margin: 0 1rem;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: #666666 !important;
-        }
-
-        .navbar-toggler {
-            border: none;
-            padding: 0.25rem 0.5rem;
-        }
-
-        .navbar-toggler:focus {
-            box-shadow: none;
-        }
-
-        /* Hero Section */
-        .hero {
-            min-height: 90vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 2rem 0;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
-        }
-
-        .hero h1 {
-            font-size: 4rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #000000;
-        }
-
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 2rem;
-            color: #555555;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Buttons */
-        .btn-primary-custom {
-            background: #000000;
-            color: #ffffff;
-            border: none;
-            padding: 1rem 2.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            margin: 0.5rem;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-primary-custom:hover {
-            background: #333333;
-            color: #ffffff;
-            transform: translateY(-2px);
-            text-decoration: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .btn-outline-custom {
-            background: transparent;
-            color: #000000;
-            border: 2px solid #000000;
-            padding: 1rem 2.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            margin: 0.5rem;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-outline-custom:hover {
-            background: #000000;
-            color: #ffffff;
-            text-decoration: none;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        /* Features Section */
-        .features {
-            padding: 5rem 0;
-            background: #f8f8f8;
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 3rem;
-            color: #000000;
-        }
-
-        .feature-card {
-            background: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 15px;
-            padding: 2.5rem 1.5rem;
-            text-align: center;
-            height: 100%;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: #000000;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-        }
-
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-            display: block;
-        }
-
-        .feature-card h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: #000000;
-        }
-
-        .feature-card p {
-            color: #666666;
-            line-height: 1.6;
-        }
-
-        /* Stats Section */
-        .stats {
-            padding: 4rem 0;
-            background: #ffffff;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 1rem;
-        }
-
-        .stat-number {
-            font-size: 3rem;
-            font-weight: 800;
-            color: #000000;
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            font-size: 1.1rem;
-            color: #666666;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
-        }
-
-        /* CTA Section */
-        .cta {
-            padding: 5rem 0;
-            background: #f8f8f8;
-            text-align: center;
-        }
-
-        .cta h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: #000000;
-        }
-
-        .cta p {
-            font-size: 1.2rem;
-            color: #666666;
-            margin-bottom: 2.5rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Footer */
-        .footer {
-            background: #000000;
-            padding: 2rem 0;
-            text-align: center;
-        }
-
-        .footer p {
-            color: #ffffff;
-            margin: 0;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            
-            .hero p {
-                font-size: 1.1rem;
-            }
-            
-            .btn-primary-custom,
-            .btn-outline-custom {
-                padding: 0.8rem 2rem;
-                font-size: 1rem;
-                display: block;
-                margin: 0.5rem auto;
-                width: fit-content;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .cta h2 {
-                font-size: 2rem;
-            }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
+    img-src 'self' data: https:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    script-src 'self' 'unsafe-inline';
+  ">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>The Skin Shelf — Clean, Effective Skincare</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧴</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/store.css">
+  <style>
+    .hero { position: relative; overflow: hidden; }
+    .hero .container { display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: center; padding: 70px 22px 80px; }
+    .hero-copy h1 { font-size: clamp(2.6rem, 5.4vw, 4.4rem); line-height: 1.02; }
+    .hero-copy h1 em { font-style: italic; color: var(--accent); }
+    .hero-copy p { font-size: 1.12rem; color: var(--ink-soft); max-width: 46ch; margin: 1.3rem 0 2rem; }
+    .hero-cta { display: flex; gap: .8rem; flex-wrap: wrap; }
+    .hero-stats { display: flex; gap: 2.2rem; margin-top: 2.6rem; }
+    .hero-stats .n { font-family: var(--serif); font-size: 1.9rem; color: var(--ink); }
+    .hero-stats .l { font-size: .82rem; color: var(--muted); }
+    .hero-art { position: relative; }
+    .hero-art .main { border-radius: var(--r-lg); aspect-ratio: 4/5; object-fit: cover; width: 100%; box-shadow: var(--sh-lg); }
+    .hero-art .float { position: absolute; background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sh-lg); padding: .8rem 1rem; display: flex; align-items: center; gap: .6rem; }
+    .hero-art .f1 { bottom: 26px; left: -18px; }
+    .hero-art .f2 { top: 30px; right: -14px; }
+    .hero-art .float .em { font-size: 1.4rem; }
+    .hero-art .float .t { font-size: .78rem; color: var(--muted); }
+    .hero-art .float .v { font-weight: 700; font-size: .92rem; }
+    .marquee { background: var(--ink); color: #f0e7db; overflow: hidden; }
+    .marquee .track { display: flex; gap: 3rem; padding: 12px 0; white-space: nowrap; animation: slide 26s linear infinite; font-size: .82rem; letter-spacing: .12em; text-transform: uppercase; }
+    @keyframes slide { to { transform: translateX(-50%); } }
+    .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .cat-card { position: relative; border-radius: var(--r-lg); overflow: hidden; aspect-ratio: 3/4; background: var(--cream-2); display: block; }
+    .cat-card img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+    .cat-card:hover img { transform: scale(1.07); }
+    .cat-card .lbl { position: absolute; inset: auto 0 0 0; padding: 20px; background: linear-gradient(transparent, rgba(20,16,13,.72)); color: #fff; }
+    .cat-card .lbl h3 { color: #fff; font-size: 1.25rem; }
+    .cat-card .lbl span { font-size: .8rem; opacity: .85; }
+    .values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .value { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 30px; }
+    .value .em { font-size: 1.8rem; }
+    .value h3 { font-size: 1.15rem; margin: .7rem 0 .4rem; }
+    .value p { color: var(--muted); font-size: .92rem; margin: 0; }
+    .story { background: var(--accent-soft); border-radius: var(--r-lg); overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; }
+    .story img { width: 100%; height: 100%; object-fit: cover; min-height: 320px; }
+    .story .txt { padding: 54px; }
+    .story .txt h2 { font-size: 2.2rem; margin-bottom: 1rem; }
+    .story .txt p { color: var(--ink-soft); }
+    .news { text-align: center; background: var(--ink); color: #fff; border-radius: var(--r-lg); padding: 56px 22px; }
+    .news h2 { color: #fff; font-size: 2.2rem; }
+    .news p { color: #cdbfae; margin: .6rem auto 1.6rem; max-width: 44ch; }
+    .news form { display: flex; gap: .6rem; max-width: 440px; margin: 0 auto; }
+    .news input { flex: 1; border-radius: var(--r-pill); border: none; padding: .85rem 1.2rem; font-size: .95rem; }
+    @media (max-width: 900px) {
+      .hero .container { grid-template-columns: 1fr; padding-top: 40px; }
+      .hero-art { order: -1; max-width: 420px; margin: 0 auto; }
+      .cat-grid { grid-template-columns: repeat(2, 1fr); }
+      .values { grid-template-columns: 1fr; }
+      .story { grid-template-columns: 1fr; }
+      .story img { min-height: 220px; }
+      .story .txt { padding: 34px; }
+    }
+    @media (max-width: 520px) { .hero-stats { gap: 1.4rem; } .news form { flex-direction: column; } }
+  </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="#home">The Skin Shelf</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-                <span style="color: black; font-size: 1.5rem;">☰</span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.html">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="features.html">Features</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="about.html">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="contact.html">Contact</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+  <div id="app-header"></div>
 
-    <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <h1>The Skin Shelf</h1>
-                    <p>Discover premium makeup essentials and transform your beauty routine with our exclusive collection of high-quality, professionally curated cosmetics.</p>
-                    <div class="mt-4">
-                        <a href="pages/login.html" class="btn-primary-custom">Shop Now</a>
-                        <a href="#features" class="btn-outline-custom">Explore Products</a>
-                    </div>
-                </div>
-            </div>
+  <section class="hero">
+    <div class="container">
+      <div class="hero-copy">
+        <span class="eyebrow">Clean skincare, curated</span>
+        <h1>Your daily ritual, <em>beautifully</em> simple.</h1>
+        <p>Thoughtfully formulated serums, cleansers and creams that actually work — for skin that feels calm, healthy and glowing.</p>
+        <div class="hero-cta">
+          <a href="pages/customer_dashboard.html" class="btn btn-primary btn-lg">Shop the collection</a>
+          <a href="#featured" class="btn btn-outline btn-lg">Bestsellers</a>
         </div>
-    </section>
-
-    <!-- Features Section -->
-    <section id="features" class="features">
-        <div class="container">
-            <h2 class="section-title">Why Choose The Skin Shelf</h2>
-            <div class="row">
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">💄</div>
-                        <h3>Premium Quality</h3>
-                        <p>Carefully selected makeup products from top brands, cruelty-free and made with the finest ingredients for flawless results.</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">🚚</div>
-                        <h3>Fast Shipping</h3>
-                        <p>Get your beauty essentials delivered quickly with our express shipping options and careful packaging.</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">✨</div>
-                        <h3>Expert Curation</h3>
-                        <p>Every product is handpicked by beauty experts to ensure you get the best makeup for every occasion and skin type.</p>
-                    </div>
-                </div>
-            </div>
+        <div class="hero-stats">
+          <div><div class="n" id="stat-products">—</div><div class="l">Products</div></div>
+          <div><div class="n">100%</div><div class="l">Cruelty-free</div></div>
+          <div><div class="n">4.8★</div><div class="l">Avg. rating</div></div>
         </div>
-    </section>
+      </div>
+      <div class="hero-art">
+        <img class="main" src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=800&q=80&auto=format&fit=crop" alt="Skincare flatlay">
+        <div class="float f1"><span class="em">🌿</span><div><div class="t">Naturally derived</div><div class="v">Gentle on skin</div></div></div>
+        <div class="float f2"><span class="em">✨</span><div><div class="t">Loved by</div><div class="v">2,400+ customers</div></div></div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Stats Section -->
-    <section id="stats" class="stats">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="stat-item">
-                        <span class="stat-number">25K+</span>
-                        <span class="stat-label">Happy Customers</span>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="stat-item">
-                        <span class="stat-number">500+</span>
-                        <span class="stat-label">Products Available</span>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="stat-item">
-                        <span class="stat-number">100%</span>
-                        <span class="stat-label">Authentic Products</span>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="stat-item">
-                        <span class="stat-number">24/7</span>
-                        <span class="stat-label">Customer Support</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+  <div class="marquee"><div class="track">
+    <span>Free shipping over ₱1,500</span><span>·</span><span>Dermatologist tested</span><span>·</span><span>Cruelty-free</span><span>·</span><span>Made in the Philippines</span><span>·</span>
+    <span>Free shipping over ₱1,500</span><span>·</span><span>Dermatologist tested</span><span>·</span><span>Cruelty-free</span><span>·</span><span>Made in the Philippines</span><span>·</span>
+  </div></div>
 
-    <!-- CTA Section -->
-    <section id="contact" class="cta">
-        <div class="container">
-            <h2>Ready to Glow Up?</h2>
-            <p>Join thousands of beauty lovers who trust The Skin Shelf for their makeup needs. Discover your perfect look today.</p>
-            <a href="pages/login.html" class="btn-primary-custom">Start Shopping</a>
-        </div>
-    </section>
+  <section class="section container">
+    <div class="section-head">
+      <div><span class="eyebrow">Find your fit</span><h2>Shop by category</h2></div>
+      <a href="pages/customer_dashboard.html" class="btn btn-soft">View all →</a>
+    </div>
+    <div class="cat-grid">
+      <a class="cat-card" href="pages/customer_dashboard.html?category=3"><img src="https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=500&q=80&auto=format&fit=crop" alt=""><div class="lbl"><h3>Serums</h3><span>Targeted treatments</span></div></a>
+      <a class="cat-card" href="pages/customer_dashboard.html?category=1"><img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=500&q=80&auto=format&fit=crop" alt=""><div class="lbl"><h3>Cleansers</h3><span>Fresh, clean start</span></div></a>
+      <a class="cat-card" href="pages/customer_dashboard.html?category=4"><img src="https://images.unsplash.com/photo-1612817288484-6f916006741a?w=500&q=80&auto=format&fit=crop" alt=""><div class="lbl"><h3>Moisturizers</h3><span>All-day hydration</span></div></a>
+      <a class="cat-card" href="pages/customer_dashboard.html?category=5"><img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=500&q=80&auto=format&fit=crop" alt=""><div class="lbl"><h3>Sunscreen</h3><span>Daily protection</span></div></a>
+    </div>
+  </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 The Skin Shelf. All rights reserved. | Premium Makeup for Every Girl</p>
-        </div>
-    </footer>
+  <section class="section container" id="featured" style="padding-top:0">
+    <div class="section-head">
+      <div><span class="eyebrow">Customer favourites</span><h2>Bestsellers this month</h2></div>
+      <a href="pages/customer_dashboard.html" class="btn btn-soft">Shop all →</a>
+    </div>
+    <div class="product-grid" id="featured-grid"></div>
+  </section>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-    </script>
+  <section class="section container" style="padding-top:0">
+    <div class="values">
+      <div class="value"><div class="em">🧪</div><h3>Backed by ingredients</h3><p>Formulas built around proven actives — vitamin C, niacinamide, hyaluronic acid and retinol.</p></div>
+      <div class="value"><div class="em">🐰</div><h3>Kind &amp; clean</h3><p>Cruelty-free, fragrance-conscious, and made for sensitive skin without the harsh stuff.</p></div>
+      <div class="value"><div class="em">🚚</div><h3>Fast, tracked delivery</h3><p>Nationwide shipping with order tracking, plus free delivery on orders over ₱1,500.</p></div>
+    </div>
+  </section>
+
+  <section class="section container" id="about" style="padding-top:0">
+    <div class="story">
+      <img src="https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=700&q=80&auto=format&fit=crop" alt="Skincare">
+      <div class="txt">
+        <span class="eyebrow">Our story</span>
+        <h2>Skincare that respects your skin</h2>
+        <p>The Skin Shelf began with a simple belief: good skincare shouldn't be complicated or full of empty promises. We curate gentle, effective products and pair them with honest guidance — so you can build a routine that fits your skin and your life.</p>
+        <p>Every product on our shelf is chosen for how it performs and how it feels. No noise, just results.</p>
+        <a href="pages/customer_dashboard.html" class="btn btn-accent" style="margin-top:.6rem">Start your ritual</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section container" style="padding-top:0">
+    <div class="news">
+      <span class="eyebrow" style="color:var(--gold)">Join the list</span>
+      <h2>10% off your first order</h2>
+      <p>Skincare tips, new drops and members-only offers — straight to your inbox.</p>
+      <form id="news-form">
+        <input type="email" placeholder="you@email.com" required aria-label="Email">
+        <button class="btn btn-accent" type="submit">Subscribe</button>
+      </form>
+    </div>
+  </section>
+
+  <div id="app-footer"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/store.js"></script>
+  <script>
+    TSS.mountHeader('home');
+    TSS.mountFooter();
+
+    (async function loadFeatured() {
+      const grid = document.getElementById('featured-grid');
+      grid.innerHTML = Array.from({length: 5}).map(() =>
+        '<div class="sk-card"><div class="skeleton sk-img"></div><div class="skeleton sk-line" style="width:60%"></div><div class="skeleton sk-line" style="width:40%"></div></div>').join('');
+      try {
+        const res = await fetch(`${TSS.API}/api/products`);
+        const products = await res.json();
+        document.getElementById('stat-products').textContent = products.length + '+';
+        grid.innerHTML = products.slice(0, 5).map(p => TSS.productCardHTML(p)).join('');
+        TSS.bindProductGrid(grid);
+      } catch (e) {
+        grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="ic">🌸</div><h3>Couldn\'t load products</h3><p>Make sure the backend is running at ' + TSS.API + '</p></div>';
+      }
+    })();
+
+    document.getElementById('news-form').addEventListener('submit', (e) => {
+      e.preventDefault(); e.target.reset();
+      TSS.toast('Thanks for subscribing! Check your inbox ✨', 'success');
+    });
+  </script>
 </body>
 </html>

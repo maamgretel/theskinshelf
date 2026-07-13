@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+    const BACKEND_URL = window.API_BASE + '';
     const DEFAULT_AVATAR = 'https://res.cloudinary.com/dwgvlwkyt/image/upload/v1751856106/default-avatar.jpg';
     const user = JSON.parse(localStorage.getItem('user'));
 

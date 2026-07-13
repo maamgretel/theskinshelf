@@ -1,6 +1,6 @@
 // Products Page JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+    const BACKEND_URL = window.API_BASE + '';
     const user = JSON.parse(localStorage.getItem('user'));
 
     // Security Check

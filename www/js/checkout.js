@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const API = 'https://backend-rj0a.onrender.com';
+    const API = window.API_BASE + '';
     const user = JSON.parse(localStorage.getItem('user'));
     
     let cardSaved = false;

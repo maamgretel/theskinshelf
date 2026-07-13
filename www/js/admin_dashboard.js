@@ -1,5 +1,5 @@
 // Enhanced Admin Dashboard JavaScript - REAL DATA ONLY
-    const API_URL = 'https://backend-rj0a.onrender.com';
+    const API_URL = window.API_BASE + '';
     let currentUser = null;
     let revenueChart = null;
     let orderStatusChart = null;

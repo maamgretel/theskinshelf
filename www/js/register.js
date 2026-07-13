@@ -35,7 +35,7 @@ function initRegister() {
 
         try {
             // Send data to the backend to request OTP
-            const response = await fetch('https://backend-rj0a.onrender.com/api/auth/register', {
+            const response = await fetch(window.API_BASE + '/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -77,7 +77,7 @@ function initRegister() {
 
         try {
             // Send email and OTP to the new verification endpoint
-            const response = await fetch('https://backend-rj0a.onrender.com/api/auth/verify-registration', {
+            const response = await fetch(window.API_BASE + '/api/auth/verify-registration', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),

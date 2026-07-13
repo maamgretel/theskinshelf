@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const BACKEND_URL = window.API_BASE + '';
   const user = JSON.parse(localStorage.getItem('user'));
 
   // Debug logging
@@ -679,7 +679,7 @@ function openAddStockModal(productId, productName, currentStock) {
 
 async function openEditProductModal(productId) {
   currentEditProductId = productId;
-  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const BACKEND_URL = window.API_BASE + '';
   const user = JSON.parse(localStorage.getItem('user'));
   
   try {
@@ -722,7 +722,7 @@ async function openEditProductModal(productId) {
 }
 
 async function handleEditProduct() {
-  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const BACKEND_URL = window.API_BASE + '';
   const user = JSON.parse(localStorage.getItem('user'));
   const confirmBtn = document.getElementById('confirmEditProduct');
   
@@ -778,7 +778,7 @@ async function handleAddStock() {
   confirmBtn.innerHTML = 'Adding...';
 
   try {
-    const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+    const BACKEND_URL = window.API_BASE + '';
     const user = JSON.parse(localStorage.getItem('user'));
     
     const response = await window.safeFetch(`${BACKEND_URL}/api/seller/add-stock`, {
@@ -852,7 +852,7 @@ async function handleSubtractStock() {
       confirmBtn.innerHTML = 'Removing...';
 
       try {
-        const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+        const BACKEND_URL = window.API_BASE + '';
         const user = JSON.parse(localStorage.getItem('user'));
         const newStock = currentStock - stockToSubtract;
         
@@ -893,7 +893,7 @@ async function deleteProduct(productId, productName) {
     async (confirmed) => {
       if (!confirmed) return;
 
-      const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+      const BACKEND_URL = window.API_BASE + '';
       const user = JSON.parse(localStorage.getItem('user'));
       
       try {

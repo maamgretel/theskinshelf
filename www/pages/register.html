@@ -9,7 +9,7 @@
         style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://fonts.googleapis.com; 
         font-src 'self' https://fonts.gstatic.com;
         media-src *; 
-        connect-src 'self' https://backend-rj0a.onrender.com;
+        connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
     ">
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
@@ -24,6 +24,7 @@
     >
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="../js/config.js"></script>
     
     <style>
         * {
@@ -942,7 +943,7 @@
 
             try {
                 // Send data to your backend
-                const response = await fetch('https://backend-rj0a.onrender.com/api/auth/register', {
+                const response = await fetch(window.API_BASE + '/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data),
@@ -1047,7 +1048,7 @@
             
             try {
                 // Send OTP verification to your backend
-                const response = await fetch('https://backend-rj0a.onrender.com/api/auth/verify-registration', {
+                const response = await fetch(window.API_BASE + '/api/auth/verify-registration', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1087,7 +1088,7 @@
             
             try {
                 // Check if resend endpoint exists, if not, show manual message
-                const response = await fetch('https://backend-rj0a.onrender.com/api/auth/resend-otp', {
+                const response = await fetch(window.API_BASE + '/api/auth/resend-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: email }),

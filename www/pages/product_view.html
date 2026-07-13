@@ -1,120 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/product_view.css">
-    <style>
-        /* Optional: Add a little space below the sticky header */
-        body {
-            padding-top: 70px;
-        }
-        .sticky-top {
-            top: -1px; /* Ensures the shadow is always visible */
-        }
-        .back-btn {
-            background: none;
-            border: none;
-            color: #6c757d;
-            font-size: 1.1rem;
-            padding: 8px 12px;
-            margin-right: 15px;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-        }
-        .back-btn:hover {
-            background: #f8f9fa;
-            color: #495057;
-        }
-        .header-content {
-            display: flex;
-            align-items: center;
-            width: 100%;
-        }
-        .navbar-brand {
-            flex: 1;
-        }
-        .search-form {
-            flex: 2;
-            max-width: 400px;
-            margin: 0 20px;
-        }
-        .nav-actions {
-            flex: 0 0 auto;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
+    img-src 'self' data: https:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    script-src 'self' 'unsafe-inline';
+  ">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Product — The Skin Shelf</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧴</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/store.css">
+  <style>
+    .crumb { padding: 22px 0 6px; font-size: .85rem; color: var(--muted); }
+    .crumb a:hover { color: var(--ink); }
+    .pdp { display: grid; grid-template-columns: 1.05fr 1fr; gap: 50px; padding: 18px 0 40px; }
+    .gallery { position: sticky; top: 90px; }
+    .gallery .main { border-radius: var(--r-lg); aspect-ratio: 1/1; object-fit: cover; width: 100%; background: var(--cream-2); box-shadow: var(--sh); }
+    .info .cat { color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; font-size: .74rem; }
+    .info h1 { font-size: clamp(1.9rem, 3.5vw, 2.8rem); margin: .5rem 0 .6rem; }
+    .info .rate { display: flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .9rem; margin-bottom: 1rem; }
+    .info .rate .s { color: var(--gold); }
+    .price-line { display: flex; align-items: baseline; gap: .8rem; margin: 1rem 0; }
+    .price-line .now { font-family: var(--serif); font-size: 2.2rem; color: var(--ink); }
+    .price-line .was { color: var(--muted); text-decoration: line-through; font-size: 1.1rem; }
+    .price-line .off { background: var(--accent-soft); color: var(--accent-dk); font-weight: 700; font-size: .78rem; padding: .25rem .6rem; border-radius: var(--r-pill); }
+    .desc { color: var(--ink-soft); margin: 1rem 0 1.4rem; }
+    .buy-row { display: flex; gap: 12px; align-items: center; margin: 1.4rem 0; flex-wrap: wrap; }
+    .buy-row .btn { flex: 1; min-width: 150px; }
+    .meta-list { border-top: 1px solid var(--line); margin-top: 1.4rem; padding-top: 1.4rem; display: grid; gap: .7rem; }
+    .meta-list div { display: flex; gap: .6rem; align-items: center; font-size: .9rem; color: var(--ink-soft); }
+    .meta-list .em { font-size: 1.1rem; }
+    .accordion { margin-top: 1.4rem; border-top: 1px solid var(--line); }
+    .acc-item { border-bottom: 1px solid var(--line); }
+    .acc-head { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; background: none; border: none; font-weight: 600; font-size: .98rem; color: var(--ink); }
+    .acc-body { max-height: 0; overflow: hidden; transition: max-height .3s ease; color: var(--ink-soft); font-size: .92rem; }
+    .acc-body p { padding-bottom: 1rem; margin: 0; }
+    .acc-item.open .acc-body { max-height: 300px; }
+    .acc-item.open .acc-head .pm { transform: rotate(45deg); }
+    .acc-head .pm { transition: transform .2s ease; font-size: 1.3rem; color: var(--muted); }
+    .stock-pill { margin: .4rem 0 .2rem; }
+    @media (max-width: 820px) { .pdp { grid-template-columns: 1fr; gap: 26px; } .gallery { position: static; } }
+  </style>
 </head>
 <body>
+  <div id="app-header"></div>
 
-<header class="p-3 mb-3 border-bottom bg-white shadow-sm fixed-top">
-    <div class="container">
-        <div class="header-content">
-            <button class="back-btn" onclick="goBack()" title="Go Back">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-            
-            <a href="customer_dashboard.html" class="navbar-brand d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
-                <strong>TheSkinShelf</strong>
-            </a>
+  <div class="container">
+    <nav class="crumb"><a href="../index.html">Home</a> / <a href="customer_dashboard.html">Shop</a> / <span id="crumb-name">Product</span></nav>
+    <div id="pdp-root">
+      <div class="spin"></div>
+    </div>
+  </div>
 
-            <form class="search-form" action="customer_dashboard.html" method="GET">
-                <input type="search" name="search" class="form-control" placeholder="Search for products..." aria-label="Search">
-            </form>
+  <section class="section container" id="related-wrap" style="display:none; padding-top:10px">
+    <div class="section-head"><div><span class="eyebrow">You may also like</span><h2>Pairs well with</h2></div></div>
+    <div class="product-grid" id="related-grid"></div>
+  </section>
 
-            <div class="nav-actions">
-                <a href="bag.html" class="nav-link px-2 text-dark position-relative">
-                    <i class="fas fa-shopping-bag fa-lg"></i>
-                    <span id="cart-badge" class="badge badge-danger" style="position: absolute; top: 0; right: 0; display: none;"></span>
-                </a>
-                <a href="profile_seller.html" class="nav-link px-2 text-dark">
-                    <i class="fas fa-user-circle fa-lg"></i>
-                </a>
+  <div id="app-footer"></div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/store.js"></script>
+  <script>
+    TSS.mountHeader('shop');
+    TSS.mountFooter();
+
+    const id = Number(new URLSearchParams(location.search).get('id'));
+    const root = document.getElementById('pdp-root');
+
+    function renderProduct(p, all) {
+      document.getElementById('crumb-name').textContent = p.name;
+      document.title = p.name + ' — The Skin Shelf';
+      const r = TSS.rating(p.id);
+      const stock = Number(p.stock || 0);
+      const was = (Number(p.price) * 1.25);
+      const wished = TSS.inWishlist(p.id);
+      const stockPill = stock <= 0
+        ? '<span class="badge badge-danger stock-pill">Out of stock</span>'
+        : stock <= 5 ? `<span class="badge badge-warn stock-pill">Only ${stock} left in stock</span>`
+        : '<span class="badge badge-success stock-pill">In stock</span>';
+
+      root.innerHTML = `
+      <div class="pdp">
+        <div class="gallery">
+          <img class="main" src="${p.image || ''}" alt="${p.name}"
+               onerror="this.src='https://via.placeholder.com/700?text=The+Skin+Shelf'">
+        </div>
+        <div class="info">
+          <div class="cat">${p.category_name || 'Skincare'}</div>
+          <h1>${p.name}</h1>
+          <div class="rate"><span class="s">${TSS.starHtml(r.stars)}</span> <strong>${r.value}</strong> · ${r.count} reviews</div>
+          ${stockPill}
+          <div class="price-line">
+            <span class="now">${TSS.money(p.price)}</span>
+            <span class="was">${TSS.money(was)}</span>
+            <span class="off">Save 20%</span>
+          </div>
+          <p class="desc">${p.description || 'A thoughtfully formulated skincare essential from The Skin Shelf.'}</p>
+
+          <div class="buy-row">
+            <div class="qty">
+              <button id="qminus" aria-label="Decrease">−</button>
+              <span id="qval">1</span>
+              <button id="qplus" aria-label="Increase">+</button>
             </div>
+            <button class="btn btn-primary btn-lg" id="addBtn" ${stock<=0?'disabled':''}>Add to bag</button>
+            <button class="btn btn-outline btn-lg" id="buyBtn" ${stock<=0?'disabled':''}>Buy now</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="wishBtn">${wished?'♥ Saved to wishlist':'♡ Add to wishlist'}</button>
+
+          <div class="meta-list">
+            <div><span class="em">🚚</span> Free delivery on orders over ₱1,500</div>
+            <div><span class="em">↩️</span> 7-day easy returns</div>
+            <div><span class="em">🐰</span> Cruelty-free &amp; dermatologist tested</div>
+          </div>
+
+          <div class="accordion">
+            <div class="acc-item open"><button class="acc-head">Description <span class="pm">+</span></button><div class="acc-body"><p>${p.description || 'A gentle, effective formula designed to fit seamlessly into your daily routine.'}</p></div></div>
+            <div class="acc-item"><button class="acc-head">How to use <span class="pm">+</span></button><div class="acc-body"><p>Apply to clean skin morning and/or evening. Follow with moisturizer and SPF during the day. Patch test before first use if you have sensitive skin.</p></div></div>
+            <div class="acc-item"><button class="acc-head">Shipping &amp; returns <span class="pm">+</span></button><div class="acc-body"><p>Ships nationwide within 2–5 business days with tracking. Free shipping over ₱1,500. Unopened items can be returned within 7 days.</p></div></div>
+          </div>
         </div>
-    </div>
-</header>
+      </div>`;
 
-<div class="container my-5">
-    <div id="product-container" class="card p-4 shadow-sm">
-        <div id="loading-spinner" class="text-center p-5">
-            <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-        </div>
-    </div>
+      // qty stepper
+      let qty = 1;
+      const qval = document.getElementById('qval');
+      document.getElementById('qminus').onclick = () => { qty = Math.max(1, qty-1); qval.textContent = qty; };
+      document.getElementById('qplus').onclick = () => { qty = Math.min(Math.max(stock,1), qty+1); qval.textContent = qty; };
+      document.getElementById('addBtn').onclick = (e) => TSS.addToCart(p.id, qty, e.currentTarget);
+      document.getElementById('buyBtn').onclick = async (e) => {
+        const ok = await TSS.addToCart(p.id, qty, e.currentTarget);
+        if (ok) setTimeout(() => location.href = 'bag.html', 500);
+      };
+      const wb = document.getElementById('wishBtn');
+      wb.onclick = () => { const now = TSS.toggleWishlist(p.id); wb.textContent = now ? '♥ Saved to wishlist' : '♡ Add to wishlist'; };
+      root.querySelectorAll('.acc-head').forEach(h => h.onclick = () => h.parentElement.classList.toggle('open'));
 
-    <div id="related-products-section" class="mt-5" style="display: none;">
-        <h3 class="mb-4">Related Products</h3>
-        <div id="related-products-container" class="row">
-        </div>
-    </div>
-</div>
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-<script src="../js/shared.js"></script>
-<script src="../js/product_view.js"></script>
-
-<script>
-function goBack() {
-    // Check if there's a previous page in history
-    if (document.referrer && document.referrer !== window.location.href) {
-        window.history.back();
-    } else {
-        // Fallback to dashboard if no referrer
-        window.location.href = 'customer_dashboard.html';
+      // related
+      const related = all.filter(x => x.id !== p.id && x.category_id === p.category_id).slice(0, 4);
+      const pool = related.length ? related : all.filter(x => x.id !== p.id).slice(0, 4);
+      if (pool.length) {
+        document.getElementById('related-wrap').style.display = '';
+        const rg = document.getElementById('related-grid');
+        rg.innerHTML = pool.map(x => TSS.productCardHTML(x)).join('');
+        TSS.bindProductGrid(rg);
+      }
     }
-}
-</script>
 
+    (async function init() {
+      if (!id) { root.innerHTML = '<div class="empty"><div class="ic">🔍</div><h3>No product selected</h3><p><a href="customer_dashboard.html">Back to shop</a></p></div>'; return; }
+      try {
+        const all = await (await fetch(`${TSS.API}/api/products`)).json();
+        const p = all.find(x => Number(x.id) === id);
+        if (!p) { root.innerHTML = '<div class="empty"><div class="ic">🌸</div><h3>Product not found</h3><p><a href="customer_dashboard.html">Back to shop</a></p></div>'; return; }
+        renderProduct(p, all);
+      } catch (e) {
+        root.innerHTML = '<div class="empty"><div class="ic">🌸</div><h3>Couldn\'t load product</h3><p>Is the backend running at ' + TSS.API + '?</p></div>';
+      }
+    })();
+  </script>
 </body>
 </html>

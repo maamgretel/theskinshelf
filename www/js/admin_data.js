@@ -1,6 +1,6 @@
 // Enhanced Admin Dashboard JavaScript - True Local Storage Caching
 document.addEventListener('DOMContentLoaded', () => {
-    const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+    const BACKEND_URL = window.API_BASE + '';
     const user = JSON.parse(localStorage.getItem('user'));
 
     // Security Check

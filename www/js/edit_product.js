@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const BACKEND_URL = window.API_BASE + '';
   const user = JSON.parse(localStorage.getItem('user'));
 
   // Debug logging function
@@ -609,7 +609,7 @@ async function openEditProductModal(productId) {
   console.log(`[DEBUG] Opening edit modal for product ID:`, productId);
   
   currentEditProductId = productId;
-  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const BACKEND_URL = window.API_BASE + '';
   const user = JSON.parse(localStorage.getItem('user'));
   
   try {
@@ -668,7 +668,7 @@ async function openEditProductModal(productId) {
 
 // Handle Edit Product - EXACT COPY OF YOUR WORKING CODE
 async function handleEditProduct() {
-  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const BACKEND_URL = window.API_BASE + '';
   const user = JSON.parse(localStorage.getItem('user'));
   
   const confirmBtn = document.getElementById('confirmEditProduct');
@@ -713,7 +713,7 @@ async function handleAddStock() {
   const stockToAdd = parseInt(document.getElementById('modalStockToAdd').value);
   const note = document.getElementById('modalStockNote').value.trim();
   const user = JSON.parse(localStorage.getItem('user'));
-  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const BACKEND_URL = window.API_BASE + '';
   
   if (!stockToAdd || stockToAdd < 1) {
     alert('Please enter a valid amount of stock to add.');
@@ -875,7 +875,7 @@ async function deleteProduct(productId, productName) {
     return;
   }
   
-  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const BACKEND_URL = window.API_BASE + '';
   const user = JSON.parse(localStorage.getItem('user'));
   
   try {

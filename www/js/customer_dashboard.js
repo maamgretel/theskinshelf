@@ -1,7 +1,7 @@
 // Replace the entire customer_dashboard.js file with this:
 
 document.addEventListener('DOMContentLoaded', () => {
-    const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+    const BACKEND_URL = window.API_BASE + '';
     let user = JSON.parse(localStorage.getItem('user'));
 
     // --- 1. Security Check ---

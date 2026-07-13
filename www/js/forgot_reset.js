@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const resetForm = document.getElementById('resetForm');
   const alertBox = document.getElementById('alertBox');
   const spinner = document.getElementById('loadingSpinner');
-  const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+  const BACKEND_URL = window.API_BASE + '';
 
   // 🔹 FORGOT PASSWORD FLOW
   if (forgotForm) {

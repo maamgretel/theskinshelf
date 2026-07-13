@@ -1,6 +1,6 @@
 // Seller Dashboard API - Enhanced with Notifications
 class SellerDashboardAPI {
-    constructor(baseURL = 'https://backend-rj0a.onrender.com', userId = null) {
+    constructor(baseURL = window.API_BASE + '', userId = null) {
         this.baseURL = baseURL;
         this.userId = userId;
         this.authToken = null; // You'll need to set this based on your auth system
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    api = new SellerDashboardAPI('https://backend-rj0a.onrender.com', sellerId);
+    api = new SellerDashboardAPI(window.API_BASE + '', sellerId);
     // Set auth token from localStorage or from stored user object if present
     const storedToken = localStorage.getItem('authToken') || (localStorage.getItem('user') ? (JSON.parse(localStorage.getItem('user')).token || null) : null);
     if (storedToken) {

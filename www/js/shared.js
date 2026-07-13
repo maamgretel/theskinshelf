@@ -1,6 +1,6 @@
 // js/shared.js
 
-const BACKEND_URL = 'https://backend-rj0a.onrender.com';
+const BACKEND_URL = window.API_BASE + '';
 
 async function updateCartBadge() {
     const user = JSON.parse(localStorage.getItem('user'));
