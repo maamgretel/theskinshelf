@@ -1,591 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login - The Skin Shelf</title>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; 
-        style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://fonts.googleapis.com; 
-        font-src 'self' https://fonts.gstatic.com;
-        media-src *; 
-        connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
-    ">
-    <meta name="format-detection" content="telephone=no">
-    <meta name="msapplication-tap-highlight" content="no">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link 
-        rel="stylesheet" 
-        href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-    >
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            height: 100%;
-            height: 100vh;
-            height: -webkit-fill-available;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #ffffff;
-            color: #000000;
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow-x: hidden;
-            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-        }
-
-        /* Floating Background Icons */
-        .floating-icons {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            height: -webkit-fill-available;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
-        }
-
-        .floating-icon {
-            position: absolute;
-            font-size: clamp(1.2rem, 3vw, 2rem);
-            color: rgba(255, 105, 180, 0.15);
-            animation: float 20s infinite linear;
-            user-select: none;
-            will-change: transform;
-        }
-
-        .floating-icon:nth-child(1) {
-            top: 100%;
-            left: 10%;
-            animation-delay: 0s;
-            font-size: clamp(1rem, 2.5vw, 1.5rem);
-        }
-
-        .floating-icon:nth-child(2) {
-            top: 100%;
-            left: 85%;
-            animation-delay: -3s;
-            font-size: clamp(1.5rem, 4vw, 2.5rem);
-        }
-
-        .floating-icon:nth-child(3) {
-            top: 100%;
-            left: 70%;
-            animation-delay: -6s;
-            font-size: clamp(1.2rem, 3vw, 1.8rem);
-        }
-
-        .floating-icon:nth-child(4) {
-            top: 100%;
-            left: 20%;
-            animation-delay: -9s;
-            font-size: clamp(1.3rem, 3.5vw, 2rem);
-        }
-
-        .floating-icon:nth-child(5) {
-            top: 100%;
-            left: 5%;
-            animation-delay: -12s;
-            font-size: clamp(1.1rem, 2.8vw, 1.6rem);
-        }
-
-        .floating-icon:nth-child(6) {
-            top: 100%;
-            left: 50%;
-            animation-delay: -2s;
-            font-size: clamp(1.4rem, 3.8vw, 2.2rem);
-        }
-
-        .floating-icon:nth-child(7) {
-            top: 100%;
-            left: 60%;
-            animation-delay: -5s;
-            font-size: clamp(1.2rem, 3.2vw, 1.7rem);
-        }
-
-        .floating-icon:nth-child(8) {
-            top: 100%;
-            left: 30%;
-            animation-delay: -8s;
-            font-size: clamp(1.3rem, 3.3vw, 1.9rem);
-        }
-
-        .floating-icon:nth-child(9) {
-            top: 100%;
-            left: 75%;
-            animation-delay: -11s;
-            font-size: clamp(1rem, 2.4vw, 1.4rem);
-        }
-
-        .floating-icon:nth-child(10) {
-            top: 100%;
-            left: 45%;
-            animation-delay: -14s;
-            font-size: clamp(1.4rem, 3.6vw, 2.1rem);
-        }
-
-        .floating-icon:nth-child(11) {
-            top: 100%;
-            left: 15%;
-            animation-delay: -4s;
-            font-size: clamp(1.2rem, 3vw, 1.8rem);
-        }
-
-        .floating-icon:nth-child(12) {
-            top: 100%;
-            left: 65%;
-            animation-delay: -7s;
-            font-size: clamp(1.3rem, 3.5vw, 2rem);
-        }
-
-        .floating-icon:nth-child(13) {
-            top: 100%;
-            left: 35%;
-            animation-delay: -10s;
-            font-size: clamp(1.1rem, 2.8vw, 1.6rem);
-        }
-
-        .floating-icon:nth-child(14) {
-            top: 100%;
-            left: 80%;
-            animation-delay: -13s;
-            font-size: clamp(1.5rem, 4.2vw, 2.3rem);
-        }
-
-        .floating-icon:nth-child(15) {
-            top: 100%;
-            left: 55%;
-            animation-delay: -1s;
-            font-size: clamp(1.2rem, 3.2vw, 1.7rem);
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(0px) rotate(0deg);
-                opacity: 0;
-            }
-            5% {
-                opacity: 1;
-            }
-            95% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-120vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        .main-wrapper {
-            width: 100%;
-            height: 100vh;
-            height: -webkit-fill-available;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            min-height: 0;
-        }
-
-        .login-container {
-            width: 100%;
-            max-width: 450px;
-            position: relative;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            min-height: 0;
-        }
-
-        .brand-logo {
-            text-align: center;
-            margin-bottom: clamp(1rem, 4vw, 2rem);
-            flex-shrink: 0;
-        }
-
-        .brand-logo h1 {
-            font-size: clamp(1.8rem, 6vw, 2.5rem);
-            font-weight: 800;
-            color: #000000;
-            text-transform: uppercase;
-            letter-spacing: clamp(1px, 0.3vw, 2px);
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
-        }
-
-        .brand-logo p {
-            color: #666666;
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
-            font-weight: 400;
-        }
-
-        .login-card {
-            background: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: clamp(12px, 3vw, 20px);
-            padding: clamp(1.5rem, 5vw, 2.5rem);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 10;
-            flex-shrink: 0;
-            max-height: calc(100vh - 4rem);
-            overflow: auto;
-        }
-
-        .login-card:hover {
-            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
-        }
-
-        .card-header {
-            background: none;
-            border: none;
-            padding: 0;
-            margin-bottom: clamp(1rem, 4vw, 2rem);
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .card-header h4 {
-            font-size: clamp(1.3rem, 4vw, 1.8rem);
-            font-weight: 700;
-            color: #000000;
-            margin: 0;
-            line-height: 1.3;
-        }
-
-        .form-group {
-            margin-bottom: clamp(1rem, 3vw, 1.5rem);
-        }
-
-        .form-group label {
-            font-weight: 600;
-            color: #000000;
-            margin-bottom: 0.5rem;
-            font-size: clamp(0.85rem, 2.2vw, 0.95rem);
-            display: block;
-        }
-
-        .form-control {
-            border: 2px solid #e0e0e0;
-            border-radius: clamp(8px, 2vw, 12px);
-            padding: clamp(0.6rem, 2vw, 0.75rem) clamp(0.8rem, 2.5vw, 1rem);
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
-            transition: all 0.3s ease;
-            background: #ffffff;
-            color: #000000;
-            width: 100%;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-
-        .form-control:focus {
-            border-color: #000000;
-            box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.1);
-            background: #ffffff;
-            color: #000000;
-            outline: none;
-        }
-
-        .form-control::placeholder {
-            color: #999999;
-        }
-
-        .btn-primary-custom {
-            background: #000000;
-            color: #ffffff;
-            border: none;
-            padding: clamp(0.7rem, 2.5vw, 0.875rem) clamp(1.5rem, 4vw, 2rem);
-            font-size: clamp(0.95rem, 2.8vw, 1.1rem);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: clamp(0.5px, 0.2vw, 1px);
-            border-radius: clamp(8px, 2vw, 12px);
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: clamp(0.5rem, 2vw, 1rem);
-            cursor: pointer;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-
-        .btn-primary-custom:hover {
-            background: #333333;
-            color: #ffffff;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .btn-primary-custom:focus {
-            box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.2);
-            outline: none;
-        }
-
-        .btn-primary-custom:active {
-            transform: translateY(0);
-        }
-
-        .alert {
-            border-radius: clamp(8px, 2vw, 12px);
-            border: none;
-            padding: clamp(0.8rem, 2.5vw, 1rem) clamp(1rem, 3vw, 1.25rem);
-            margin-bottom: clamp(1rem, 3vw, 1.5rem);
-            font-size: clamp(0.85rem, 2.2vw, 0.95rem);
-        }
-
-        .alert-danger {
-            background: #fee;
-            color: #c33;
-            border-left: 4px solid #c33;
-        }
-
-        .text-links {
-            text-align: center;
-            margin-top: clamp(1rem, 3vw, 1.5rem);
-        }
-
-        .text-links p {
-            margin-bottom: 0.5rem;
-            color: #666666;
-            font-size: clamp(0.85rem, 2.2vw, 0.95rem);
-        }
-
-        .text-links a {
-            color: #000000;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .text-links a:hover {
-            color: #333333;
-            text-decoration: underline;
-        }
-
-        .divider {
-            text-align: center;
-            margin: clamp(1rem, 3vw, 1.5rem) 0;
-            position: relative;
-        }
-
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #e0e0e0;
-        }
-
-        .divider span {
-            background: #ffffff;
-            padding: 0 1rem;
-            color: #666666;
-            font-size: clamp(0.8rem, 2vw, 0.9rem);
-        }
-
-        /* Very small screens (phones in portrait) */
-        @media (max-width: 380px) {
-            .main-wrapper {
-                padding: 0.5rem;
-            }
-            
-            .login-card {
-                border-radius: 12px;
-                padding: 1.25rem;
-            }
-            
-            .brand-logo {
-                margin-bottom: 1rem;
-            }
-        }
-
-        /* Small screens (phones) */
-        @media (max-width: 576px) {
-            .main-wrapper {
-                padding: 0.75rem;
-            }
-            
-            .login-card {
-                max-height: calc(100vh - 2rem);
-            }
-        }
-
-        /* Medium screens (tablets) */
-        @media (min-width: 577px) and (max-width: 768px) {
-            .login-container {
-                max-width: 500px;
-            }
-        }
-
-        /* Large screens */
-        @media (min-width: 1200px) {
-            .login-container {
-                max-width: 480px;
-            }
-        }
-
-        /* Landscape orientation on mobile */
-        @media (max-height: 500px) and (orientation: landscape) {
-            .main-wrapper {
-                align-items: flex-start;
-                padding-top: 1rem;
-                padding-bottom: 1rem;
-            }
-            
-            .brand-logo {
-                margin-bottom: 0.75rem;
-            }
-            
-            .brand-logo h1 {
-                font-size: 1.5rem;
-            }
-            
-            .brand-logo p {
-                font-size: 0.85rem;
-            }
-            
-            .card-header {
-                margin-bottom: 1rem;
-            }
-            
-            .card-header h4 {
-                font-size: 1.3rem;
-            }
-            
-            .form-group {
-                margin-bottom: 1rem;
-            }
-            
-            .login-card {
-                padding: 1.5rem;
-                max-height: calc(100vh - 2rem);
-                overflow-y: auto;
-            }
-        }
-
-        /* iOS Safari specific fixes */
-        @supports (-webkit-touch-callout: none) {
-            body {
-                min-height: -webkit-fill-available;
-            }
-            
-            .main-wrapper {
-                height: -webkit-fill-available;
-            }
-        }
-
-        /* Hide elements that might cause issues on very small screens */
-        @media (max-height: 400px) {
-            .floating-icons {
-                display: none;
-            }
-        }
-
-        /* Focus styles for better accessibility */
-        .form-control:focus,
-        .btn-primary-custom:focus,
-        .text-links a:focus {
-            outline: 2px solid rgba(0,0,0,0.5);
-            outline-offset: 2px;
-        }
-
-        /* Prevent zoom on input focus for iOS */
-        @media (max-width: 576px) {
-            .form-control {
-                font-size: 16px;
-            }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
+    img-src 'self' data: https:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    script-src 'self' 'unsafe-inline';
+  ">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sign in — The Skin Shelf</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧴</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/store.css">
+  <style>.auth-aside::after { background-image: var(--bg); }</style>
 </head>
 <body>
-    <!-- Floating Background Icons -->
-    <div class="floating-icons">
-        <div class="floating-icon">💄</div>
-        <div class="floating-icon">💋</div>
-        <div class="floating-icon">✨</div>
-        <div class="floating-icon">💄</div>
-        <div class="floating-icon">🎀</div>
-        <div class="floating-icon">💋</div>
-        <div class="floating-icon">✨</div>
-        <div class="floating-icon">💄</div>
-        <div class="floating-icon">🎀</div>
-        <div class="floating-icon">💋</div>
-        <div class="floating-icon">✨</div>
-        <div class="floating-icon">💄</div>
-        <div class="floating-icon">🎀</div>
-        <div class="floating-icon">💋</div>
-        <div class="floating-icon">✨</div>
-    </div>
+  <div class="auth-wrap">
+    <aside class="auth-aside" style="--bg:url('https://images.unsplash.com/photo-1631730359585-38a4935cbec4?w=900&q=80&auto=format&fit=crop')">
+      <a class="brand" href="../index.html"><span class="dot"></span> The Skin Shelf</a>
+      <div class="pitch">
+        <h2>Welcome back to your ritual.</h2>
+        <p>Sign in to shop clean skincare, track your orders and pick up where you left off.</p>
+      </div>
+      <div class="quotes">
+        <div class="q"><b>4.8★</b> average rating</div>
+        <div class="q"><b>2,400+</b> happy customers</div>
+      </div>
+    </aside>
 
-    <div class="main-wrapper">
-        <div class="login-container">
-            <div class="brand-logo">
-                <h1>The Skin Shelf</h1>
-                <p>Premium Makeup Collection</p>
-            </div>
-            
-            <div class="login-card">
-                <div class="card-header">
-                    <h4>Welcome Back</h4>
-                </div>
-                
-                <!-- Login alert -->
-                <div id="login-alert" class="alert alert-danger d-none"></div>
+    <main class="auth-main">
+      <div class="auth-card">
+        <span class="eyebrow">Account</span>
+        <h1>Sign in</h1>
+        <p class="lede">Enter your details to continue.</p>
 
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" name="email" id="email" class="form-control" placeholder="Enter your email" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password" required>
-                    </div>
-                    
-                    <button type="submit" class="btn-primary-custom">Sign In</button>
-                </form>
-                
-                <div class="text-links">
-                    <p>
-                        <a href="forgot_password.html">Forgot your password?</a>
-                    </p>
-                    <div class="divider">
-                        <span>or</span>
-                    </div>
-                    <p>
-                        New to The Skin Shelf? <a href="register.html">Create an account</a>
-                    </p>
-                </div>
+        <div class="auth-alert err" id="alert"></div>
+
+        <form id="loginForm">
+          <div class="field"><label for="email">Email</label><input type="email" id="email" name="email" placeholder="you@email.com" required></div>
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="password" name="password" placeholder="••••••••" required>
+              <button type="button" class="toggle" data-toggle="password">Show</button>
             </div>
+          </div>
+          <div style="text-align:right;margin:-4px 0 16px"><a href="forgot_password.html" style="font-size:.85rem;color:var(--accent);font-weight:600">Forgot password?</a></div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">Sign in</button>
+        </form>
+
+        <div class="debug-otp" style="margin-top:1.4rem">
+          <div style="margin-bottom:6px">Demo accounts — tap to fill</div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+            <button class="chip" data-demo="customer@skinshelf.com|Customer123!">Customer</button>
+            <button class="chip" data-demo="seller@skinshelf.com|Seller123!">Seller</button>
+            <button class="chip" data-demo="admin@skinshelf.com|Admin123!">Admin</button>
+          </div>
         </div>
-    </div>
 
-    <script src="../js/config.js"></script>
-    <script src="../js/login.js"></script>
+        <div class="foot">New here? <a href="register.html">Create an account</a></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/store.js"></script>
+  <script>
+    const alertEl = document.getElementById('alert');
+    function showErr(m) { alertEl.textContent = m; alertEl.className = 'auth-alert err show'; }
+
+    document.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => {
+      const inp = document.getElementById(b.dataset.toggle);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      b.textContent = inp.type === 'password' ? 'Show' : 'Hide';
+    });
+    document.querySelectorAll('[data-demo]').forEach(b => b.onclick = () => {
+      const [e, p] = b.dataset.demo.split('|');
+      document.getElementById('email').value = e;
+      document.getElementById('password').value = p;
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertEl.className = 'auth-alert';
+      const btn = document.getElementById('submitBtn');
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      btn.disabled = true; btn.textContent = 'Signing in…';
+      try {
+        const r = await fetch(`${TSS.API}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || d.message || 'Invalid email or password');
+        localStorage.setItem('user', JSON.stringify(d.user));
+        if (d.user.role === 'seller') sessionStorage.setItem('sellerId', d.user.id);
+        alertEl.textContent = 'Welcome back! Redirecting…'; alertEl.className = 'auth-alert ok show';
+        const dest = d.user.role === 'admin' ? 'admin_dashboard.html' : d.user.role === 'seller' ? 'seller_dashboard.html' : 'customer_dashboard.html';
+        const back = sessionStorage.getItem('returnTo'); sessionStorage.removeItem('returnTo');
+        setTimeout(() => location.href = (back && d.user.role === 'customer') ? back : dest, 600);
+      } catch (err) {
+        showErr(err.message);
+        btn.disabled = false; btn.textContent = 'Sign in';
+      }
+    });
+  </script>
 </body>
 </html>

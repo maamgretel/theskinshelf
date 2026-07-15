@@ -1,231 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <!-- ADDED THIS ESSENTIAL LINK -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/profile.css">
-  
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
+    img-src 'self' data: blob: https:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    script-src 'self' 'unsafe-inline';
+  ">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>My Profile — The Skin Shelf</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧴</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/store.css">
+  <style>
+    .prof-layout { display: grid; grid-template-columns: 300px 1fr; gap: 26px; padding: 30px 0 60px; align-items: start; }
+    .prof-side { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 28px; text-align: center; position: sticky; top: 90px; }
+    .prof-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin: 0 auto 14px; background: var(--cream-2); border: 3px solid var(--paper); box-shadow: var(--sh); }
+    .prof-side h2 { font-size: 1.3rem; }
+    .prof-side .role { display: inline-block; margin-top: 6px; }
+    .prof-side .upload { margin-top: 14px; }
+    .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 28px; margin-bottom: 18px; }
+    .card h3 { font-size: 1.2rem; margin-bottom: 4px; }
+    .card .sub { color: var(--muted); font-size: .88rem; margin-bottom: 18px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    @media (max-width: 820px) { .prof-layout { grid-template-columns: 1fr; } .prof-side { position: static; } .grid2 { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
+  <div id="app-header"></div>
 
-<div class="container mt-4 mb-5">
-    <div class="row">
-        <div class="col-md-3">
-            <nav class="sidebar-nav">
-                <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                    <a class="nav-link active" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="true">My Profile</a>
-                    <a class="nav-link" href="my_orders.html">My Orders</a>
-                    
-            </nav>
-        </div>
+  <div class="container">
+    <div style="padding-top:30px"><span class="eyebrow">Your account</span><h1 style="font-size:clamp(1.8rem,3.5vw,2.6rem)">My profile</h1></div>
+    <div id="root" class="prof-layout"><div class="spin"></div></div>
+  </div>
 
-        <div class="col-md-9">
-            <h2>My Profile</h2>
-            <hr>
-            
-            <div class="text-center mb-4">
-                <img src="" id="profilePicPreview" class="profile-avatar" alt="Profile Picture">
+  <div id="app-footer"></div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/store.js"></script>
+  <script>
+    TSS.mountHeader('');
+    TSS.mountFooter();
+    const DEFAULT_AV = 'https://res.cloudinary.com/dwgvlwkyt/image/upload/v1751856106/default-avatar.jpg';
+    const root = document.getElementById('root');
+
+    if (!TSS.requireLogin('Please sign in to view your profile')) { /* redirect */ }
+    else init();
+
+    async function init() {
+      let u;
+      try { u = await (await fetch(`${TSS.API}/api/profile`, { headers: TSS.authHeaders() })).json(); }
+      catch { root.innerHTML = '<div class="empty">Couldn\'t load profile</div>'; return; }
+      if (u.error) { root.innerHTML = `<div class="empty"><h3>${u.error}</h3></div>`; return; }
+
+      root.innerHTML = `
+        <aside class="prof-side">
+          <img class="prof-avatar" id="avatar" src="${u.profile_pic || DEFAULT_AV}" onerror="this.src='${DEFAULT_AV}'" alt="">
+          <h2 id="dispName">${u.name || ''}</h2>
+          <span class="badge badge-muted role">${(u.role||'customer')[0].toUpperCase()+(u.role||'customer').slice(1)}</span>
+          <div class="upload">
+            <input type="file" id="avaFile" accept="image/*" class="hide">
+            <button class="btn btn-soft btn-sm btn-block" id="avaBtn">Change photo</button>
+          </div>
+          <p class="muted" style="font-size:.78rem;margin-top:14px">Member since ${u.created_at ? new Date(u.created_at).getFullYear() : '—'}</p>
+        </aside>
+
+        <div>
+          <div class="card">
+            <h3>Personal details</h3><div class="sub">Update your name and contact information.</div>
+            <div class="grid2">
+              <div class="field"><label>Full name</label><input id="f-name" value="${(u.name||'').replace(/"/g,'&quot;')}"></div>
+              <div class="field"><label>Email</label><input id="f-email" type="email" value="${(u.email||'').replace(/"/g,'&quot;')}"></div>
             </div>
+            <div class="field"><label>Contact number</label><input id="f-contact" value="${(u.contact_number||'').replace(/"/g,'&quot;')}" placeholder="09XX XXX XXXX"></div>
+          </div>
 
-            <div id="alert-container" class="mb-3"></div>
-            
-            <!-- Profile Information Form -->
-            <form id="profileForm">
-                <div class="form-group">
-                    <label>Name:</label>
-                    <input type="text" id="name" name="name" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>Email:</label>
-                    <input type="email" id="email" name="email" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="contact_number">Contact Number:</label>
-                    <input type="text" id="contact_number" name="contact_number" class="form-control">
-                </div>
-                
-                <!-- Improved Address Section -->
-                <div class="address-section">
-                    <h6><i class="fas fa-map-marker-alt"></i> Address Information</h6>
-                    
-                    <div class="form-group">
-                        <label for="street_address">Street Address:</label>
-                        <input type="text" id="street_address" name="street_address" class="form-control" placeholder="House/Building number and street name">
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="barangay">Barangay:</label>
-                            <input type="text" id="barangay" name="barangay" class="form-control" placeholder="Barangay">
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="city">City/Municipality:</label>
-                            <input type="text" id="city" name="city" class="form-control" placeholder="City or Municipality">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="province">Province:</label>
-                            <input type="text" id="province" name="province" class="form-control" placeholder="Province">
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="postal_code">Postal Code:</label>
-                            <input type="text" id="postal_code" name="postal_code" class="form-control" placeholder="Postal Code">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="landmark">Landmark (Optional):</label>
-                        <input type="text" id="landmark" name="landmark" class="form-control" placeholder="Nearby landmark for easier delivery">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="profile_pic">Update Profile Picture:</label>
-                    <input type="file" id="profile_pic" name="profile_pic" class="form-control-file" accept="image/*">
-                </div>
-                <button type="submit" id="updateButton" class="btn btn-primary">Update Profile</button>
-            </form>
+          <div class="card">
+            <h3>Delivery address</h3><div class="sub">Where we'll send your orders.</div>
+            <div class="field"><label>Address</label><textarea id="f-address" rows="3" placeholder="House no., street, barangay, city, province, postal code">${u.address||''}</textarea></div>
+          </div>
 
-            <!-- Section Divider -->
-            <div class="section-divider"></div>
+          <div class="card">
+            <h3>Security</h3><div class="sub">Manage how you sign in.</div>
+            <a class="btn btn-soft" href="forgot_password.html">Change password →</a>
+          </div>
 
-            <!-- Change Password Section -->
-            <div class="password-section">
-                <h6><i class="fas fa-lock"></i> Change Password</h6>
-                <p class="text-muted mb-3">Update your password to keep your account secure.</p>
-                
-                <form id="passwordForm">
-                    <div class="form-group">
-                        <label for="current_password">Current Password:</label>
-                        <input type="password" id="current_password" name="current_password" class="form-control" required>
-                        <button type="button" class="password-toggle" onclick="togglePassword('current_password')">
-                            <i class="fas fa-eye" id="current_password_icon"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="new_password">New Password:</label>
-                        <input type="password" id="new_password" name="new_password" class="form-control" required>
-                        <button type="button" class="password-toggle" onclick="togglePassword('new_password')">
-                            <i class="fas fa-eye" id="new_password_icon"></i>
-                        </button>
-                        <div id="password-strength" class="password-strength"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="confirm_password">Confirm New Password:</label>
-                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
-                        <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">
-                            <i class="fas fa-eye" id="confirm_password_icon"></i>
-                        </button>
-                        <div id="password-match" class="mt-2"></div>
-                    </div>
-                    
-                    <button type="submit" id="changePasswordButton" class="btn btn-danger">Change Password</button>
-                </form>
-            </div>
+          <div style="display:flex;gap:12px">
+            <button class="btn btn-primary btn-lg" id="saveBtn">Save changes</button>
+            <a class="btn btn-ghost btn-lg" href="customer_dashboard.html">Back to shop</a>
+          </div>
+        </div>`;
 
-            <a href="#" id="backButton" class="btn btn-secondary">Back to Dashboard</a>
-        </div>
-    </div>
-</div>
+      const avaFile = document.getElementById('avaFile'), avatar = document.getElementById('avatar');
+      document.getElementById('avaBtn').onclick = () => avaFile.click();
+      avaFile.onchange = () => { if (avaFile.files[0]) avatar.src = URL.createObjectURL(avaFile.files[0]); };
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script>
-// Password toggle functionality
-function togglePassword(inputId) {
-    const input = document.getElementById(inputId);
-    const icon = document.getElementById(inputId + '_icon');
-    
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        input.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
+      document.getElementById('saveBtn').onclick = async (e) => {
+        const btn = e.currentTarget;
+        const fd = new FormData();
+        fd.append('name', document.getElementById('f-name').value.trim());
+        fd.append('email', document.getElementById('f-email').value.trim());
+        fd.append('contact_number', document.getElementById('f-contact').value.trim());
+        fd.append('address', document.getElementById('f-address').value.trim());
+        if (avaFile.files[0]) fd.append('profile_pic', avaFile.files[0]);
+        btn.disabled = true; btn.textContent = 'Saving…';
+        try {
+          const r = await fetch(`${TSS.API}/api/profile`, { method:'PUT', headers: { 'X-User-ID': String(TSS.user().id) }, body: fd });
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.error || 'Could not save');
+          // refresh cached user for the header
+          const merged = { ...TSS.user(), ...(d.user || d) };
+          localStorage.setItem('user', JSON.stringify(merged));
+          TSS.toast('Profile updated ✓', 'success');
+          document.getElementById('dispName').textContent = merged.name || '';
+          TSS.mountHeader('');
+        } catch (err) { TSS.toast(err.message, 'error'); }
+        finally { btn.disabled = false; btn.textContent = 'Save changes'; }
+      };
     }
-}
-
-// Password strength checker
-function checkPasswordStrength(password) {
-    let strength = 0;
-    let feedback = [];
-    
-    if (password.length >= 8) strength++;
-    else feedback.push("at least 8 characters");
-    
-    if (/[a-z]/.test(password)) strength++;
-    else feedback.push("lowercase letters");
-    
-    if (/[A-Z]/.test(password)) strength++;
-    else feedback.push("uppercase letters");
-    
-    if (/[0-9]/.test(password)) strength++;
-    else feedback.push("numbers");
-    
-    if (/[^a-zA-Z0-9]/.test(password)) strength++;
-    else feedback.push("special characters");
-    
-    return { strength, feedback };
-}
-
-// Password validation
-document.getElementById('new_password').addEventListener('input', function() {
-    const password = this.value;
-    const strengthDiv = document.getElementById('password-strength');
-    
-    if (password.length === 0) {
-        strengthDiv.style.display = 'none';
-        return;
-    }
-    
-    const { strength, feedback } = checkPasswordStrength(password);
-    
-    strengthDiv.style.display = 'block';
-    
-    if (strength < 3) {
-        strengthDiv.className = 'password-strength strength-weak';
-        strengthDiv.textContent = 'Weak - Missing: ' + feedback.join(', ');
-    } else if (strength < 5) {
-        strengthDiv.className = 'password-strength strength-medium';
-        strengthDiv.textContent = 'Medium - Missing: ' + feedback.join(', ');
-    } else {
-        strengthDiv.className = 'password-strength strength-strong';
-        strengthDiv.textContent = 'Strong password!';
-    }
-});
-
-// Password match validation
-document.getElementById('confirm_password').addEventListener('input', function() {
-    const newPassword = document.getElementById('new_password').value;
-    const confirmPassword = this.value;
-    const matchDiv = document.getElementById('password-match');
-    
-    if (confirmPassword.length === 0) {
-        matchDiv.innerHTML = '';
-        return;
-    }
-    
-    if (newPassword === confirmPassword) {
-        matchDiv.innerHTML = '<small class="text-success"><i class="fas fa-check"></i> Passwords match</small>';
-    } else {
-        matchDiv.innerHTML = '<small class="text-danger"><i class="fas fa-times"></i> Passwords do not match</small>';
-    }
-});
-</script>
-<script src="../js/config.js"></script>
-    <script src="../js/profile.js"></script>
-<script src="../js/navbar.js"></script>
-
+  </script>
 </body>
 </html>

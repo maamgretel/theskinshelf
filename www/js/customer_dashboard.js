@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function initializeUserProfile() {
         userNameEl.textContent = user.name || 'User';
-        profilePic.src = user.profile_pic || 'https://via.placeholder.com/40';
+        profilePic.src = user.profile_pic || window.TSS_PLACEHOLDER;
 
         try {
             const response = await fetch(`${BACKEND_URL}/api/profile`, {

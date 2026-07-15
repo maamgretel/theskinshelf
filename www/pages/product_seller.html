@@ -1,738 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Seller Dashboard</title>
-  
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-  
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
+    img-src 'self' data: https:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    script-src 'self' 'unsafe-inline';
+  ">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>My Products — The Skin Shelf</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧴</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/store.css">
+  <link rel="stylesheet" href="../css/seller.css">
   <style>
-    :root {
-     /* Core Branding */
-   --primary-color: #000000;   /* Black */
-   --secondary-color: #ffffff; /* White */
-
-   /* Neutrals */
-   --background-light: #f5f5f5; /* Product backdrop */
-   --background-gray: #f8f9fa;  /* Light gray sections */
-
-   /* Status & Semantic Colors */
-   --success-color: #10b981;  /* Emerald green (delivered / success) */
-   --warning-color: #fbbf24;  /* Warm yellow (pending) */
-   --danger-color: #ef4444;   /* Red (cancelled / errors) */
-
-   /* Seasonal Promo Accents */
-   --promo-pink: #ff6b9d;     /* Hot pink (sales) */
-   --promo-coral: #ff8fab;    /* Coral (fashion highlights) */
-   --promo-blue: #3b82f6;     /* Sky blue (fresh drops) */
-   --promo-yellow: #facc15;   /* Summer yellow */
-    }
-
-    body {
-        background-color: var(--background-light);
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    .sidebar {
-        background: linear-gradient(135deg, var(--primary-color), var(--primary-color));
-        min-height: 100vh;
-        transition: all 0.3s ease;
-    }
-
-    .sidebar .nav-link {
-        color: rgba(255, 255, 255, 0.8);
-        border-radius: 8px;
-        margin: 4px 0;
-        transition: all 0.2s ease;
-    }
-
-    .sidebar .nav-link:hover, .sidebar .nav-link.active {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: white;
-        transform: translateX(5px);
-    }
-
-    .main-content {
-        transition: margin-left 0.3s ease;
-    }
-
-    .seller-avatar {
-        width: 40px;
-        height: 40px;
-        object-fit: cover;
-    }
-
-    @media (max-width: 768px) {
-        .sidebar {
-            margin-left: -250px;
-        }
-        
-        .sidebar.show {
-            margin-left: 0;
-        }
-        
-        .main-content {
-            margin-left: 0 !important;
-        }
-    }
-
-    /* Additional styles for your content */
-    .product-card img {
-      height: 150px;
-      width: 100%;
-      object-fit: contain;
-      margin-bottom: 1rem;
-    }
-    
-    #productListRow:empty::after {
-      content: "Loading your products...";
-      display: block;
-      text-align: center;
-      font-style: italic;
-      color: #6c757d;
-      padding: 2rem;
-    }
-    
-    .modal-backdrop {
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-    
-    .modal.show {
-      display: block;
-    }
-
-    /* Page content container */
-    .page-content {
-        padding: 2rem;
-    }
-
-    .card {
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    .btn {
-        border-radius: 8px;
-        font-weight: 500;
-    }
-
-    /* Hide any spinners that might be added by JavaScript */
-    .spinner-border,
-    .spinner-grow {
-        display: none !important;
-    }
-
-    /* Fix stock quantity visibility */
-    .stock-quantity,
-    .text-muted,
-    .card-text,
-    .product-stock {
-        color: #374151 !important;
-    }
-
-    /* Ensure all text in product cards is visible */
-    .product-card .card-text,
-    .product-card p,
-    .product-card small,
-    .product-card span {
-        color: #374151 !important;
-    }
-
-    /* Prevent modal from closing too quickly */
-    .modal.fade.show {
-        animation: none !important;
-    }
-    /* Stock Badge Visibility Fix */
-.badge {
-  color: #fff !important;
-  font-weight: 600 !important;
-  padding: 0.5em 0.8em !important;
-  border-radius: 0.375rem !important;
-  font-size: 0.875rem !important;
-  display: inline-block !important;
-  text-align: center !important;
-  white-space: nowrap !important;
-  vertical-align: baseline !important;
-}
-
-/* Specific badge colors with high contrast */
-.badge-success {
-  background-color: #28a745 !important;
-  color: #ffffff !important;
-  border: 1px solid #1e7e34 !important;
-}
-
-.badge-warning {
-  background-color: #ffc107 !important;
-  color: #212529 !important; /* Dark text for better contrast on yellow */
-  border: 1px solid #d39e00 !important;
-  font-weight: 700 !important;
-}
-
-.badge-danger {
-  background-color: #dc3545 !important;
-  color: #ffffff !important;
-  border: 1px solid #bd2130 !important;
-}
-
-.badge-info {
-  background-color: #17a2b8 !important;
-  color: #ffffff !important;
-  border: 1px solid #117a8b !important;
-}
-
-/* Enhanced stock status styling */
-.stock-status {
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-
-/* Card border styling for stock status */
-.card.border-danger {
-  border: 2px solid #dc3545 !important;
-  box-shadow: 0 0 0 0.1rem rgba(220, 53, 69, 0.25) !important;
-}
-
-.card.border-warning {
-  border: 2px solid #ffc107 !important;
-  box-shadow: 0 0 0 0.1rem rgba(255, 193, 7, 0.25) !important;
-}
-
-/* Stock text in product cards */
-.card-text.stock-info {
-  font-weight: 600;
-  color: #495057 !important;
-  background-color: #f8f9fa;
-  padding: 4px 8px;
-  border-radius: 4px;
-  display: inline-block;
-  margin: 4px 0;
-}
-
-/* Alternative: Stock info with icon styling */
-.stock-info-container {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin: 8px 0;
-  border-left: 4px solid #6c757d;
-}
-
-.stock-info-container.out-of-stock {
-  background-color: #f8d7da;
-  border-left-color: #dc3545;
-  color: #721c24 !important;
-}
-
-.stock-info-container.low-stock {
-  background-color: #fff3cd;
-  border-left-color: #ffc107;
-  color: #856404 !important;
-}
-
-.stock-info-container.in-stock {
-  background-color: #d1eddd;
-  border-left-color: #28a745;
-  color: #155724 !important;
-}
-
-/* Price text enhancement */
-.price-text {
-  color: #28a745 !important;
-  font-weight: 700 !important;
-  font-size: 1.1rem !important;
-}
-
-/* Product name styling */
-.card-title {
-  color: #212529 !important;
-  font-weight: 600 !important;
-}
-
-/* Category badge */
-.category-badge {
-  background-color: #6c757d !important;
-  color: #ffffff !important;
-  font-size: 0.75rem !important;
-  padding: 0.25rem 0.5rem !important;
-}
-
-/* Ensure all text in cards is visible */
-.card-body * {
-  color: inherit;
-}
-
-.card-body .text-muted {
-  color: #6c757d !important;
-}
-
-/* Stock alert boxes */
-.stock-alert .alert {
-  font-weight: 600;
-  border-width: 2px;
-}
-
-.stock-alert .alert-danger {
-  color: #721c24 !important;
-  background-color: #f8d7da !important;
-  border-color: #f5c6cb !important;
-}
-
-.stock-alert .alert-warning {
-  color: #856404 !important;
-  background-color: #fff3cd !important;
-  border-color: #ffeaa7 !important;
-}
+    .toolbar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .toolbar .input-search { flex: 1; min-width: 220px; }
+    .toolbar select { padding: .65rem 2.2rem .65rem 1rem; border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--paper); font-family: inherit; font-weight: 600; font-size: .88rem; -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23241f1b' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>"); background-repeat: no-repeat; background-position: right 1rem center; }
+    .actions-cell { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+    .page-wrap { padding-bottom: 60px; }
   </style>
-
-  <script>
-    // Configure sidebar for this page
-    window.sidebarConfig = {
-        currentPage: 'dashboard',
-        userRole: 'seller'
-    };
-  </script>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar position-fixed" style="width: 250px; z-index: 1000;">
-        <div class="p-3">
-            <div class="d-flex align-items-center mb-4">
-                <i class="bi bi-shop text-white me-2" style="font-size: 1.5rem;"></i>
-                <h5 class="text-white mb-0">The TheSkinShelf</h5>
-            </div>
-            
-            <!-- Seller Profile -->
-            <div class="text-center mb-4 p-3" style="background: rgba(255,255,255,0.1); border-radius: 8px;">
-                <a href="profile_seller.html" style="text-decoration: none;">
-                    <img id="profilePic" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23e5e7eb'/%3E%3Ccircle cx='20' cy='16' r='6' fill='%236b7280'/%3E%3Cpath d='M8 32c0-6.627 5.373-12 12-12s12 5.373 12 12' fill='%236b7280'/%3E%3C/svg%3E" 
-                         class="rounded-circle seller-avatar mb-2" alt="Seller" style="cursor: pointer;">
-                </a>
-                <h6 id="userName" class="text-white mb-1">Seller</h6>
-                <small id="seller-email" class="text-white-50">Loading...</small>
-            </div>
-            
-            <!-- Navigation -->
-           <nav class="nav nav-pills flex-column">
-    <a class="nav-link" href="seller_dashboard.html" data-section="dashboard">
-        <i class="bi bi-house-door me-2"></i> Dashboard
-    </a>
-    <a class="nav-link" href="orders.html" data-section="orders">
-        <i class="bi bi-box-seam me-2"></i> Orders
-    </a>
-    <a class="nav-link" href="product_seller.html" data-section="products">
-        <i class="bi bi-bag me-2"></i> Products
-    </a>
-    <a class="nav-link" href="customer.html" data-section="customers">
-        <i class="bi bi-people me-2"></i> Customers
-    </a>
-    <div class="mt-auto"></div>
-    <hr class="bg-light opacity-25">
-    <button class="nav-link text-danger border-0 bg-transparent w-100 text-start" id="logoutBtn">
-        <i class="bi bi-box-arrow-right me-2"></i> Logout
-    </button>
-</nav>
-        </div>
+  <div id="seller-header"></div>
+
+  <div class="container page-wrap">
+    <div class="page-head">
+      <div><span class="eyebrow">Inventory</span><h1>My products</h1><p id="count-line">Manage your catalogue, prices and stock.</p></div>
+      <a class="btn btn-primary" href="add_product.html">+ Add product</a>
     </div>
 
-    <!-- Logout Confirmation Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to log out?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmLogout">Logout</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content" style="margin-left: 250px;">
-        <!-- Header -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-            <div class="container-fluid">
-                <button class="btn d-md-none" id="sidebarToggle">
-                    <i class="bi bi-list"></i>
-                </button>
-                
-                <h4 class="mb-0 ms-2">Seller Dashboard</h4>
-                
-                <div class="navbar-nav ms-auto d-flex flex-row">
-                    <div class="nav-item dropdown">
-                        <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
-                            
-                         
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><h6 class="dropdown-header">Notifications</h6></li>
-                            <li id="no-notifications"><span class="dropdown-item-text">No new notifications</span></li>
-                        </ul>
-                    </div>
-                    
-                    <button class="btn btn-outline-primary ms-2" onclick="refreshDashboard()">
-                        <i class="bi bi-arrow-clockwise"></i> Refresh
-                    </button>
-                </div>
-            </div>
-        </nav>
-
-        <div class="page-content">
-            <div class="container-fluid">
-                <!-- Hidden elements that JavaScript might need -->
-                <div style="display: none;">
-                    <button id="logoutButton"></button>
-                    <span id="notifBadge"></span>
-                </div>
-
-                <div class="mb-4">
-                    <a href="add_product.html" class="btn btn-primary">➕ Add New Product</a>
-                 
-                </div>
-
-                <hr />
-                <h3>Your Products</h3>
-
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <input type="text" id="searchInput" class="form-control" placeholder="Search by product name" />
-                    </div>
-                    <div class="col-md-4">
-                        <select id="categoryFilter" class="form-control">
-                            <option value="">All Categories</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <button id="applyFiltersBtn" class="btn btn-success w-100">Apply Filters</button>
-                    </div>
-                </div>
-
-                <div id="productListRow" class="row">
-                    <!-- Products will be loaded here dynamically -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stock Update Success Modal -->
-    <div class="modal fade" id="stockUpdateModal" tabindex="-1" aria-labelledby="stockUpdateModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="stockUpdateModalLabel">
-                        <i class="bi bi-check-circle me-2"></i>Stock Updated Successfully
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="handleModalClose()"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center">
-                        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-                        <h4 class="mt-3 mb-3">Success!</h4>
-                        <p id="stockUpdateMessage" class="lead">Stock updated successfully.</p>
-                        <div class="mt-3">
-                            <small class="text-muted">The page will refresh after you close this dialog.</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="handleModalClose()">
-                        <i class="bi bi-check me-1"></i>OK
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Success Modal -->
-<div class="modal fade" id="deleteSuccessModal" tabindex="-1" aria-labelledby="deleteSuccessModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title" id="deleteSuccessModalLabel">
-          <i class="bi bi-trash-check me-2"></i> Deleted Successfully
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="handleDeleteModalClose()"></button>
+    <div class="toolbar">
+      <div class="input-search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" id="search" placeholder="Search your products…">
       </div>
-      <div class="modal-body">
-        <div class="text-center">
-          <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-          <h4 class="mt-3 mb-3">Success!</h4>
-          <p class="lead">The item has been deleted successfully.</p>
-          <div class="mt-3">
-            <small class="text-muted">This page will refresh once you close this dialog.</small>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="handleDeleteModalClose()">
-          <i class="bi bi-check me-1"></i>OK
-        </button>
-      </div>
+      <select id="catFilter"><option value="">All categories</option></select>
+      <select id="stockFilter">
+        <option value="">All stock levels</option>
+        <option value="low">Low stock (≤10)</option>
+        <option value="out">Out of stock</option>
+      </select>
+    </div>
+
+    <div class="panel" style="padding:10px 18px">
+      <div class="tbl-wrap"><table class="tbl" id="ptable">
+        <thead><tr><th>Product</th><th>Price</th><th>Stock</th><th style="text-align:right">Actions</th></tr></thead>
+        <tbody><tr><td colspan="4"><div class="spin"></div></td></tr></tbody>
+      </table></div>
     </div>
   </div>
-</div>
 
+  <script src="../js/config.js"></script>
+  <script src="../js/store.js"></script>
+  <script src="../js/seller.js"></script>
+  <script>
+    let all = [];
+    const state = { search: '', cat: '', stock: '' };
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/config.js"></script>
-    <script src="../js/seller_dashboard.js"></script>
-   
-    <script>
-        // Global variables to track modal state
-        let stockModalInstance = null;
-        let shouldReloadAfterModal = false;
-
-        // Mobile sidebar toggle functionality
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('show');
-        });
-
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(e) {
-            const sidebar = document.querySelector('.sidebar');
-            const toggle = document.getElementById('sidebarToggle');
-            
-            if (window.innerWidth <= 768 && 
-                !sidebar.contains(e.target) && 
-                !toggle.contains(e.target) && 
-                sidebar.classList.contains('show')) {
-                sidebar.classList.remove('show');
-            }
-        });
-
-        // Function to show stock update modal with proper event handling
-        function showStockUpdateModal(addedItems, newTotal) {
-            try {
-                const modalElement = document.getElementById('stockUpdateModal');
-                const messageElement = document.getElementById('stockUpdateMessage');
-                
-                if (modalElement && messageElement) {
-                    // Update the message
-                    messageElement.textContent = `Successfully added ${addedItems} items to stock. New total: ${newTotal}`;
-                    
-                    // Create modal instance if it doesn't exist
-                    if (!stockModalInstance) {
-                        stockModalInstance = new bootstrap.Modal(modalElement, {
-                            backdrop: 'static',
-                            keyboard: false
-                        });
-                    }
-                    
-                    // Set flag to reload after modal closes
-                    shouldReloadAfterModal = true;
-                    
-                    // Show the modal
-                    stockModalInstance.show();
-                    
-                    console.log('[DEBUG] Stock update modal shown successfully');
-                } else {
-                    console.error('Modal elements not found');
-                    // Fallback to alert if modal fails
-                    alert(`Successfully added ${addedItems} items to stock. New total: ${newTotal}`);
-                }
-            } catch (error) {
-                console.error('Error showing modal:', error);
-                alert(`Successfully added ${addedItems} items to stock. New total: ${newTotal}`);
-            }
-        }
-
-        // Handle modal close event
-        function handleModalClose() {
-            console.log('[DEBUG] Modal close requested');
-            
-            if (stockModalInstance) {
-                stockModalInstance.hide();
-            }
-            
-            // Only reload if this was a stock update modal
-            if (shouldReloadAfterModal) {
-                console.log('[DEBUG] Reloading page after stock update...');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 500); // Small delay to ensure modal closes gracefully
-            }
-        }
-
-        // Listen for modal events
-        document.addEventListener('DOMContentLoaded', function() {
-            const modalElement = document.getElementById('stockUpdateModal');
-            
-            if (modalElement) {
-                // When modal is fully hidden, handle the reload
-                modalElement.addEventListener('hidden.bs.modal', function () {
-                    console.log('[DEBUG] Modal hidden event fired');
-                    if (shouldReloadAfterModal) {
-                        shouldReloadAfterModal = false; // Reset flag
-                        console.log('[DEBUG] Reloading page...');
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 200);
-                    }
-                });
-                
-                // When modal is shown, log for debugging
-                modalElement.addEventListener('shown.bs.modal', function () {
-                    console.log('[DEBUG] Modal shown event fired');
-                });
-            }
-        });
-
-        // Test function for the modal
-        function testStockModal() {
-            console.log('[DEBUG] Testing stock modal...');
-            showStockUpdateModal(19, 150);
-        }
-
-        // Improved alert override to handle stock success messages
-        const originalAlert = window.alert;
-        window.alert = function(message) {
-            console.log('[DEBUG] Alert intercepted:', message);
-            
-            // Check if it's a stock update message
-            if (message && typeof message === 'string' && 
-                message.includes("Successfully added") && 
-                message.includes("items to stock") && 
-                message.includes("New total:")) {
-                
-                // Extract numbers from the message
-                const addedMatch = message.match(/Successfully added (\d+) items/);
-                const totalMatch = message.match(/New total: (\d+)/);
-                
-                if (addedMatch && totalMatch) {
-                    console.log('[DEBUG] Stock update detected - showing modal');
-                    showStockUpdateModal(parseInt(addedMatch[1]), parseInt(totalMatch[1]));
-                    
-                    // Prevent any immediate reloads
-                    const originalReload = window.location.reload;
-                    window.location.reload = function() {
-                        console.log('[DEBUG] Page reload call intercepted during modal display');
-                        // Don't reload immediately - let the modal handle it
-                    };
-                    
-                    // Restore reload function after a longer delay to ensure modal has time to show
-                    setTimeout(() => {
-                        window.location.reload = originalReload;
-                        console.log('[DEBUG] location.reload function restored');
-                    }, 10000); // Increased timeout
-                    
-                    return; // Don't show the original alert
-                }
-            }
-            
-            // For other alerts, use the original alert
-            originalAlert(message);
-        };
-
-        // Make functions globally available
-        window.showStockUpdateModal = showStockUpdateModal;
-        window.testStockModal = testStockModal;
-        window.showStockAlert = showStockUpdateModal;
-        window.handleModalClose = handleModalClose;
-
-        // Additional safety: Prevent any automatic page reloads for a few seconds after page load
-        let pageLoadTime = Date.now();
-        const originalReload = window.location.reload;
-        
-        window.location.reload = function() {
-            const timeSinceLoad = Date.now() - pageLoadTime;
-            if (timeSinceLoad < 2000) {
-                console.log('[DEBUG] Preventing immediate reload after page load');
-                return;
-            }
-            originalReload.call(this);
-        };
-        
-        // Restore normal reload function after initial period
-        setTimeout(() => {
-            if (!shouldReloadAfterModal) {
-                window.location.reload = originalReload;
-            }
-        }, 3000);
-
-
-
-        let deleteModalInstance = null;
-let shouldReloadAfterDelete = false;
-
-function showDeleteSuccessModal() {
-    const modalElement = document.getElementById('deleteSuccessModal');
-    if (!deleteModalInstance) {
-        deleteModalInstance = new bootstrap.Modal(modalElement, {
-            backdrop: 'static',
-            keyboard: false
-        });
+    if (SELLER.requireSeller()) {
+      SELLER.mountTopbar('products');
+      init();
     }
-    shouldReloadAfterDelete = true;
-    deleteModalInstance.show();
-}
 
-function handleDeleteModalClose() {
-    if (deleteModalInstance) {
-        deleteModalInstance.hide();
+    async function init() {
+      try {
+        const cats = await (await fetch(`${TSS.API}/api/categories`)).json();
+        document.getElementById('catFilter').innerHTML += cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      } catch {}
+      await load();
+      let t;
+      document.getElementById('search').addEventListener('input', e => { clearTimeout(t); t = setTimeout(() => { state.search = e.target.value.trim().toLowerCase(); render(); }, 200); });
+      document.getElementById('catFilter').addEventListener('change', e => { state.cat = e.target.value; render(); });
+      document.getElementById('stockFilter').addEventListener('change', e => { state.stock = e.target.value; render(); });
     }
-    if (shouldReloadAfterDelete) {
-        setTimeout(() => {
-            window.location.reload();
-        }, 500);
+
+    async function load() {
+      try {
+        all = await SELLER.api('/api/seller/products');
+        render();
+      } catch (e) {
+        document.querySelector('#ptable tbody').innerHTML = `<tr><td colspan="4" style="text-align:center;padding:26px">Couldn't load products — ${e.message}</td></tr>`;
+      }
     }
-}
 
-// Event listener for cleanup
-document.addEventListener('DOMContentLoaded', function() {
-    const modalElement = document.getElementById('deleteSuccessModal');
-    if (modalElement) {
-        modalElement.addEventListener('hidden.bs.modal', function () {
-            if (shouldReloadAfterDelete) {
-                shouldReloadAfterDelete = false;
-                setTimeout(() => {
-                    window.location.reload();
-                }, 200);
-            }
-        });
+    function render() {
+      let list = all.slice();
+      if (state.search) list = list.filter(p => (p.name||'').toLowerCase().includes(state.search) || (p.description||'').toLowerCase().includes(state.search));
+      if (state.cat) list = list.filter(p => String(p.category_id) === state.cat);
+      if (state.stock === 'low') list = list.filter(p => Number(p.stock) > 0 && Number(p.stock) <= 10);
+      if (state.stock === 'out') list = list.filter(p => Number(p.stock) <= 0);
+      document.getElementById('count-line').textContent = `${list.length} of ${all.length} products shown`;
+
+      const tb = document.querySelector('#ptable tbody');
+      if (!list.length) { tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">No products match. <a href="add_product.html" style="color:var(--accent);font-weight:600">Add one →</a></td></tr>'; return; }
+      tb.innerHTML = list.map(p => `
+        <tr data-id="${p.id}">
+          <td><div class="prod-cell">
+            <img src="${p.image||''}" onerror="this.src=window.TSS_PLACEHOLDER">
+            <div><div class="nm">${p.name}</div><div class="cat">${p.category_name || 'Uncategorised'}</div></div>
+          </div></td>
+          <td class="num"><b>${TSS.money(p.price)}</b></td>
+          <td>${SELLER.stockBadge(p.stock)}</td>
+          <td><div class="actions-cell">
+            <button class="act-btn primary" data-act="stock">+ Stock</button>
+            <a class="act-btn" href="edit_product.html?id=${p.id}">Edit</a>
+            <a class="act-btn" href="product_view.html?id=${p.id}" title="See it in the store">View</a>
+            <button class="act-btn danger" data-act="del">Delete</button>
+          </div></td>
+        </tr>`).join('');
+
+      tb.querySelectorAll('tr[data-id]').forEach(row => {
+        const id = Number(row.dataset.id);
+        const p = all.find(x => Number(x.id) === id);
+        row.querySelector('[data-act="stock"]').onclick = () => addStock(p);
+        row.querySelector('[data-act="del"]').onclick = () => del(p);
+      });
     }
-});
-window.showDeleteSuccessModal = showDeleteSuccessModal;
-window.handleDeleteModalClose = handleDeleteModalClose;
 
-    </script>
+    function addStock(p) {
+      const m = SELLER.modal(`
+        <h3>Add stock</h3>
+        <div class="sub">${p.name} — currently ${p.stock} in stock</div>
+        <div class="field"><label>Quantity to add</label><input type="number" id="m-qty" min="1" value="10"></div>
+        <div class="field"><label>Note (optional)</label><input type="text" id="m-note" placeholder="e.g. New delivery from supplier"></div>
+        <div class="modal-actions">
+          <button class="btn btn-soft" data-x="no">Cancel</button>
+          <button class="btn btn-primary" data-x="yes">Add stock</button>
+        </div>`);
+      m.el.querySelector('[data-x="no"]').onclick = m.close;
+      m.el.querySelector('[data-x="yes"]').onclick = async (e) => {
+        const qty = parseInt(m.el.querySelector('#m-qty').value, 10);
+        if (!qty || qty <= 0) { TSS.toast('Enter a valid quantity', 'error'); return; }
+        e.target.disabled = true;
+        try {
+          const d = await SELLER.api('/api/seller/add-stock', { method: 'POST', body: JSON.stringify({ product_id: p.id, stock_to_add: qty, note: m.el.querySelector('#m-note').value || '' }) });
+          TSS.toast(`Stock updated: ${d.previous_stock} → ${d.new_stock}`, 'success');
+          m.close(); await load();
+        } catch (err) { TSS.toast(err.message, 'error'); e.target.disabled = false; }
+      };
+    }
 
-    <!-- Logout Confirmation Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to log out?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmLogout">Logout</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Include shared functionality -->
-    <script src="../js/shared.js"></script>
+    async function del(p) {
+      const ok = await SELLER.confirm('Delete product?', `“${p.name}” will be removed from your shop. This can't be undone.`, 'Delete', true);
+      if (!ok) return;
+      try {
+        await SELLER.api(`/api/products/${p.id}`, { method: 'DELETE' });
+        TSS.toast('Product deleted', 'info');
+        await load();
+      } catch (e) { TSS.toast(e.message, 'error'); }
+    }
+  </script>
 </body>
 </html>

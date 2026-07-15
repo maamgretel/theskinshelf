@@ -1,91 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Orders</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-     <link rel="stylesheet" href="../css/my_orders.css">
-  
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
+    img-src 'self' data: https:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    script-src 'self' 'unsafe-inline';
+  ">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>My Orders — The Skin Shelf</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧴</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/store.css">
+  <style>
+    .orders-head { padding: 34px 0 8px; }
+    .orders-head h1 { font-size: clamp(1.8rem, 3.5vw, 2.6rem); }
+    .ord-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 18px 0 6px; }
+    .ord-stat { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px 18px; }
+    .ord-stat .v { font-family: var(--serif); font-size: 1.6rem; }
+    .ord-stat .l { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0 18px; }
+    .order-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px; margin-bottom: 14px; }
+    .oc-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+    .oc-top .id { font-weight: 700; }
+    .oc-top .date { color: var(--muted); font-size: .85rem; }
+    .oc-body { display: flex; gap: 16px; align-items: center; padding: 16px 0; }
+    .oc-body img { width: 72px; height: 72px; border-radius: var(--r); object-fit: cover; background: var(--cream-2); }
+    .oc-body .nm { font-weight: 600; color: var(--ink); }
+    .oc-body .meta { font-size: .85rem; color: var(--muted); }
+    .oc-body .total { margin-left: auto; text-align: right; }
+    .oc-body .total .v { font-family: var(--serif); font-size: 1.3rem; }
+    .timeline { display: flex; align-items: center; gap: 0; margin: 6px 0 2px; }
+    .timeline .node { flex: 1; text-align: center; position: relative; font-size: .72rem; color: var(--muted); }
+    .timeline .node::before { content: ""; display: block; width: 14px; height: 14px; border-radius: 50%; background: var(--line); margin: 0 auto 6px; position: relative; z-index: 1; }
+    .timeline .node::after { content: ""; position: absolute; top: 6px; left: -50%; width: 100%; height: 2px; background: var(--line); z-index: 0; }
+    .timeline .node:first-child::after { display: none; }
+    .timeline .node.done { color: var(--ink); font-weight: 600; }
+    .timeline .node.done::before { background: var(--success); }
+    .timeline .node.done::after { background: var(--success); }
+    .timeline.cancelled .node.cancel { color: var(--danger); font-weight: 700; }
+    .timeline.cancelled .node.cancel::before { background: var(--danger); }
+    .oc-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap; }
+    @media (max-width: 640px) { .ord-stats { grid-template-columns: 1fr 1fr; } .oc-body { flex-wrap: wrap; } .oc-body .total { margin-left: 0; text-align: left; } }
+  </style>
 </head>
 <body>
+  <div id="app-header"></div>
 
-<div class="container-fluid mt-4 mb-5">
-    <div class="row">
-        <!-- Sidebar Navigation -->
-        <div class="col-lg-3 col-md-4">
-            <nav class="sidebar-nav">
-                <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                    <a class="nav-link" href="profile_seller.html">
-                        <i class="fas fa-user mr-2"></i>My Profile
-                    </a>
-                    <a class="nav-link active" href="my_orders.html">
-                        <i class="fas fa-shopping-bag mr-2"></i>My Orders
-                    </a>
-                </div>
-            </nav>
+  <div class="container" style="padding-bottom:60px">
+    <div class="orders-head"><span class="eyebrow">Your account</span><h1>My orders</h1><p class="muted">Track and manage everything you've ordered.</p></div>
+    <div class="ord-stats" id="stats"></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="list"><div class="spin"></div></div>
+  </div>
+
+  <div id="app-footer"></div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/store.js"></script>
+  <script>
+    TSS.mountHeader('orders');
+    TSS.mountFooter();
+
+    const STAGES = ['Pending', 'Shipped', 'Delivered'];
+    let all = [], active = 'All';
+    const list = document.getElementById('list');
+
+    if (!TSS.requireLogin('Please sign in to see your orders')) { /* redirect handled */ }
+    else load();
+
+    async function load() {
+      try {
+        const r = await fetch(`${TSS.API}/api/orders`, { headers: TSS.authHeaders() });
+        all = await r.json();
+        if (!Array.isArray(all)) all = [];
+        renderStats(); renderTabs(); render();
+      } catch (e) {
+        list.innerHTML = `<div class="empty"><div class="ic">🌸</div><h3>Couldn't load your orders</h3><p>Is the backend running at ${TSS.API}?</p></div>`;
+      }
+    }
+
+    function renderStats() {
+      const spent = all.filter(o => o.status !== 'Cancelled').reduce((s,o)=>s+Number(o.total_price),0);
+      const items = all.reduce((s,o)=>s+Number(o.quantity),0);
+      const active_ = all.filter(o => o.status === 'Pending' || o.status === 'Shipped').length;
+      document.getElementById('stats').innerHTML = `
+        <div class="ord-stat"><div class="v">${all.length}</div><div class="l">Total orders</div></div>
+        <div class="ord-stat"><div class="v">${items}</div><div class="l">Items bought</div></div>
+        <div class="ord-stat"><div class="v">${active_}</div><div class="l">In progress</div></div>
+        <div class="ord-stat"><div class="v">${TSS.money(spent)}</div><div class="l">Total spent</div></div>`;
+    }
+
+    function renderTabs() {
+      const opts = ['All', 'Pending', 'Shipped', 'Delivered', 'Cancelled'];
+      const count = s => s === 'All' ? all.length : all.filter(o => o.status === s).length;
+      document.getElementById('tabs').innerHTML = opts.map(s => `<button class="chip ${active===s?'active':''}" data-s="${s}">${s} (${count(s)})</button>`).join('');
+      document.querySelectorAll('#tabs .chip').forEach(b => b.onclick = () => { active = b.dataset.s; renderTabs(); render(); });
+    }
+
+    function render() {
+      const rows = (active === 'All' ? all : all.filter(o => o.status === active))
+        .sort((a,b) => new Date(b.order_date) - new Date(a.order_date));
+      if (!rows.length) {
+        list.innerHTML = `<div class="empty"><div class="ic">📦</div><h3>No ${active==='All'?'':active.toLowerCase()+' '}orders yet</h3><p>When you place an order it'll show up here.</p><a class="btn btn-primary" href="customer_dashboard.html" style="margin-top:12px">Start shopping</a></div>`;
+        return;
+      }
+      list.innerHTML = rows.map(o => card(o)).join('');
+      list.querySelectorAll('[data-cancel]').forEach(b => b.onclick = () => cancelOrder(b.dataset.cancel));
+      list.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => TSS.addToCart(b.dataset.buy, 1, b));
+    }
+
+    function card(o) {
+      const cancelled = o.status === 'Cancelled';
+      const idx = STAGES.indexOf(o.status);
+      const tl = cancelled
+        ? `<div class="timeline cancelled"><div class="node done">Ordered</div><div class="node cancel">Cancelled</div></div>`
+        : `<div class="timeline">${STAGES.map((s,i) => `<div class="node ${i<=idx?'done':''}">${s}</div>`).join('')}</div>`;
+      return `
+      <div class="order-card">
+        <div class="oc-top">
+          <div><span class="id">Order #${o.id}</span> · <span class="date">${new Date(o.order_date).toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'})}</span></div>
+          <span class="badge ${badgeClass(o.status)}">${o.status}</span>
         </div>
-
-        <!-- Main Content -->
-        <div class="col-lg-9 col-md-8">
-            <div class="main-content">
-                <div class="page-header">
-                    <h2>
-                        <i class="fas fa-shopping-bag mr-3"></i>My Orders
-                    </h2>
-                    <p class="text-muted mb-0">Track and manage your orders grouped by order number</p>
-                </div>
-                
-                <!-- Filter Tabs -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="status-tabs">
-                            <div class="tab-slider">
-                                <div class="tab-item active" data-status="">
-                                    <span>All Orders</span>
-                                </div>
-                                <div class="tab-item" data-status="pending">
-                                    <span>Pending</span>
-                                </div>
-                                <div class="tab-item" data-status="shipped">
-                                    <span>Shipped</span>
-                                </div>
-                                <div class="tab-item" data-status="delivered">
-                                    <span>Delivered</span>
-                                </div>
-                                <div class="tab-item" data-status="cancelled">
-                                    <span>Cancelled</span>
-                                </div>
-                                <div class="slider-indicator"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mt-3">
-                        <select class="form-control" id="sortOptions">
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="amount_high">Highest Amount</option>
-                            <option value="amount_low">Lowest Amount</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Orders Container -->
-                <div id="orders-list-container">
-                    <!-- Orders will be loaded here by JavaScript -->
-                </div>
-            </div>
+        <div class="oc-body">
+          <img src="${o.product_image||''}" onerror="this.src=window.TSS_PLACEHOLDER" alt="">
+          <div>
+            <a href="product_view.html?id=${o.product_id}" class="nm">${o.product_name}</a>
+            <div class="meta">Qty ${o.quantity} · Sold by ${o.seller_name || 'The Skin Shelf'}</div>
+          </div>
+          <div class="total"><div class="v">${TSS.money(o.total_price)}</div><div class="meta">incl. VAT + shipping</div></div>
         </div>
-    </div>
-</div>
+        ${tl}
+        <div class="oc-actions">
+          ${o.status === 'Pending' ? `<button class="act-btn danger" data-cancel="${o.id}" style="border:1px solid var(--line);background:var(--paper);border-radius:var(--r-pill);padding:.42rem .9rem;font-size:.8rem;font-weight:600">Cancel order</button>` : ''}
+          <button class="btn btn-soft btn-sm" data-buy="${o.product_id}">Buy again</button>
+          <a class="btn btn-ghost btn-sm" href="product_view.html?id=${o.product_id}">View product</a>
+        </div>
+      </div>`;
+    }
 
-<!-- Scripts -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script src="../js/config.js"></script>
-    <script src="../js/my_orders.js"></script>
+    function badgeClass(s) { return { Pending:'badge-warn', Shipped:'badge-info', Delivered:'badge-success', Cancelled:'badge-danger' }[s] || 'badge-muted'; }
 
+    async function cancelOrder(id) {
+      const veil = document.createElement('div');
+      veil.innerHTML = `<div style="position:fixed;inset:0;background:rgba(24,19,15,.5);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px">
+        <div style="background:var(--paper);border-radius:var(--r-lg);padding:26px;max-width:400px;box-shadow:var(--sh-lg)">
+          <h3 style="font-family:var(--serif);margin-bottom:6px">Cancel this order?</h3>
+          <p class="muted" style="font-size:.9rem;margin-bottom:18px">Order #${id} will be marked as cancelled.</p>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn btn-soft" id="cno">Keep order</button>
+            <button class="btn btn-accent" id="cyes">Cancel order</button>
+          </div>
+        </div></div>`;
+      document.body.appendChild(veil);
+      veil.querySelector('#cno').onclick = () => veil.remove();
+      veil.querySelector('#cyes').onclick = async () => {
+        veil.remove();
+        try {
+          const r = await fetch(`${TSS.API}/api/orders/cancel`, { method:'POST', headers: TSS.authHeaders(), body: JSON.stringify({ order_ids: [Number(id)] }) });
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.error || 'Could not cancel');
+          TSS.toast('Order cancelled', 'info');
+          await load();
+        } catch (e) { TSS.toast(e.message, 'error'); }
+      };
+    }
+  </script>
 </body>
 </html>

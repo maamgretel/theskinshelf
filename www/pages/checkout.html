@@ -143,7 +143,7 @@
       const box = document.getElementById('co-items');
       box.innerHTML = data.items.map(i => `
         <div class="co-item">
-          <img src="${i.image||''}" onerror="this.src='https://via.placeholder.com/120?text=TSS'" alt="">
+          <img src="${i.image||''}" onerror="this.src=window.TSS_PLACEHOLDER" alt="">
           <div><div class="nm">${i.name}</div><div class="q">Qty ${i.quantity} · ${TSS.money(i.price)}</div></div>
           <div class="lt">${TSS.money(Number(i.price)*i.quantity)}</div>
         </div>`).join('');

@@ -80,7 +80,7 @@
             const out = Number(i.stock) <= 0;
             return `
             <div class="bag-item" data-id="${i.id}" data-pid="${i.product_id}">
-              <a href="product_view.html?id=${i.product_id}"><img src="${i.image||''}" onerror="this.src='https://via.placeholder.com/200?text=TSS'" alt="${i.name}"></a>
+              <a href="product_view.html?id=${i.product_id}"><img src="${i.image||''}" onerror="this.src=window.TSS_PLACEHOLDER" alt="${i.name}"></a>
               <div>
                 <a href="product_view.html?id=${i.product_id}" class="nm">${i.name}</a>
                 <div class="unit">${money(i.price)} each ${out?'· <span style="color:var(--danger)">out of stock</span>':(Number(i.stock)<=5?'· only '+i.stock+' left':'')}</div>

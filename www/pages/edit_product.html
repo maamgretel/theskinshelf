@@ -1,72 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Product</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../css/custom-dashboard.css">
-    <style>
-        .product-image-preview {
-            max-height: 150px;
-            max-width: 100%;
-            border: 1px solid #ddd;
-            padding: 5px;
-            border-radius: 4px;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
+    img-src 'self' data: blob: https:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    script-src 'self' 'unsafe-inline';
+  ">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Edit Product — The Skin Shelf</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧴</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/store.css">
+  <link rel="stylesheet" href="../css/seller.css">
 </head>
 <body>
-<div class="container mt-4 mb-5">
-    <div id="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 id="productNameTitle">Edit Product</h2>
-            <a href="seller_dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
-        </div>
-        <div id="alert-container"></div>
-        <form id="editProductForm">
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" class="form-control" required>
-            </div>
+  <div id="seller-header"></div>
 
-            <div class="form-group">
-                <label for="categoryDropdown">Category</label>
-                <select id="categoryDropdown" name="category_id" class="form-control" required>
-                    <option value="">Loading categories...</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" class="form-control" rows="4" required></textarea>
-            </div>
-            <div class="form-row">
-                <div class="form-group col-md-6">
-                    <label for="price">Price (₱)</label>
-                    <input type="number" id="price" name="price" step="0.01" class="form-control" required>
-                </div>
-                <div class="form-group col-md-6">
-                    <label for="stock">Stock</label>
-                    <input type="number" id="stock" name="stock" class="form-control" required>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Current Image:</label><br>
-                <div id="image-preview-container">
-                    <img src="" id="imagePreview" alt="Product Image" class="product-image-preview">
-                    <em id="noImageText" class="text-muted">No image uploaded.</em>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="image">Change Image (optional):</label>
-                <input type="file" id="image" name="image" class="form-control-file" accept="image/*">
-            </div>
-            <button type="submit" id="updateButton" class="btn btn-primary">Update Product</button>
-        </form>
+  <div class="container" style="padding-bottom:60px">
+    <div class="page-head">
+      <div><span class="eyebrow">Inventory</span><h1>Edit product</h1><p id="sub">Update details — changes go live immediately.</p></div>
+      <a class="btn btn-soft" href="product_seller.html">← Back to products</a>
     </div>
-</div>
-<script src="../js/config.js"></script>
-    <script src="../js/edit_product.js"></script>
+
+    <div id="root"><div class="spin"></div></div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/store.js"></script>
+  <script src="../js/seller.js"></script>
+  <script>
+    const id = Number(new URLSearchParams(location.search).get('id'));
+    const root = document.getElementById('root');
+
+    if (SELLER.requireSeller()) {
+      SELLER.mountTopbar('products');
+      init();
+    }
+
+    async function init() {
+      if (!id) { root.innerHTML = '<div class="empty"><h3>No product selected</h3><p><a href="product_seller.html">Back to products</a></p></div>'; return; }
+      let p, cats = [];
+      try {
+        [p, cats] = await Promise.all([
+          SELLER.api(`/api/products/${id}`).then(d => d.details),
+          fetch(`${TSS.API}/api/categories`).then(r => r.json()),
+        ]);
+      } catch (e) { root.innerHTML = `<div class="empty"><h3>Couldn't load product</h3><p>${e.message}</p></div>`; return; }
+
+      document.getElementById('sub').textContent = p.name;
+      root.innerHTML = `
+      <div class="panel form-card">
+        <form id="pform" class="form-grid">
+          <div class="field full"><label>Product name *</label><input id="f-name" required></div>
+          <div class="field full"><label>Description</label><textarea id="f-desc" rows="4"></textarea></div>
+          <div class="field"><label>Price (₱) *</label><input id="f-price" type="number" step="0.01" min="1" required></div>
+          <div class="field"><label>Stock</label>
+            <div class="row gap-sm"><input id="f-stockview" disabled style="flex:1"><button type="button" class="act-btn primary" id="stockBtn">+ Add stock</button></div>
+          </div>
+          <div class="field full"><label>Category *</label><select id="f-cat" required></select></div>
+          <div class="field full"><label>Product photo</label>
+            <div class="img-drop" id="drop">
+              <img id="preview" src="" alt="">
+              <div class="hint"><b>Click to upload a new photo</b> or paste an image link below. Leave unchanged to keep the current photo.</div>
+            </div>
+            <input type="file" id="f-file" accept="image/*" class="hide">
+            <input id="f-imgurl" placeholder="…or paste an image URL (https://…)" style="margin-top:10px">
+          </div>
+          <div class="full modal-actions" style="justify-content:flex-start">
+            <button type="submit" class="btn btn-primary btn-lg" id="saveBtn">Save changes</button>
+            <a class="btn btn-ghost" href="product_seller.html">Cancel</a>
+          </div>
+        </form>
+      </div>`;
+
+      // prefill
+      document.getElementById('f-name').value = p.name || '';
+      document.getElementById('f-desc').value = p.description || '';
+      document.getElementById('f-price').value = p.price || '';
+      document.getElementById('f-stockview').value = `${p.stock} in stock`;
+      document.getElementById('f-cat').innerHTML = '<option value="">Choose…</option>' +
+        cats.map(c => `<option value="${c.id}" ${Number(p.category_id)===c.id?'selected':''}>${c.name}</option>`).join('');
+      const preview = document.getElementById('preview');
+      preview.src = p.image || window.TSS_PLACEHOLDER;
+      preview.onerror = () => preview.src = window.TSS_PLACEHOLDER;
+
+      const drop = document.getElementById('drop'), file = document.getElementById('f-file'), urlIn = document.getElementById('f-imgurl');
+      drop.onclick = () => file.click();
+      file.onchange = () => { if (file.files[0]) { preview.src = URL.createObjectURL(file.files[0]); urlIn.value = ''; } };
+      urlIn.addEventListener('change', () => { if (urlIn.value.trim()) { preview.src = urlIn.value.trim(); file.value = ''; } });
+
+      // add stock (same endpoint as products page)
+      document.getElementById('stockBtn').onclick = () => {
+        const m = SELLER.modal(`
+          <h3>Add stock</h3><div class="sub">${p.name} — currently ${p.stock} in stock</div>
+          <div class="field"><label>Quantity to add</label><input type="number" id="m-qty" min="1" value="10"></div>
+          <div class="modal-actions"><button class="btn btn-soft" data-x="no">Cancel</button><button class="btn btn-primary" data-x="yes">Add</button></div>`);
+        m.el.querySelector('[data-x="no"]').onclick = m.close;
+        m.el.querySelector('[data-x="yes"]').onclick = async (e) => {
+          const qty = parseInt(m.el.querySelector('#m-qty').value, 10);
+          if (!qty || qty <= 0) { TSS.toast('Enter a valid quantity', 'error'); return; }
+          e.target.disabled = true;
+          try {
+            const d = await SELLER.api('/api/seller/add-stock', { method:'POST', body: JSON.stringify({ product_id: id, stock_to_add: qty, note: 'Added while editing' }) });
+            p.stock = d.new_stock;
+            document.getElementById('f-stockview').value = `${d.new_stock} in stock`;
+            TSS.toast(`Stock updated: ${d.previous_stock} → ${d.new_stock}`, 'success');
+            m.close();
+          } catch (err) { TSS.toast(err.message, 'error'); e.target.disabled = false; }
+        };
+      };
+
+      // save
+      document.getElementById('pform').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('saveBtn');
+        const fd = new FormData();
+        fd.append('name', document.getElementById('f-name').value.trim());
+        fd.append('description', document.getElementById('f-desc').value.trim());
+        fd.append('price', document.getElementById('f-price').value);
+        fd.append('category_id', document.getElementById('f-cat').value);
+        if (file.files[0]) fd.append('image', file.files[0]);
+        else if (urlIn.value.trim()) fd.append('image_url', urlIn.value.trim());
+        btn.disabled = true; btn.textContent = 'Saving…';
+        try {
+          const r = await fetch(`${TSS.API}/api/products/${id}`, { method:'POST', headers: { 'X-User-ID': String(TSS.user().id) }, body: fd });
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.error || 'Failed to save');
+          TSS.toast('Product updated ✓', 'success');
+          setTimeout(() => location.href = 'product_seller.html', 800);
+        } catch (err) { TSS.toast(err.message, 'error'); btn.disabled = false; btn.textContent = 'Save changes'; }
+      });
+    }
+  </script>
 </body>
 </html>

@@ -1,58 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Product</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/custom-dashboard.css">
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
+    img-src 'self' data: blob: https:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    script-src 'self' 'unsafe-inline';
+  ">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Add Product — The Skin Shelf</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧴</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/store.css">
+  <link rel="stylesheet" href="../css/seller.css">
 </head>
 <body>
-<div class="container mt-4">
-    <h3>Add New Product</h3>
+  <div id="seller-header"></div>
 
-    <div id="form-alert" class="alert d-none"></div>
+  <div class="container" style="padding-bottom:60px">
+    <div class="page-head">
+      <div><span class="eyebrow">Inventory</span><h1>Add a product</h1><p>Fill in the details — it goes live in your shop right away.</p></div>
+      <a class="btn btn-soft" href="product_seller.html">← Back to products</a>
+    </div>
 
-    <form id="addProductForm">
-        <div class="form-group">
-            <label>Product Name</label>
-            <input type="text" name="name" class="form-control" required>
+    <div class="panel form-card">
+      <form id="pform" class="form-grid">
+        <div class="field full"><label>Product name *</label><input id="f-name" required placeholder="e.g. Hydrating Rose Serum"></div>
+        <div class="field full"><label>Description</label><textarea id="f-desc" rows="4" placeholder="What makes it special? Key ingredients, skin type, how it feels…"></textarea></div>
+        <div class="field"><label>Price (₱) *</label><input id="f-price" type="number" step="0.01" min="1" required placeholder="499.00"></div>
+        <div class="field"><label>Initial stock *</label><input id="f-stock" type="number" min="0" required placeholder="20"></div>
+        <div class="field full"><label>Category *</label><select id="f-cat" required><option value="">Choose a category…</option></select></div>
+
+        <div class="field full"><label>Product photo</label>
+          <div class="img-drop" id="drop">
+            <img id="preview" alt="">
+            <div class="hint"><b>Click to upload a photo</b> JPG or PNG, up to 16 MB — or paste an image link below.</div>
+          </div>
+          <input type="file" id="f-file" accept="image/*" class="hide">
+          <input id="f-imgurl" placeholder="…or paste an image URL (https://…)" style="margin-top:10px">
         </div>
 
-        <div class="form-group">
-            <label for="categoryDropdown">Category</label>
-            <select id="categoryDropdown" name="category_id" class="form-control" required>
-                <option value="">Loading categories...</option>
-            </select>
+        <div class="full modal-actions" style="justify-content:flex-start">
+          <button type="submit" class="btn btn-primary btn-lg" id="saveBtn">Publish product</button>
+          <a class="btn btn-ghost" href="product_seller.html">Cancel</a>
         </div>
+      </form>
+    </div>
+  </div>
 
-        <div class="form-group">
-            <label>Description</label>
-            <textarea name="description" class="form-control" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-            <label>Price (₱)</label>
-            <input type="number" name="price" step="0.01" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label>Stock</label>
-            <input type="number" name="stock" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label>Product Image</label>
-            <input type="file" name="image" class="form-control-file" accept="image/*">
-        </div>
+  <script src="../js/config.js"></script>
+  <script src="../js/store.js"></script>
+  <script src="../js/seller.js"></script>
+  <script>
+    if (SELLER.requireSeller()) {
+      SELLER.mountTopbar('products');
+      init();
+    }
 
-        <button type="submit" id="submitButton" class="btn btn-success">Add Product</button>
-        <a href="seller_dashboard.html" class="btn btn-secondary">Cancel</a>
-    </form>
-</div>
+    async function init() {
+      document.getElementById('preview').src = window.TSS_PLACEHOLDER;
+      try {
+        const cats = await (await fetch(`${TSS.API}/api/categories`)).json();
+        document.getElementById('f-cat').innerHTML += cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      } catch { TSS.toast('Couldn\'t load categories', 'error'); }
 
-<script src="../js/config.js"></script>
-    <script src="../js/add_product.js"></script>
+      const drop = document.getElementById('drop'), file = document.getElementById('f-file'),
+            preview = document.getElementById('preview'), urlIn = document.getElementById('f-imgurl');
+      drop.onclick = () => file.click();
+      file.onchange = () => {
+        if (file.files[0]) { preview.src = URL.createObjectURL(file.files[0]); urlIn.value = ''; }
+      };
+      urlIn.addEventListener('change', () => { if (urlIn.value.trim()) { preview.src = urlIn.value.trim(); file.value = ''; } });
 
+      document.getElementById('pform').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('saveBtn');
+        const name = document.getElementById('f-name').value.trim();
+        const price = document.getElementById('f-price').value;
+        const stock = document.getElementById('f-stock').value;
+        const cat = document.getElementById('f-cat').value;
+        if (!name || !price || stock === '' || !cat) { TSS.toast('Please fill in all required fields', 'error'); return; }
+
+        const fd = new FormData();
+        fd.append('name', name);
+        fd.append('description', document.getElementById('f-desc').value.trim());
+        fd.append('price', price);
+        fd.append('stock', stock);
+        fd.append('category_id', cat);
+        if (file.files[0]) fd.append('image', file.files[0]);
+        else if (urlIn.value.trim()) fd.append('image_url', urlIn.value.trim());
+
+        btn.disabled = true; btn.textContent = 'Publishing…';
+        try {
+          const r = await fetch(`${TSS.API}/api/products`, { method: 'POST', headers: { 'X-User-ID': String(TSS.user().id) }, body: fd });
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.error || 'Failed to create product');
+          TSS.toast('Product published! 🎉', 'success');
+          setTimeout(() => location.href = 'product_seller.html', 900);
+        } catch (err) {
+          TSS.toast(err.message, 'error');
+          btn.disabled = false; btn.textContent = 'Publish product';
+        }
+      });
+    }
+  </script>
 </body>
 </html>

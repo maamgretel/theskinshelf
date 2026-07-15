@@ -1,553 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Reset Password - The Skins Shelf</title>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; 
-        style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://fonts.googleapis.com; 
-        font-src 'self' https://fonts.gstatic.com;
-        media-src *; 
-        connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
-    ">
-    <meta name="format-detection" content="telephone=no">
-    <meta name="msapplication-tap-highlight" content="no">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link 
-        rel="stylesheet" 
-        href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-    >
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            height: 100%;
-            overflow-x: hidden;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #ffffff;
-            color: #000000;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        /* Floating Background Icons */
-        .floating-icons {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
-        }
-
-        .floating-icon {
-            position: absolute;
-            font-size: 2rem;
-            color: rgba(255, 105, 180, 0.15);
-            animation: float 20s infinite linear;
-            user-select: none;
-            will-change: transform;
-        }
-
-        .floating-icon:nth-child(1) {
-            top: 100%;
-            left: 10%;
-            animation-delay: 0s;
-            font-size: 1.5rem;
-        }
-
-        .floating-icon:nth-child(2) {
-            top: 100%;
-            left: 85%;
-            animation-delay: -3s;
-            font-size: 2.5rem;
-        }
-
-        .floating-icon:nth-child(3) {
-            top: 100%;
-            left: 70%;
-            animation-delay: -6s;
-            font-size: 1.8rem;
-        }
-
-        .floating-icon:nth-child(4) {
-            top: 100%;
-            left: 20%;
-            animation-delay: -9s;
-            font-size: 2rem;
-        }
-
-        .floating-icon:nth-child(5) {
-            top: 100%;
-            left: 5%;
-            animation-delay: -12s;
-            font-size: 1.6rem;
-        }
-
-        .floating-icon:nth-child(6) {
-            top: 100%;
-            left: 50%;
-            animation-delay: -2s;
-            font-size: 2.2rem;
-        }
-
-        .floating-icon:nth-child(7) {
-            top: 100%;
-            left: 60%;
-            animation-delay: -5s;
-            font-size: 1.7rem;
-        }
-
-        .floating-icon:nth-child(8) {
-            top: 100%;
-            left: 30%;
-            animation-delay: -8s;
-            font-size: 1.9rem;
-        }
-
-        .floating-icon:nth-child(9) {
-            top: 100%;
-            left: 75%;
-            animation-delay: -11s;
-            font-size: 1.4rem;
-        }
-
-        .floating-icon:nth-child(10) {
-            top: 100%;
-            left: 45%;
-            animation-delay: -14s;
-            font-size: 2.1rem;
-        }
-
-        .floating-icon:nth-child(11) {
-            top: 100%;
-            left: 15%;
-            animation-delay: -4s;
-            font-size: 1.8rem;
-        }
-
-        .floating-icon:nth-child(12) {
-            top: 100%;
-            left: 65%;
-            animation-delay: -7s;
-            font-size: 2rem;
-        }
-
-        .floating-icon:nth-child(13) {
-            top: 100%;
-            left: 35%;
-            animation-delay: -10s;
-            font-size: 1.6rem;
-        }
-
-        .floating-icon:nth-child(14) {
-            top: 100%;
-            left: 80%;
-            animation-delay: -13s;
-            font-size: 2.3rem;
-        }
-
-        .floating-icon:nth-child(15) {
-            top: 100%;
-            left: 55%;
-            animation-delay: -1s;
-            font-size: 1.7rem;
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(0px) rotate(0deg);
-                opacity: 0;
-            }
-            5% {
-                opacity: 1;
-            }
-            95% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-120vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        .reset-container {
-            width: 100%;
-            max-width: 500px;
-            padding: 2rem;
-            position: relative;
-            z-index: 10;
-        }
-
-        .brand-logo {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .brand-logo h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #000000;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 0.5rem;
-        }
-
-        .brand-logo p {
-            color: #666666;
-            font-size: 1rem;
-            font-weight: 400;
-        }
-
-        .reset-card {
-            background: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 20px;
-            padding: 2.5rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 10;
-        }
-
-        .reset-card:hover {
-            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
-        }
-
-        .card-header {
-            background: none;
-            border: none;
-            padding: 0;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        .card-header h4 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #000000;
-            margin: 0 0 0.5rem 0;
-        }
-
-        .card-header p {
-            color: #666666;
-            font-size: 0.95rem;
-            margin: 0;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            color: #000000;
-            margin-bottom: 0.5rem;
-            font-size: 0.95rem;
-        }
-
-        .form-control {
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: #ffffff;
-            color: #000000;
-        }
-
-        .form-control:focus {
-            border-color: #000000;
-            box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.1);
-            background: #ffffff;
-            color: #000000;
-        }
-
-        .form-control::placeholder {
-            color: #999999;
-        }
-
-        /* Special styling for OTP input */
-        #otp {
-            text-align: center;
-            letter-spacing: 0.5rem;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        /* Password strength indicator */
-        .password-strength {
-            margin-top: 0.5rem;
-            font-size: 0.85rem;
-        }
-
-        .strength-weak {
-            color: #dc3545;
-        }
-
-        .strength-medium {
-            color: #ffc107;
-        }
-
-        .strength-strong {
-            color: #28a745;
-        }
-
-        .btn-primary-custom {
-            background: #000000;
-            color: #ffffff;
-            border: none;
-            padding: 0.875rem 2rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 1rem;
-        }
-
-        .btn-primary-custom:hover {
-            background: #333333;
-            color: #ffffff;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .btn-primary-custom:focus {
-            box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.2);
-        }
-
-        .alert {
-            border-radius: 12px;
-            border: none;
-            padding: 1rem 1.25rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .alert-danger {
-            background: #fee;
-            color: #c33;
-            border-left: 4px solid #c33;
-        }
-
-        .alert-success {
-            background: #efe;
-            color: #3c3;
-            border-left: 4px solid #3c3;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border-left: 4px solid #856404;
-        }
-
-        .text-links {
-            text-align: center;
-            margin-top: 1.5rem;
-        }
-
-        .text-links p {
-            margin-bottom: 0.5rem;
-            color: #666666;
-        }
-
-        .text-links a {
-            color: #000000;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .text-links a:hover {
-            color: #333333;
-            text-decoration: underline;
-        }
-
-        /* Loading Spinner */
-        .spinner-container {
-            text-align: center;
-            margin-top: 1.5rem;
-        }
-
-        .spinner-border {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-width: 0.3rem;
-            border-color: #000000;
-            border-right-color: transparent;
-        }
-
-        .spinner-text {
-            margin-top: 1rem;
-            color: #666666;
-            font-size: 0.9rem;
-        }
-
-        .security-info {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 12px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-            color: #666666;
-        }
-
-        .security-info h6 {
-            color: #000000;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        @media (max-width: 576px) {
-            .reset-container {
-                padding: 1rem;
-            }
-            
-            .reset-card {
-                padding: 2rem;
-            }
-            
-            .brand-logo h1 {
-                font-size: 2rem;
-            }
-            
-            .card-header h4 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://backend-rj0a.onrender.com;
+    img-src 'self' data: https:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    script-src 'self' 'unsafe-inline';
+  ">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Verify your email — The Skin Shelf</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧴</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/store.css">
+  <style>.auth-aside::after { background-image: var(--bg); }</style>
 </head>
 <body>
-    <!-- Floating Background Icons -->
-    <div class="floating-icons">
-        <div class="floating-icon">💄</div>
-        <div class="floating-icon">💋</div>
-        <div class="floating-icon">✨</div>
-        <div class="floating-icon">💄</div>
-        <div class="floating-icon">🎀</div>
-        <div class="floating-icon">💋</div>
-        <div class="floating-icon">✨</div>
-        <div class="floating-icon">💄</div>
-        <div class="floating-icon">🎀</div>
-        <div class="floating-icon">💋</div>
-        <div class="floating-icon">✨</div>
-        <div class="floating-icon">💄</div>
-        <div class="floating-icon">🎀</div>
-        <div class="floating-icon">💋</div>
-        <div class="floating-icon">✨</div>
-    </div>
+  <div class="auth-wrap">
+    <aside class="auth-aside" style="--bg:url('https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=900&q=80&auto=format&fit=crop')">
+      <a class="brand" href="../index.html"><span class="dot"></span> The Skin Shelf</a>
+      <div class="pitch">
+        <h2>Almost there.</h2>
+        <p>We've sent a 6-digit verification code to your email. Enter it to activate your account.</p>
+      </div>
+      <div class="quotes"><div class="q">🔒 Your account, secured</div></div>
+    </aside>
 
-    <div class="reset-container">
-        <div class="brand-logo">
-            <h1>The Skins Shelf</h1>
-            <p>Premium Makeup Collection</p>
-        </div>
-        
-        <div class="reset-card">
-            <div class="card-header">
-                <h4>Reset Password</h4>
-                <p>Enter the OTP sent to your email and create a new password</p>
-            </div>
-            
-            <!-- Alert Box -->
-            <div id="alertBox" class="alert d-none"></div>
+    <main class="auth-main">
+      <div class="auth-card">
+        <span class="eyebrow">Verify email</span>
+        <h1>Enter your code</h1>
+        <p class="lede">Sent to <b id="emailLine">your email</b>.</p>
 
-            <div class="security-info">
-                <h6>🔐 Security Requirements</h6>
-                <ul class="mb-0">
-                    <li>Password must be at least 8 characters long</li>
-                    <li>Include uppercase and lowercase letters</li>
-                    <li>Include at least one number or special character</li>
-                </ul>
-            </div>
+        <div class="auth-alert err" id="alert"></div>
 
-            <form id="resetForm">
-                <div class="form-group">
-                    <label for="otp">Verification Code (OTP)</label>
-                    <input type="text" id="otp" class="form-control" placeholder="Enter 6-digit code" maxlength="6" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="newPassword">New Password</label>
-                    <input type="password" id="newPassword" class="form-control" placeholder="Create a strong password" required>
-                    <div id="passwordStrength" class="password-strength"></div>
-                </div>
-                
-                <button type="submit" class="btn-primary-custom">Reset Password</button>
-            </form>
-            
-            <!-- Loading Spinner -->
-            <div id="loadingSpinner" class="spinner-container d-none">
-                <div class="spinner-border" role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
-                <div class="spinner-text">Resetting password...</div>
-            </div>
-            
-            <div class="text-links">
-                <p>
-                    Remember your password? <a href="login.html">Back to Login</a>
-                </p>
-            </div>
-        </div>
-    </div>
+        <form id="otpForm">
+          <div class="otp-inputs" id="otpBoxes">
+            <input inputmode="numeric" maxlength="1" aria-label="digit 1">
+            <input inputmode="numeric" maxlength="1" aria-label="digit 2">
+            <input inputmode="numeric" maxlength="1" aria-label="digit 3">
+            <input inputmode="numeric" maxlength="1" aria-label="digit 4">
+            <input inputmode="numeric" maxlength="1" aria-label="digit 5">
+            <input inputmode="numeric" maxlength="1" aria-label="digit 6">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn" style="margin-top:16px">Verify &amp; continue</button>
+        </form>
 
-    <script>
-        // Password strength checker
-        document.getElementById('newPassword').addEventListener('input', function() {
-            const password = this.value;
-            const strengthDiv = document.getElementById('passwordStrength');
-            
-            let score = 0;
-            let feedback = '';
-            
-            if (password.length >= 8) score++;
-            if (/[a-z]/.test(password)) score++;
-            if (/[A-Z]/.test(password)) score++;
-            if (/[0-9]/.test(password)) score++;
-            if (/[^A-Za-z0-9]/.test(password)) score++;
-            
-            if (password.length === 0) {
-                strengthDiv.innerHTML = '';
-                return;
-            }
-            
-            if (score < 3) {
-                strengthDiv.innerHTML = '<span class="strength-weak">⚠️ Weak password</span>';
-            } else if (score < 4) {
-                strengthDiv.innerHTML = '<span class="strength-medium">🔶 Medium strength</span>';
-            } else {
-                strengthDiv.innerHTML = '<span class="strength-strong">✅ Strong password</span>';
-            }
-        });
+        <div id="debugBox" class="debug-otp" style="display:none">Local demo code: <b id="debugOtp"></b></div>
 
-        // OTP input formatting
-        document.getElementById('otp').addEventListener('input', function() {
-            this.value = this.value.replace(/[^0-9]/g, '');
-        });
-    </script>
-    <script src="../js/config.js"></script>
-    <script src="../js/forgot_reset.js"></script>
+        <div class="foot">Didn't get it? <a href="#" id="resend">Resend code</a> · <a href="register.html">Change email</a></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/store.js"></script>
+  <script>
+    const email = sessionStorage.getItem('pendingEmail');
+    const alertEl = document.getElementById('alert');
+    function showErr(m){ alertEl.textContent = m; alertEl.className = 'auth-alert err show'; }
+    if (!email) { location.href = 'register.html'; }
+    document.getElementById('emailLine').textContent = email || '';
+
+    const dbg = sessionStorage.getItem('debugOtp');
+    if (dbg) { document.getElementById('debugBox').style.display = 'block'; document.getElementById('debugOtp').textContent = dbg; }
+
+    // otp box UX
+    const boxes = [...document.querySelectorAll('#otpBoxes input')];
+    boxes.forEach((b, i) => {
+      b.addEventListener('input', () => { b.value = b.value.replace(/\D/g, ''); if (b.value && i < 5) boxes[i+1].focus(); });
+      b.addEventListener('keydown', e => { if (e.key === 'Backspace' && !b.value && i > 0) boxes[i-1].focus(); });
+      b.addEventListener('paste', e => {
+        const t = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+        if (t) { e.preventDefault(); t.split('').forEach((c, k) => { if (boxes[k]) boxes[k].value = c; }); boxes[Math.min(t.length, 5)].focus(); }
+      });
+    });
+    boxes[0].focus();
+
+    document.getElementById('otpForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertEl.className = 'auth-alert';
+      const otp = boxes.map(b => b.value).join('');
+      if (otp.length !== 6) { showErr('Please enter all 6 digits'); return; }
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = 'Verifying…';
+      try {
+        const r = await fetch(`${TSS.API}/api/auth/verify-registration`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, otp }) });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || d.message || 'Invalid code');
+        alertEl.textContent = 'Account verified! Redirecting to sign in…'; alertEl.className = 'auth-alert ok show';
+        sessionStorage.removeItem('pendingEmail'); sessionStorage.removeItem('debugOtp');
+        setTimeout(() => location.href = 'login.html', 900);
+      } catch (err) {
+        showErr(err.message);
+        btn.disabled = false; btn.textContent = 'Verify & continue';
+      }
+    });
+
+    document.getElementById('resend').addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        const r = await fetch(`${TSS.API}/api/auth/resend-otp`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email }) });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || d.message || 'Could not resend');
+        if (d.debug_otp) { document.getElementById('debugBox').style.display = 'block'; document.getElementById('debugOtp').textContent = d.debug_otp; }
+        alertEl.textContent = 'A new code has been sent.'; alertEl.className = 'auth-alert ok show';
+      } catch (err) { showErr(err.message); }
+    });
+  </script>
 </body>
 </html>

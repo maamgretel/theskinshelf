@@ -180,14 +180,14 @@
       const badge = stock <= 0
         ? '<span class="pc-badge out">Sold out</span>'
         : stock <= 5 ? `<span class="pc-badge low">Only ${stock} left</span>` : '';
-      const img = p.image || 'https://via.placeholder.com/600x600?text=No+Image';
+      const img = p.image || window.TSS_PLACEHOLDER;
       const link = this.page('product_view.html') + '?id=' + p.id;
       return `
       <article class="product-card" data-id="${p.id}">
         <a class="pc-media" href="${link}">
           <span class="pc-cat">${cat}</span>
           <img src="${img}" alt="${(p.name || '').replace(/"/g, '&quot;')}" loading="lazy"
-               onerror="this.src='https://via.placeholder.com/600x600?text=The+Skin+Shelf'">
+               onerror="this.src=window.TSS_PLACEHOLDER">
           ${badge}
         </a>
         <button class="pc-wish ${wished}" data-wish="${p.id}" aria-label="Save to wishlist" title="Save to wishlist">♥</button>
