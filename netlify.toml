@@ -1,0 +1,12 @@
+# Netlify config for The Skin Shelf (static frontend).
+# If you connect this GitHub repo to Netlify, it publishes the www/ folder.
+# (For manual "drag & drop" deploys, just drop the www/ folder itself.)
+[build]
+  publish = "www"
+  command = ""
+
+# Send the bare domain to the storefront home page.
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
